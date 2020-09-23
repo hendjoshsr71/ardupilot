@@ -511,6 +511,9 @@ private:
 
         // how much correction have we added for terrain data
         float terrain_correction;
+
+        // have we started an emergency landing?
+        bool started_landing;
     } auto_state;
 
 #if AP_SCRIPTING_ENABLED
@@ -1120,6 +1123,8 @@ private:
     bool get_wp_distance_m(float &distance) const override;
     bool get_wp_bearing_deg(float &bearing) const override;
     bool get_wp_crosstrack_error_m(float &xtrack_error) const override;
+
+    bool in_auto_land(void);
 
     // reverse_thrust.cpp
     bool reversed_throttle;
