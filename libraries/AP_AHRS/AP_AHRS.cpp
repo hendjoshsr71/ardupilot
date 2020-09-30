@@ -1909,8 +1909,7 @@ AP_AHRS::EKFType AP_AHRS::active_EKF_type(void) const
             should_use_gps = true;
         }
 #endif
-        if (hal.util->get_soft_armed() &&
-            should_use_gps &&
+        if (should_use_gps &&
             AP::gps().status() >= AP_GPS::GPS_OK_FIX_3D &&
             (!filt_state.flags.using_gps ||
              !filt_state.flags.horiz_pos_abs ||
