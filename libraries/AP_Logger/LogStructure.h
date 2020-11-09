@@ -1626,7 +1626,6 @@ enum LogMessages : uint8_t {
     LOG_CSRV_MSG,
     LOG_CESC_MSG,
     LOG_ARSP_MSG,
-    LOG_IDS_FROM_BATTMONITOR,
     LOG_MAG_MSG,
 
     LOG_IDS_FROM_GPS,
@@ -1636,6 +1635,7 @@ enum LogMessages : uint8_t {
 
     LOG_FORMAT_MSG = 128, // this must remain #128
 
+    LOG_IDS_FROM_BATTMONITOR,
     LOG_IDS_FROM_DAL,
 
     LOG_ACC_MSG,

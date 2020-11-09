@@ -233,7 +233,7 @@ void LoggerMessageWriter_WriteSysInfo::process() {
         stage = Stage::RC_PROTOCOL;
         FALLTHROUGH;
 
-    case Stage::RC_PROTOCOL:
+    case Stage::RC_PROTOCOL: {
         const char *prot = hal.rcin->protocol();
         if (prot == nullptr) {
             prot = "None";
@@ -241,6 +241,12 @@ void LoggerMessageWriter_WriteSysInfo::process() {
         if (! _logger_backend->Write_MessageF("RC Protocol: %s", prot)) {
             return; // call me again
         }
+        stage = Stage::BATT_CYCLES;
+        FALLTHROUGH;
+    }
+
+    case Stage::BATT_CYCLES:
+        AP::battery().log_smart_battery_info();
     }
 
     _finished = true;  // all done!
