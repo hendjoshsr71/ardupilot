@@ -187,6 +187,8 @@ void LoggerMessageWriter_WriteSysInfo::reset()
 
 void LoggerMessageWriter_WriteSysInfo::process() {
     const AP_FWVersion &fwver = AP::fwversion();
+    const char *prot = hal.rcin->protocol();
+    const AP_BattMonitor &battery = AP::battery();
 
     switch(stage) {
 
@@ -234,13 +236,17 @@ void LoggerMessageWriter_WriteSysInfo::process() {
         FALLTHROUGH;
 
     case Stage::RC_PROTOCOL:
-        const char *prot = hal.rcin->protocol();
         if (prot == nullptr) {
             prot = "None";
         }
         if (! _logger_backend->Write_MessageF("RC Protocol: %s", prot)) {
             return; // call me again
         }
+        stage = Stage::BATT_CYCLES;
+        FALLTHROUGH;
+
+    case Stage::BATT_CYCLES:
+        battery.log_smart_battery_info();
     }
 
     _finished = true;  // all done!
