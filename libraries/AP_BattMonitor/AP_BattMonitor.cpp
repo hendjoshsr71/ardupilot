@@ -578,6 +578,33 @@ bool AP_BattMonitor::reset_remaining(uint16_t battery_mask, float percentage)
     return ret;
 }
 
+// Returns true if got mavlink charge state and fills charge_state The following mavlink charge states are not used
+// MAV_BATTERY_CHARGE_STATE_EMERGENCY , MAV_BATTERY_CHARGE_STATE_FAILED
+// MAV_BATTERY_CHARGE_STATE_UNHEALTHY, MAV_BATTERY_CHARGE_STATE_CHARGING, MAV_BATTERY_CHARGE_STATE_UNDEFINED
+bool AP_BattMonitor::get_mavlink_charge_state(const uint8_t instance, uint8_t &charge_state) const 
+{
+    if (instance >= _num_instances) {
+        return false;
+    }
+
+    switch (state[instance].failsafe) {
+
+    case Failsafe::None:
+        charge_state = MAV_BATTERY_CHARGE_STATE_OK;
+        break;
+
+    case Failsafe::Low:
+        charge_state = MAV_BATTERY_CHARGE_STATE_LOW;
+        break;
+
+    case Failsafe::Critical:
+        charge_state = MAV_BATTERY_CHARGE_STATE_CRITICAL;
+        break;
+    }
+
+    return true;
+}
+
 namespace AP {
 
 AP_BattMonitor &battery()
