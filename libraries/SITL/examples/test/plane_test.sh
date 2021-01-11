@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# three plane swarm
+# three plane 
 
 # assume we start the script from the root directory
 ROOTDIR=$PWD
