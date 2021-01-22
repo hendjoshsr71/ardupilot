@@ -68,6 +68,9 @@ private:
     // on success returns true and updates margin
     bool calc_margin_from_object_database(const Location &start, const Location &end, float &margin) const;
 
+    // Logging function
+    void Write_OABendyRuler(uint8_t type, bool active, float target_yaw, float target_pitch, bool ignore_chg, float margin, const Location &final_dest, const Location &oa_dest);
+
     // OA common parameters
     float _margin_max;              // object avoidance will ignore objects more than this many meters from vehicle
     

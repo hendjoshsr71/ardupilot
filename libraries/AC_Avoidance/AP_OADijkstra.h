@@ -189,4 +189,7 @@ private:
 
     AP_OADijkstra_Error _error_last_id;                 // last error id sent to GCS
     uint32_t _error_last_report_ms;                     // last time an error message was sent to GCS
+
+    // Logging function
+    void Write_OADijkstra(uint8_t state, uint8_t error_id, uint8_t curr_point, uint8_t tot_points, const Location &final_dest, const Location &oa_dest);
 };

@@ -165,7 +165,7 @@ void AC_Avoid::adjust_velocity(float kP, float accel_cmss, Vector2f &desired_vel
         uint32_t now = AP_HAL::millis();
         if ((now - _last_log_ms) > 100) {
             _last_log_ms = now;
-            AP::logger().Write_SimpleAvoidance(true, desired_vel_orig, desired_vel_cms, backing_up);
+            Write_SimpleAvoidance(true, desired_vel_orig, desired_vel_cms, backing_up);
         }
     }
 }
