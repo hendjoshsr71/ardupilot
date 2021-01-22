@@ -263,7 +263,7 @@ void Rover::ahrs_update()
     }
 
     if (should_log(MASK_LOG_IMU)) {
-        logger.Write_IMU();
+        AP::ins().Write_IMU();
     }
 }
 
@@ -320,7 +320,7 @@ void Rover::update_logging2(void)
     }
 
     if (should_log(MASK_LOG_IMU)) {
-        logger.Write_Vibration();
+        AP::ins().Write_Vibration();
     }
 }
 
