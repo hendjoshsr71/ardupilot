@@ -391,6 +391,15 @@ int32_t AP_BattMonitor::pack_capacity_mah(uint8_t instance) const
     }
 }
 
+// get and fill design capacity (capacity when newly manufactured)
+bool AP_BattMonitor::get_design_capacity(uint8_t instance, int32_t &design_capacity) const
+{
+    if (instance >= AP_BATT_MONITOR_MAX_INSTANCES || (drivers[instance] == nullptr)) {
+        return false;
+    }
+    return drivers[instance]->get_design_capacity(design_capacity);
+}
+
 void AP_BattMonitor::check_failsafes(void)
 {
     if (hal.util->get_soft_armed()) {
@@ -512,6 +521,27 @@ bool AP_BattMonitor::get_cycle_count(uint8_t instance, uint16_t &cycles) const
     return drivers[instance]->get_cycle_count(cycles);
 }
 
+bool AP_BattMonitor::get_serial_number(uint8_t instance, char *serial_number, uint8_t buflen) const
+{
+    if (instance >= AP_BATT_MONITOR_MAX_INSTANCES || (drivers[instance] == nullptr)) {
+        return false;
+    }
+    return drivers[instance]->get_serial_number(serial_number, buflen);
+}
+
+bool AP_BattMonitor::get_product_name(uint8_t instance, char *product_name, uint8_t buflen) const
+{
+    if (instance >= AP_BATT_MONITOR_MAX_INSTANCES || (drivers[instance] == nullptr)) {
+        return false;
+    }
+
+    if (!drivers[instance]->get_product_name(product_name, buflen)) {
+        return false;
+    }
+
+    return true;
+}
+
 bool AP_BattMonitor::arming_checks(size_t buflen, char *buffer) const
 {
     char temp_buffer[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN+1] {};
@@ -576,6 +606,20 @@ bool AP_BattMonitor::reset_remaining(uint16_t battery_mask, float percentage)
         AP_Notify::flags.failsafe_battery = false;
     }
     return ret;
+}
+
+// Logs smart battery messages
+void AP_BattMonitor::log_smart_battery_info() const
+{    
+    AP_Logger *logger = AP_Logger::get_singleton();
+
+    for(uint8_t i = 0; i < _num_instances; i++) {
+        if (drivers[i] != nullptr && get_type(i) != Type::NONE) {
+            if (logger != nullptr && logger->should_log(_log_battery_bit)) {
+                drivers[i]->Log_Write_BATI(i);
+            }
+        }
+    }
 }
 
 namespace AP {

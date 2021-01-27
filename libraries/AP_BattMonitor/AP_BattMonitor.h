@@ -162,6 +162,9 @@ public:
     int32_t pack_capacity_mah(uint8_t instance) const;
     int32_t pack_capacity_mah() const { return pack_capacity_mah(AP_BATT_PRIMARY_INSTANCE); }
  
+    // get and fills design capacity (capacity when newly manufactured)
+    bool get_design_capacity(uint8_t instance, int32_t &design_capacity) const;
+    
     /// returns true if a battery failsafe has ever been triggered
     bool has_failsafed(void) const { return _has_triggered_failsafe; };
 
@@ -180,6 +183,12 @@ public:
         return _params[instance]._serial_number;
     }
 
+    // get_serial_number() as char[buflen]
+    bool get_serial_number(uint8_t instance, char *serial_number, uint8_t buflen) const;
+
+    // get product name as 'device_name'_'manufacturer'
+    bool get_product_name(uint8_t instance, char *product_name, uint8_t buflen) const;
+    
     /// true when (voltage * current) > watt_max
     bool overpower_detected() const;
     bool overpower_detected(uint8_t instance) const;
@@ -209,6 +218,9 @@ public:
 
     // reset battery remaining percentage
     bool reset_remaining(uint16_t battery_mask, float percentage);
+
+    // log smart_battery_info
+    void log_smart_battery_info(void) const;
 
     static const struct AP_Param::GroupInfo var_info[];
 

@@ -18,7 +18,6 @@ uint8_t smbus_cell_ids[] = { 0x3f,  // cell 1
                              0x35,  // cell 11
                              0x34}; // cell 12
 
-#define SMBUS_READ_BLOCK_MAXIMUM_TRANSFER    0x20   // A Block Read or Write is allowed to transfer a maximum of 32 data bytes.
 #define SMBUS_CELL_COUNT_CHECK_TIMEOUT       15     // check cell count for up to 15 seconds
 
 /*
@@ -46,8 +45,8 @@ AP_BattMonitor_SMBus_Generic::AP_BattMonitor_SMBus_Generic(AP_BattMonitor &mon,
 
 void AP_BattMonitor_SMBus_Generic::timer()
 {
-	// check if PEC is supported
-    if (!check_pec_support()) {
+    // check if battery information registers have been read
+    if (!initialize()) {
         return;
     }
 
@@ -107,16 +106,10 @@ void AP_BattMonitor_SMBus_Generic::timer()
         _state.last_time_micros = tnow;
     }
 
-    read_full_charge_capacity();
-
     // FIXME: Perform current integration if the remaining capacity can't be requested
     read_remaining_capacity();
 
     read_temp();
-
-    read_serial_number();
-
-    read_cycle_count();
 }
 
 // read_block - returns number of characters read if successful, zero if unsuccessful
@@ -163,6 +156,33 @@ uint8_t AP_BattMonitor_SMBus_Generic::read_block(uint8_t reg, uint8_t* data, boo
     return bufflen;
 }
 
+// Read batery information messages once: PEC, cycles, serial number, device name, manufacturer name
+bool AP_BattMonitor_SMBus_Generic::initialize()
+{
+    if(_initialized){
+        return true;
+    }
+    
+    read_full_charge_capacity();
+    read_serial_number();
+    read_cycle_count();
+    read_device_name();
+    read_manufacturer_name();
+    read_design_capacity();
+
+    // Set parameters with retrieved data
+    read();
+    
+    // check if PEC is supported
+    if (!check_pec_support()) {
+        _initialized = true;
+        return false;
+    }
+
+    _initialized = true;
+    return true;
+}
+
 // check if PEC supported with the version value in SpecificationInfo() function
 // returns true once PEC is confirmed as working or not working
 bool AP_BattMonitor_SMBus_Generic::check_pec_support()
@@ -189,14 +209,11 @@ bool AP_BattMonitor_SMBus_Generic::check_pec_support()
     }
 
     // check manufacturer name
-    uint8_t buff[SMBUS_READ_BLOCK_MAXIMUM_TRANSFER + 1];
-    if (read_block(BATTMONITOR_SMBUS_MANUFACTURE_NAME, buff, true)) {
-        // Hitachi maxell batteries do not support PEC
-        if (strcmp((char*)buff, "Hitachi maxell") == 0) {
-            _pec_supported = false;
-            _pec_confirmed = true;
-            return true;
-        }
+    // Hitachi maxell batteries do not support PEC
+    if (strcmp((char*)_manufacturer_name, "Hitachi maxell") == 0) {
+        _pec_supported = false;
+        _pec_confirmed = true;
+        return true;
     }
 
     // assume all other batteries support PEC
@@ -204,4 +221,3 @@ bool AP_BattMonitor_SMBus_Generic::check_pec_support()
 	_pec_confirmed = true;
 	return true;
 }
-

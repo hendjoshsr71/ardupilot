@@ -49,8 +49,23 @@ public:
     /// capacity_remaining_pct - returns the % battery capacity remaining (0 ~ 100)
     virtual uint8_t capacity_remaining_pct() const;
 
+    // gets the design capacity (capacity when newly manufactured) and fills in design capacity
+    virtual bool get_design_capacity(int32_t &design_capacity) const { return false; }
+
     // return true if cycle count can be provided and fills in cycles argument
     virtual bool get_cycle_count(uint16_t &cycles) const { return false; }
+
+    // return true if serial number can be provided and fills in serial number
+    virtual bool get_serial_number(char *serial_number, uint8_t serial_name_len) const { return false; }
+
+    // return true if device name can be provided and fills in device name
+    virtual bool get_device_name(char *device_name, uint8_t buflen) const { return false; }
+
+    // return true if manufacturer name can be provided and fills in manufacturer name
+    virtual bool get_manufacturer_name(char *manufacturer_name, uint8_t buflen) const { return false; }
+
+    // return true if product name can be provided from manufacturer name and device name
+    virtual bool get_product_name(char *product_name, uint8_t buflen) const { return false; };
 
     /// get voltage with sag removed (based on battery current draw and resistance)
     /// this will always be greater than or equal to the raw voltage
@@ -71,6 +86,7 @@ public:
     // logging functions 
     void Log_Write_BAT(const uint8_t instance, const uint64_t time_us) const;
     void Log_Write_BCL(const uint8_t instance, const uint64_t time_us) const;
+    void Log_Write_BATI(uint8_t instance) const;
 
 protected:
     AP_BattMonitor                      &_mon;      // reference to front-end

@@ -1,4 +1,5 @@
 #include "AP_BattMonitor_SMBus.h"
+#include <stdio.h>
 
 #define AP_BATTMONITOR_SMBUS_PEC_POLYNOME 0x07 // Polynome for CRC generation
 
@@ -28,6 +29,110 @@ bool AP_BattMonitor_SMBus::get_cycle_count(uint16_t &cycles) const
     }
     cycles = _cycle_count;
     return true;
+}
+
+// return true if serial number can be provided and fills in serial number argument
+bool AP_BattMonitor_SMBus::get_serial_number(char *serial_number, uint8_t buflen) const {
+
+    if (_serial_number != -1) {
+        snprintf(serial_number, buflen, "%i", (signed) _serial_number);
+        return true;
+    }
+
+    return false;
+}
+
+// return true if device name can be provided and fills in device name
+bool AP_BattMonitor_SMBus::read_device_name()
+{
+    if (_device_name_len != 0) {
+        return true;
+    }
+
+    _device_name_len = read_block(BATTMONITOR_SMBUS_DEVICE_NAME, _device_name, true) + 1;
+
+    return _device_name_len > 0;
+}
+
+// return true if device name can be provided and fills in product name
+bool AP_BattMonitor_SMBus::get_device_name(char * device_name, uint8_t buflen) const
+{ 
+    // check device name
+    if (_device_name_len) {
+        strncpy(device_name, (char*)_device_name, buflen -1);
+        return true;
+    }
+
+    return false;
+}
+
+// return true if manufacturer name can be provided and fills in device name
+bool AP_BattMonitor_SMBus::read_manufacturer_name()
+{
+    // already have manufacturer name return
+    if (_manufacturer_name_len != 0) {
+        return true;
+    }
+
+    _manufacturer_name_len = read_block(BATTMONITOR_SMBUS_MANUFACTURE_NAME, _manufacturer_name, true) + 1;
+
+    return _manufacturer_name_len > 0;
+}
+
+// return true if manufacturer name can be provided and fills in manufacturer name
+bool AP_BattMonitor_SMBus::get_manufacturer_name(char * manufacturer_name, uint8_t buflen) const
+{    
+    if (_manufacturer_name_len) {
+        strncpy(manufacturer_name, (char*)_manufacturer_name, buflen -1);
+        return true;
+    }
+
+    return false;
+}
+
+bool AP_BattMonitor_SMBus::get_product_name(char *product_name, uint8_t buflen) const
+{
+
+    char manufacturer_name[SMBUS_READ_BLOCK_MAXIMUM_TRANSFER+1];
+    if (!get_manufacturer_name(manufacturer_name, ARRAY_SIZE(manufacturer_name))) {
+        return false;
+    }
+
+    char device_name[SMBUS_READ_BLOCK_MAXIMUM_TRANSFER+1];
+    if (!get_device_name(device_name, ARRAY_SIZE(device_name))) {
+        return false;
+    }
+
+    snprintf(product_name, buflen, "%s_%s", device_name, manufacturer_name);
+
+    return true;
+}
+
+// return true if design_capacity can be provided and fills it in
+bool AP_BattMonitor_SMBus::get_design_capacity(int32_t &design_capacity) const
+{
+    if (!_has_design_capacity) {
+        return false;
+    }
+    design_capacity = _design_capacity;
+
+    return true;
+}
+
+// reads the design capacity (capacity when newly manufactured)
+// returns true if the read was successful, or if we already knew the design capacity
+bool AP_BattMonitor_SMBus::read_design_capacity(void)
+{
+    uint16_t data;
+
+    if (_design_capacity != 0) {
+        return true;
+    } else if (read_word(BATTMONITOR_SMBUS_DESIGN_CAPACITY, data)) {
+        _design_capacity = data * get_capacity_scaler();
+        _has_design_capacity =  true;
+        return true;
+    }
+    return false;
 }
 
 /// read the battery_voltage and current, should be called at 10hz
@@ -189,4 +294,3 @@ uint8_t AP_BattMonitor_SMBus::get_PEC(const uint8_t i2c_addr, uint8_t cmd, bool 
     // return result
     return crc;
 }
-

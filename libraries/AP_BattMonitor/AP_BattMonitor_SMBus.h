@@ -11,6 +11,7 @@
 #define AP_BATTMONITOR_SMBUS_BUS_EXTERNAL           1
 #define AP_BATTMONITOR_SMBUS_I2C_ADDR               0x0B
 #define AP_BATTMONITOR_SMBUS_TIMEOUT_MICROS         5000000 // sensor becomes unhealthy if no successful readings for 5 seconds
+#define SMBUS_READ_BLOCK_MAXIMUM_TRANSFER           0x20 // A Block Read or Write is allowed to transfer a maximum of 32 data bytes.
 
 class AP_BattMonitor_SMBus : public AP_BattMonitor_Backend
 {
@@ -22,12 +23,16 @@ public:
         BATTMONITOR_SMBUS_VOLTAGE = 0x09,              // Voltage
         BATTMONITOR_SMBUS_CURRENT = 0x0A,              // Current
         BATTMONITOR_SMBUS_REMAINING_CAPACITY = 0x0F,   // Remaining Capacity
-        BATTMONITOR_SMBUS_FULL_CHARGE_CAPACITY = 0x10, // Full Charge Capacity
+        BATTMONITOR_SMBUS_FULL_CHARGE_CAPACITY = 0x10, // Full Charge Capacity (accounting for battery degradation)
         BATTMONITOR_SMBUS_CYCLE_COUNT = 0x17,          // Cycle Count
         BATTMONITOR_SMBUS_SPECIFICATION_INFO = 0x1A,   // Specification Info
         BATTMONITOR_SMBUS_SERIAL = 0x1C,               // Serial Number
+        BATTMONITOR_SMBUS_DESIGN_CAPACITY = 0x18,      // Design capacity (capacity when newly manufactured)
+        BATTMONITOR_SMBUS_DESIGN_VOLTAGE = 0x19,       // Design voltage
         BATTMONITOR_SMBUS_MANUFACTURE_NAME = 0x20,     // Manufacture Name
-        BATTMONITOR_SMBUS_MANUFACTURE_DATA = 0x23,     // Manufacture Data
+        BATTMONITOR_SMBUS_DEVICE_NAME = 0x21,          // Device Name
+        BATTMONITOR_SMBUS_DEVICE_CHEMISTRY = 0x22,     // Battery chemistry type
+        BATTMONITOR_SMBUS_MANUFACTURE_DATA = 0x23      // Manufacture Data
     };
 
     /// Constructor
@@ -52,13 +57,28 @@ public:
     // return true if cycle count can be provided and fills in cycles argument
     bool get_cycle_count(uint16_t &cycles) const override;
 
+    // return true if serial number can be provided and fills in serial number argument
+    bool get_serial_number(char *serial_number, uint8_t buflen) const override;
+
+    // return true if device name can be provided and fills in device name
+    bool get_device_name(char * product_name, uint8_t buflen) const override;
+
+    // return true if manufacturer name can be provided and fills in manufacturer name
+    bool get_manufacturer_name(char * manufacturer_name, uint8_t buflen) const override;
+
+    // return true if product name can be provided from manufacturer name and device name
+    bool get_product_name(char *product_name, uint8_t buflen) const override;
+
+    // gets the design capacity (capacity when newly manufactured)
+    bool get_design_capacity(int32_t &design_capacity) const override;
+
     virtual void init(void) override;
 
 protected:
 
     void read(void) override;
 
-    // reads the pack full charge capacity
+    // reads the pack full charge capacity (accounting for battery degradation)
     // returns true if the read was successful, or if we already knew the pack capacity
     bool read_full_charge_capacity(void);
 
@@ -66,6 +86,10 @@ protected:
     // returns true if the read was successful, which is only considered to be the
     // we know the full charge capacity
     bool read_remaining_capacity(void);
+
+    // reads the design capacity (capacity when newly manufactured)
+    // returns true if the read was successful, or if we already knew the design capacity
+    bool read_design_capacity(void);
 
     // return a scaler that should be multiplied by the battery's reported capacity numbers to arrive at the actual capacity in mAh
     virtual uint16_t get_capacity_scaler() const { return 1; }
@@ -81,6 +105,12 @@ protected:
     // reads the battery's cycle count
     void read_cycle_count();
 
+    // return true if device name can be provided and fills in device name
+    bool read_device_name(void);
+
+    // return true if manufacturer name can be provided and fills in manufacturer name
+    bool read_manufacturer_name(void);
+
      // read word from register
      // returns true if read was successful, false if failed
     bool read_word(uint8_t reg, uint16_t& data) const;
@@ -93,11 +123,17 @@ protected:
     bool _pec_supported; // true if PEC is supported
 
     int32_t _serial_number = -1;    // battery serial number
-    uint16_t _full_charge_capacity; // full charge capacity, used to stash the value before setting the parameter
+    int32_t _full_charge_capacity; // full charge capacity, used to stash the value before setting the parameter
     bool _has_cell_voltages;        // smbus backends flag this as true once they have received a valid cell voltage report
     uint16_t _cycle_count = 0;      // number of cycles the battery has experienced. An amount of discharge approximately equal to the value of DesignCapacity.
     bool _has_cycle_count;          // true if cycle count has been retrieved from the battery
     bool _has_temperature;
+    uint8_t _device_name_len;
+    uint8_t _device_name[SMBUS_READ_BLOCK_MAXIMUM_TRANSFER+1]{};
+    uint8_t _manufacturer_name_len;
+    uint8_t _manufacturer_name[SMBUS_READ_BLOCK_MAXIMUM_TRANSFER+1]{};
+    int32_t _design_capacity;
+    bool _has_design_capacity;
 
     virtual void timer(void) = 0;   // timer function to read from the battery
 
