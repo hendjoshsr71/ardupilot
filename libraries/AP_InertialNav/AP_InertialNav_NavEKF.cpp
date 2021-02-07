@@ -25,7 +25,7 @@ void AP_InertialNav_NavEKF::update(bool high_vibes)
     // get the D position relative to the local earth frame origin
     float posD;
     if (_ahrs_ekf.get_relative_position_D_origin(posD)) {
-        _relpos_cm.z = - posD * 100; // convert from m in NED to cm in NEU
+        _relpos_cm.z = posD * 100; // convert from m in NED to cm
     }
 
     // get the velocity relative to the local earth frame
@@ -39,7 +39,6 @@ void AP_InertialNav_NavEKF::update(bool high_vibes)
             }
         }
         _velocity_cm = velNED * 100; // convert to cm/s
-        _velocity_cm.z = -_velocity_cm.z; // convert from NED to NEU
     }
 }
 
@@ -58,9 +57,9 @@ nav_filter_status AP_InertialNav_NavEKF::get_filter_status() const
  *
  * @return
  */
-const Vector3f &AP_InertialNav_NavEKF::get_position(void) const 
+const Vector3f AP_InertialNav_NavEKF::get_position(void) const 
 {
-    return _relpos_cm;
+    return Vector3f(_relpos_cm.x, _relpos_cm.y, -_relpos_cm.z); // Convert to NEU here from NED to rid ourselves of NEU in steps DELETE
 }
 
 /**
@@ -71,9 +70,9 @@ const Vector3f &AP_InertialNav_NavEKF::get_position(void) const
  * 				.y : longitude velocity in cm/s
  * 				.z : vertical  velocity in cm/s
  */
-const Vector3f &AP_InertialNav_NavEKF::get_velocity() const
+const Vector3f AP_InertialNav_NavEKF::get_velocity() const
 {
-    return _velocity_cm;
+    return Vector3f(_velocity_cm.x, _velocity_cm.y, -_velocity_cm.z); // Might need to convert to NEU here from NED // Convert here to NEU from NED to rid ourselves of NEU in steps DELETE
 }
 
 /**
@@ -92,7 +91,7 @@ float AP_InertialNav_NavEKF::get_speed_xy() const
  */
 float AP_InertialNav_NavEKF::get_altitude() const
 {
-    return _relpos_cm.z;
+    return -_relpos_cm.z;  // Convert here to NEU from NED to rid ourselves of NEU in steps DELETE
 }
 
 /**
@@ -104,7 +103,7 @@ float AP_InertialNav_NavEKF::get_altitude() const
  */
 float AP_InertialNav_NavEKF::get_velocity_z() const
 {
-    return _velocity_cm.z;
+    return -_velocity_cm.z; // Convert here to NEU from NED to rid ourselves of NEU in steps DELETE
 }
 
 #endif // AP_AHRS_NAVEKF_AVAILABLE

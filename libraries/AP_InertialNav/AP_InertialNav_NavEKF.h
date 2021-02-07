@@ -33,7 +33,7 @@ public:
      *
      * @return
      */
-    const Vector3f&    get_position() const override;
+    const Vector3f    get_position() const override;
 
     /**
      * get_velocity - returns the current velocity in cm/s
@@ -43,7 +43,7 @@ public:
      * 				.y : longitude velocity in cm/s
      * 				.z : vertical  velocity in cm/s
      */
-    const Vector3f&    get_velocity() const override;
+    const Vector3f    get_velocity() const override;
 
     /**
      * get_speed_xy - returns the current horizontal speed in cm/s
@@ -68,7 +68,7 @@ public:
     float       get_velocity_z() const override;
 
 private:
-    Vector3f _relpos_cm;   // NEU
-    Vector3f _velocity_cm; // NEU
+    Vector3f _relpos_cm;   // NED was NEU DELETE comment
+    Vector3f _velocity_cm; // NED was NED DELETE comment
     AP_AHRS_NavEKF &_ahrs_ekf;
 };
