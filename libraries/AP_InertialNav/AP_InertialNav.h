@@ -44,7 +44,7 @@ public:
      *
      * @return
      */
-    virtual const Vector3f&    get_position() const = 0;
+    virtual const Vector3f    get_position() const = 0;
 
     /**
      * get_velocity - returns the current velocity in cm/s
@@ -54,7 +54,7 @@ public:
      * 				.y : longitude velocity in cm/s
      * 				.z : vertical  velocity in cm/s
      */
-    virtual const Vector3f&    get_velocity() const = 0;
+    virtual const Vector3f    get_velocity() const = 0; // ADD comment for frame used
 
     /**
      * get_speed_xy - returns the current horizontal speed in cm/s
@@ -81,7 +81,7 @@ public:
      *
      * @return climbrate in cm/s (positive up)
      */
-    virtual float       get_velocity_z() const = 0;
+    virtual float       get_velocity_z() const = 0; // NEU DELETE ME
 };
 
 #if AP_AHRS_NAVEKF_AVAILABLE
