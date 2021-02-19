@@ -384,6 +384,7 @@ function update()
       notify:handle_rgb(255,0,0,10)
    elseif t - last_mission_update_t >= 1.0 then
       last_mission_update_t = t
+      notify:handle_rgb(0,255,0,0)
       mission_update()
    end
 
