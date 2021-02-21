@@ -231,7 +231,7 @@ bool ModeGuided::set_destination(const Vector3f& destination, bool use_yaw, floa
 {
 #if AC_FENCE == ENABLED
     // reject destination if outside the fence
-    const Location dest_loc(destination, terrain_alt ? Location::AltFrame::ABOVE_TERRAIN : Location::AltFrame::ABOVE_ORIGIN);
+    const Location dest_loc(destination, terrain_alt ? Location::AltFrame::ABOVE_TERRAIN : Location::AltFrame::ABOVE_ORIGIN); // Location constructor uses NEU
     if (!copter.fence.check_destination_within_fence(dest_loc)) {
         AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::DEST_OUTSIDE_FENCE);
         // failure is propagated to GCS with NAK
@@ -248,10 +248,10 @@ bool ModeGuided::set_destination(const Vector3f& destination, bool use_yaw, floa
     set_yaw_state(use_yaw, yaw_cd, use_yaw_rate, yaw_rate_cds, relative_yaw);
 
     // no need to check return status because terrain data is not used
-    wp_nav->set_wp_destination(destination, terrain_alt);
+    wp_nav->set_wp_destination(destination.neu_to_ned() * 0.01f, terrain_alt); // convert cm to m
 
     // log target
-    copter.Log_Write_GuidedTarget(guided_mode, destination, Vector3f());
+    copter.Log_Write_GuidedTarget(guided_mode, destination, Vector3f()); // Log_Write_Guided assumes NEU
 
     send_notification = true;
 
@@ -408,7 +408,7 @@ void ModeGuided::takeoff_run()
 #endif
 
         // switch to position control mode but maintain current target
-        const Vector3f target = wp_nav->get_wp_destination();
+        const Vector3f target = wp_nav->get_wp_destination().neu_to_ned();  // cm
         set_destination(target, false, 0, false, 0, false, wp_nav->origin_and_destination_are_terrain_alt());
     }
 }

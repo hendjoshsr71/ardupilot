@@ -140,6 +140,7 @@ void GCS_MAVLINK_Copter::send_position_target_local_ned()
                     POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
                     POSITION_TARGET_TYPEMASK_FORCE_SET | POSITION_TARGET_TYPEMASK_YAW_IGNORE| POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE; // ignore everything except position
         target_pos = copter.wp_nav->get_wp_destination() * 0.01f; // convert to metres
+
         break;
     case ModeGuided::SubMode::Velocity:
         type_mask = POSITION_TARGET_TYPEMASK_X_IGNORE | POSITION_TARGET_TYPEMASK_Y_IGNORE | POSITION_TARGET_TYPEMASK_Z_IGNORE |
@@ -163,7 +164,7 @@ void GCS_MAVLINK_Copter::send_position_target_local_ned()
         type_mask,
         target_pos.x, // x in metres
         target_pos.y, // y in metres
-        -target_pos.z, // z in metres NED frame
+        target_pos.z, // z in metres NED frame
         target_vel.x, // vx in m/s
         target_vel.y, // vy in m/s
         -target_vel.z, // vz in m/s NED frame
