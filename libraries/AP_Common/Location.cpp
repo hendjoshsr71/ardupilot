@@ -236,6 +236,17 @@ bool Location::get_vector_from_origin_NEU(Vector3f &vec_neu) const
     return true;
 }
 
+// Vector from origin in NED (cm)
+bool Location::get_vector_from_origin_NED_cm(Vector3f &vec_ned) const
+{
+    if (!get_vector_from_origin_NEU(vec_ned)) {
+        return false;
+    }
+
+    vec_ned.z = -vec_ned.z;
+    return true;
+}
+
 // return distance in meters between two locations
 ftype Location::get_distance(const struct Location &loc2) const
 {
