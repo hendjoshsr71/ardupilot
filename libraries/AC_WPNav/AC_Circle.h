@@ -31,11 +31,11 @@ public:
     /// set circle center to a Location
     void set_center(const Location& center);
 
-    /// set_circle_center as a vector from ekf origin
+    /// set_circle_center as a vector from ekf origin frame NED in cm 
     ///     terrain_alt should be true if center.z is alt is above terrain
     void set_center(const Vector3f& center, bool terrain_alt) { _center = center; _terrain_alt = terrain_alt; }
 
-    /// get_circle_center in cm from home
+    /// get_circle_center frame NED in cm from home
     const Vector3f& get_center() const { return _center; }
 
     /// returns true if using terrain altitudes
@@ -79,6 +79,13 @@ public:
     //  result's altitude (i.e. z) will be set to the circle_center's altitude
     //  if vehicle is at the center of the circle, the edge directly behind vehicle will be returned
     void get_closest_point_on_circle(Vector3f &result) const;
+
+    // get_closest_point_on_circle - returns closest point on the circle in NED 
+    //  circle's center should already have been set
+    //  closest point on the circle will be placed in result
+    //  result's altitude (i.e. -z) will be set to the circle_center's altitude
+    //  if vehicle is at the center of the circle, the edge directly behind vehicle will be returned
+    void get_closest_point_on_circle_NED(Vector3f &result) const;
 
     /// get horizontal distance to loiter target in cm
     float get_distance_to_target() const { return _pos_control.get_pos_error_xy_cm(); }
@@ -143,7 +150,7 @@ private:
     AP_Int16    _options;       // stick control enable/disable
 
     // internal variables
-    Vector3f    _center;        // center of circle in cm from home
+    Vector3f    _center;        // center of circle frame NED in cm from home
     float       _radius;        // radius of circle in cm
     float       _yaw;           // yaw heading (normally towards circle center)
     float       _angle;         // current angular position around circle in radians (0=directly north of the center of the circle)
