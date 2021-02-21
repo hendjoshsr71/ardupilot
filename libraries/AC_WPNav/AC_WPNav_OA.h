@@ -20,6 +20,9 @@ public:
     ///     returns false on failure (likely caused by missing terrain data)
     bool set_wp_origin_and_destination(const Vector3f& origin, const Vector3f& destination, bool terrain_alt = false) override;
 
+    // // NED version in cm DELETE
+    bool set_wp_origin_and_destination_NED(const Vector3f& origin, const Vector3f& destination, bool terrain_alt = false) override;
+
     /// get horizontal distance to destination in cm
     /// always returns distance to final destination (i.e. does not use oa adjusted destination)
     float get_wp_distance_to_destination() const override;

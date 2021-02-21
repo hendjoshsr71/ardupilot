@@ -91,7 +91,7 @@ public:
     /// get default target descent rate in cm/s during missions.  Note: always positive
     float get_default_speed_down() const { return _wp_speed_down_cms; }
 
-    /// get_speed_z - returns target descent speed in cm/s during missions.  Note: always positive
+    /// get_accel_z - returns target descent speed in cm/s during missions.  Note: always positive
     float get_accel_z() const { return _wp_accel_z_cmss; }
 
     /// get_wp_acceleration - returns acceleration in cm/s/s during missions
@@ -121,17 +121,19 @@ public:
     // having this function unifies the AC_WPNav_OA and AC_WPNav interfaces making vehicle code simpler
     virtual bool get_oa_wp_destination(Location& destination) const { return get_wp_destination(destination); }
 
-    /// set_wp_destination waypoint using position vector (distance from ekf origin in cm)
-    ///     terrain_alt should be true if destination.z is a desired altitude above terrain
-    bool set_wp_destination(const Vector3f& destination, bool terrain_alt = false);
-
     /// set waypoint destination using NED position vector from ekf origin in meters
-    bool set_wp_destination_NED(const Vector3f& destination_NED);
+    bool set_wp_destination_NED(const Vector3f& destination_NED, bool terrain_alt = false);
 
     /// set_wp_origin_and_destination - set origin and destination waypoints using position vectors (distance from ekf origin in cm)
     ///     terrain_alt should be true if origin.z and destination.z are desired altitudes above terrain (false if these are alt-above-ekf-origin)
     ///     returns false on failure (likely caused by missing terrain data)
-    virtual bool set_wp_origin_and_destination(const Vector3f& origin, const Vector3f& destination, bool terrain_alt = false);
+    virtual bool set_wp_origin_and_destination(const Vector3f& origin, const Vector3f& destination, bool terrain_alt  = false);
+
+    // NED in ?? units version DELETE
+    /// set_wp_origin_and_destination - set origin and destination waypoints using position vectors (distance from ekf origin in cm)
+    ///     terrain_alt should be true if origin.z and destination.z are desired altitudes above terrain (false if these are alt-above-ekf-origin)
+    ///     returns false on failure (likely caused by missing terrain data)
+    virtual bool set_wp_origin_and_destination_NED(const Vector3f& origin, const Vector3f& destination, bool terrain_alt  = false);
 
     /// shift_wp_origin_to_current_pos - shifts the origin and destination so the origin starts at the current position
     ///     used to reset the position just before takeoff
@@ -206,7 +208,7 @@ public:
     ///     next_destination should be set to the next segment's destination if the seg_end_type is SEGMENT_END_STRAIGHT or SEGMENT_END_SPLINE
     bool set_spline_destination(const Location& destination, bool stopped_at_start, spline_segment_end_type seg_end_type, Location next_destination);
 
-    /// set_spline_destination waypoint using position vector (distance from ekf origin in cm)
+    /// set_spline_destination waypoint using position vector (distance from ekf origin NED in cm)
     ///     returns false if conversion from location to vector from ekf origin cannot be calculated
     ///     terrain_alt should be true if destination.z is a desired altitudes above terrain (false if its desired altitudes above ekf origin)
     ///     stopped_at_start should be set to true if vehicle is stopped at the origin
@@ -221,6 +223,14 @@ public:
     ///     seg_end_type should be set to stopped, straight or spline depending upon the next segment's type
     ///     next_destination should be set to the next segment's destination if the seg_end_type is SEGMENT_END_STRAIGHT or SEGMENT_END_SPLINE
     bool set_spline_origin_and_destination(const Vector3f& origin, const Vector3f& destination, bool terrain_alt, bool stopped_at_start, spline_segment_end_type seg_end_type, const Vector3f& next_destination);
+
+    // NED version
+    /// set_spline_origin_and_destination - set origin and destination waypoints using position vectors (distance from ekf origin in cm)
+    ///     terrain_alt should be true if origin.z and destination.z are desired altitudes above terrain (false if desired altitudes above ekf origin)
+    ///     stopped_at_start should be set to true if vehicle is stopped at the origin
+    ///     seg_end_type should be set to stopped, straight or spline depending upon the next segment's type
+    ///     next_destination should be set to the next segment's destination if the seg_end_type is SEGMENT_END_STRAIGHT or SEGMENT_END_SPLINE
+    bool set_spline_origin_and_destination_NED(const Vector3f& origin, const Vector3f& destination, bool terrain_alt, bool stopped_at_start, spline_segment_end_type seg_end_type, const Vector3f& next_destination);
 
     /// update_spline - update spline controller
     bool update_spline();
@@ -285,9 +295,10 @@ protected:
     // get terrain's altitude (in cm above the ekf origin) at the current position (+ve means terrain below vehicle is above ekf origin's altitude)
     bool get_terrain_offset(float& offset_cm);
 
+    // EDIT Description since NED in cm
     // convert location to vector from ekf origin.  terrain_alt is set to true if resulting vector's z-axis should be treated as alt-above-terrain
     //      returns false if conversion failed (likely because terrain data was not available)
-    bool get_vector_NEU(const Location &loc, Vector3f &vec, bool &terrain_alt);
+    bool get_vector_NED_cm(const Location &loc, Vector3f &vec, bool &terrain_alt);
 
     // set heading used for spline and waypoint navigation
     void set_yaw_cd(float heading_cd);
@@ -338,4 +349,10 @@ protected:
     AP_Int8     _rangefinder_use;
     bool        _rangefinder_healthy;
     float       _rangefinder_alt_cm;
+
+private:
+    // Facilitate conversion to NED
+    /// set_wp_destination waypoint using position vector (distance from ekf origin in cm)
+    ///     terrain_alt should be true if destination.z is a desired altitude above terrain
+    bool set_wp_destination(const Vector3f& destination, bool terrain_alt = false);
 };

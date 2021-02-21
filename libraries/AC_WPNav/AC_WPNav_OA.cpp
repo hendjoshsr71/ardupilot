@@ -24,7 +24,10 @@ bool AC_WPNav_OA::get_oa_wp_destination(Location& destination) const
 ///     returns false on failure (likely caused by missing terrain data)
 bool AC_WPNav_OA::set_wp_origin_and_destination(const Vector3f& origin, const Vector3f& destination, bool terrain_alt)
 {
-    const bool ret = AC_WPNav::set_wp_origin_and_destination(origin, destination, terrain_alt);
+    Vector3f temp_origin(origin.x, origin.y, -origin.z);
+    Vector3f temp_destination(destination.x, destination.y, -destination.z);
+    const bool ret = AC_WPNav::set_wp_origin_and_destination_NED(temp_origin, temp_destination, terrain_alt);
+    // const bool ret = AC_WPNav::set_wp_origin_and_destination(origin, destination, terrain_alt);
 
     if (ret) {
         // reset object avoidance state
@@ -32,6 +35,15 @@ bool AC_WPNav_OA::set_wp_origin_and_destination(const Vector3f& origin, const Ve
     }
 
     return ret;
+}
+
+// NED version in cm DELETE
+bool AC_WPNav_OA::set_wp_origin_and_destination_NED(const Vector3f& origin, const Vector3f& destination, bool terrain_alt)
+{
+    Vector3f temp_origin(origin.x, origin.y, -origin.z);
+    Vector3f temp_destination(destination.x, destination.y, -destination.z);
+
+    return set_wp_origin_and_destination(temp_origin, temp_destination, terrain_alt);
 }
 
 /// get_wp_distance_to_destination - get horizontal distance to destination in cm
@@ -87,7 +99,8 @@ bool AC_WPNav_OA::update_wpnav()
         case AP_OAPathPlanner::OA_NOT_REQUIRED:
             if (_oa_state != oa_retstate) {
                 // object avoidance has become inactive so reset target to original destination
-                set_wp_destination(_destination_oabak, _terrain_alt);
+                Vector3f temp_destination_oabak(_destination_oabak.x, _destination_oabak.y , -_destination_oabak.z);   // convert neu to ned
+                set_wp_destination_NED( temp_destination_oabak * 0.01f, _terrain_alt); // convert from cm to m
                 _oa_state = oa_retstate;
             }
             break;
@@ -100,7 +113,7 @@ bool AC_WPNav_OA::update_wpnav()
                 Vector3f stopping_point;
                 get_wp_stopping_point(stopping_point);
                 _oa_destination = Location(stopping_point);
-                if (set_wp_destination(stopping_point, false)) {
+                if (set_wp_destination_NED(stopping_point * 0.01f, false)) { // convert from cm to m
                     _oa_state = oa_retstate;
                 }
             }
@@ -110,15 +123,17 @@ bool AC_WPNav_OA::update_wpnav()
             if ((_oa_state != AP_OAPathPlanner::OA_SUCCESS) || !oa_destination_new.same_latlon_as(_oa_destination)) {
                 _oa_destination = oa_destination_new;
                 // convert Location to offset from EKF origin
-                Vector3f dest_NEU;
-                if (_oa_destination.get_vector_from_origin_NEU(dest_NEU)) {
+                Vector3f dest_NED;
+                if (_oa_destination.get_vector_from_origin_NED_cm(dest_NED)) {
                     if (oa_ptr -> get_bendy_type() == AP_OABendyRuler::OABendyType::OA_BENDY_HORIZONTAL || oa_ptr -> get_bendy_type() == AP_OABendyRuler::OABendyType::OA_BENDY_DISABLED) {
                         // calculate target altitude by calculating OA adjusted destination's distance along the original track
                         // and then linear interpolate using the original track's origin and destination altitude
                         const float dist_along_path = constrain_float(oa_destination_new.line_path_proportion(origin_loc, destination_loc), 0.0f, 1.0f);
-                        dest_NEU.z = linear_interpolate(_origin_oabak.z, _destination_oabak.z, dist_along_path, 0.0f, 1.0f);
+                        Vector3f temp_destination_oabak(_destination_oabak.x, _destination_oabak.y , -_destination_oabak.z);   // convert neu to ned
+                        Vector3f temp_origin_oabak(_origin_oabak.x, _origin_oabak.y , -_origin_oabak.z);   // convert neu to ned
+                        dest_NED.z = linear_interpolate(temp_origin_oabak.z, temp_destination_oabak.z, dist_along_path, 0.0f, 1.0f);
                     }       
-                    if (set_wp_destination(dest_NEU, _terrain_alt)) {
+                    if (set_wp_destination_NED(dest_NED * 0.01f, _terrain_alt)) { // convert from cm to m
                         _oa_state = oa_retstate;
                     }
                 }
