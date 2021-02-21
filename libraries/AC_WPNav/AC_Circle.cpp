@@ -89,7 +89,7 @@ void AC_Circle::init()
     const Vector3p& stopping_point = _pos_control.get_pos_target_cm();
 
     // set circle center to circle_radius ahead of stopping point
-    _center = stopping_point;
+    _center = Vector3f(stopping_point.x, stopping_point.y, -stopping_point.z);  // convert NEU to NED
     if ((_options.get() & CircleOptions::INIT_AT_CENTER) == 0) {
         _center.x += _radius * _ahrs.cos_yaw();
         _center.y += _radius * _ahrs.sin_yaw();
@@ -111,21 +111,24 @@ void AC_Circle::set_center(const Location& center)
         Vector2f center_xy;
         int32_t terr_alt_cm;
         if (center.get_vector_xy_from_origin_NE(center_xy) && center.get_alt_cm(Location::AltFrame::ABOVE_TERRAIN, terr_alt_cm)) {
-            set_center(Vector3f(center_xy.x, center_xy.y, terr_alt_cm), true);
+            set_center(Vector3f(center_xy.x, center_xy.y, -terr_alt_cm), true); // convert altitude to NED
         } else {
             // failed to convert location so set to current position and log error
-            set_center(_inav.get_position(), false);
+            Vector3f circle_center_neu = _inav.get_position();
+            circle_center_neu.z = -circle_center_neu.z;
+            set_center(circle_center_neu, false);
             AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::FAILED_CIRCLE_INIT);
         }
     } else {
         // convert Location with alt-above-home, alt-above-origin or absolute alt
-        Vector3f circle_center_neu;
-        if (!center.get_vector_from_origin_NEU(circle_center_neu)) {
+        Vector3f circle_center_ned;
+        if (!center.get_vector_from_origin_NED_cm(circle_center_ned)) {
             // default to current position and log error
-            circle_center_neu = _inav.get_position();
+            circle_center_ned = _inav.get_position();
+            circle_center_ned.z = -circle_center_ned.z; // Convert what was NEU to NED
             AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::FAILED_CIRCLE_INIT);
         }
-        set_center(circle_center_neu, false);
+        set_center(circle_center_ned, false);
     }
 }
 
@@ -183,9 +186,9 @@ bool AC_Circle::update(float climb_rate_cms)
     // calculate z-axis target
     float target_z_cm;
     if (_terrain_alt) {
-        target_z_cm = _center.z + terr_offset;
+        target_z_cm = _center.z - terr_offset; // Convert terr_offset NEU to NED
     } else {
-        target_z_cm = _pos_control.get_pos_target_z_cm();
+        target_z_cm = -_pos_control.get_pos_target_z_cm(); // Convert NEU to NED
     }
 
     // if the circle_radius is zero we are doing panorama so no need to update loiter target
@@ -194,6 +197,7 @@ bool AC_Circle::update(float climb_rate_cms)
         _center.y,
         target_z_cm
     };
+
     if (!is_zero(_radius)) {
         // calculate target position
         target.x += _radius * cosf(-_angle);
@@ -217,7 +221,7 @@ bool AC_Circle::update(float climb_rate_cms)
     _pos_control.input_pos_vel_accel_xy(target.xy(), zero, zero);
     if (_terrain_alt) {
         float zero2 = 0;
-        float target_zf = target.z;
+        float target_zf = -target.z; // pos_control uses NEU
         _pos_control.input_pos_vel_accel_z(target_zf, zero2, 0);
     } else {
         _pos_control.set_pos_target_z_from_climb_rate_cm(climb_rate_cms,  false);
@@ -265,6 +269,17 @@ void AC_Circle::get_closest_point_on_circle(Vector3f &result) const
     result.x = _center.x + vec.x / dist * _radius;
     result.y = _center.y + vec.y / dist * _radius;
     result.z = _center.z;
+}
+
+// get_closest_point_on_circle - returns closest point on the circle in NED 
+//  circle's center should already have been set
+//  closest point on the circle will be placed in result
+//  result's altitude (i.e. -z) will be set to the circle_center's altitude
+//  if vehicle is at the center of the circle, the edge directly behind vehicle will be returned
+void AC_Circle::get_closest_point_on_circle_NED(Vector3f &result) const
+{
+    get_closest_point_on_circle(result);
+    //result.z = -result.z;
 }
 
 // calc_velocities - calculate angular velocity max and acceleration based on radius and rate

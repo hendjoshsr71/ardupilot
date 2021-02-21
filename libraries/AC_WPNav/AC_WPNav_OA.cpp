@@ -21,12 +21,13 @@ bool AC_WPNav_OA::get_oa_wp_destination(Location& destination) const
     return true;
 }
 
-/// set_wp_destination waypoint using position vector (distance from ekf origin in cm)
+/// set_wp_destination waypoint using position vector (distance from ekf origin frame NED in meters)
 ///     terrain_alt should be true if destination.z is a desired altitude above terrain
 ///     returns false on failure (likely caused by missing terrain data)
 bool AC_WPNav_OA::set_wp_destination(const Vector3f& destination, bool terrain_alt)
 {
     const bool ret = AC_WPNav::set_wp_destination(destination, terrain_alt);
+    // const bool ret = AC_WPNav::set_wp_destination(destination, terrain_alt);
 
     if (ret) {
         // reset object avoidance state
@@ -45,7 +46,7 @@ float AC_WPNav_OA::get_wp_distance_to_destination() const
     }
 
     // get current location
-    const Vector3f &curr = _inav.get_position();
+    const Vector3f &curr = _inav.get_position(); // _inav returns neu but z not used here
     return norm(_destination_oabak.x-curr.x, _destination_oabak.y-curr.y);
 }
 
@@ -57,7 +58,7 @@ int32_t AC_WPNav_OA::get_wp_bearing_to_destination() const
         return AC_WPNav::get_wp_bearing_to_destination();
     }
 
-    return get_bearing_cd(_inav.get_position(), _destination_oabak);
+    return get_bearing_cd(_inav.get_position(), _destination_oabak); // _inav returns neu but z not used here
 }
 
 /// true when we have come within RADIUS cm of the waypoint
@@ -82,8 +83,8 @@ bool AC_WPNav_OA::update_wpnav()
         }
 
         // convert origin and destination to Locations and pass into oa
-        const Location origin_loc(_origin_oabak, _terrain_alt_oabak ? Location::AltFrame::ABOVE_TERRAIN : Location::AltFrame::ABOVE_ORIGIN);
-        const Location destination_loc(_destination_oabak, _terrain_alt_oabak ? Location::AltFrame::ABOVE_TERRAIN : Location::AltFrame::ABOVE_ORIGIN);
+        const Location origin_loc(_origin_oabak.neu_to_ned(), _terrain_alt_oabak ? Location::AltFrame::ABOVE_TERRAIN : Location::AltFrame::ABOVE_ORIGIN);                // I didnt have neu to ned and it worked ???
+        const Location destination_loc(_destination_oabak.neu_to_ned(), _terrain_alt_oabak ? Location::AltFrame::ABOVE_TERRAIN : Location::AltFrame::ABOVE_ORIGIN);      // I didnt have neu to ned and it worked ???
         Location oa_origin_new, oa_destination_new;
         AP_OAPathPlanner::OAPathPlannerUsed path_planner_used = AP_OAPathPlanner::OAPathPlannerUsed::None;
         const AP_OAPathPlanner::OA_RetState oa_retstate = oa_ptr->mission_avoidance(current_loc, origin_loc, destination_loc, oa_origin_new, oa_destination_new, path_planner_used);
@@ -93,7 +94,7 @@ bool AC_WPNav_OA::update_wpnav()
         case AP_OAPathPlanner::OA_NOT_REQUIRED:
             if (_oa_state != oa_retstate) {
                 // object avoidance has become inactive so reset target to original destination
-                set_wp_destination(_destination_oabak, _terrain_alt_oabak);
+                set_wp_destination(_destination_oabak * 0.01f, _terrain_alt_oabak); // convert from cm to m
                 _oa_state = oa_retstate;
             }
             break;
@@ -106,7 +107,9 @@ bool AC_WPNav_OA::update_wpnav()
                 // calculate stopping point
                 Vector3f stopping_point;
                 get_wp_stopping_point(stopping_point);
-                _oa_destination = Location(stopping_point, Location::AltFrame::ABOVE_ORIGIN);
+                
+                // convert to NEU for Location below FIX ME
+                _oa_destination = Location(stopping_point.neu_to_ned() * 100.0f, Location::AltFrame::ABOVE_ORIGIN); // convert to cm
                 if (set_wp_destination(stopping_point, false)) {
                     _oa_state = oa_retstate;
                 }
@@ -178,16 +181,16 @@ bool AC_WPNav_OA::update_wpnav()
                 _oa_state = oa_retstate;
                 _oa_destination = oa_destination_new;
 
-                // calculate final destination as an offset from EKF origin in NEU
-                Vector3f dest_NEU;
-                if (!_oa_destination.get_vector_from_origin_NEU(dest_NEU)) {
+                // calculate final destination as an offset from EKF origin in NED
+                Vector3f dest_NED;
+                if (!_oa_destination.get_vector_from_origin_NED(dest_NED)) {
                     // this should never happen because we can only get here if we have an EKF origin
                     INTERNAL_ERROR(AP_InternalError::error_t::flow_of_control);
                     return false;
                 }
 
                 // pass the desired position directly to the position controller as an offset from EKF origin in NEU
-                Vector3p dest_NEU_p{dest_NEU.x, dest_NEU.y, dest_NEU.z};
+                Vector3p dest_NEU_p{dest_NED.x, dest_NED.y, -dest_NED.z};
                 _pos_control.input_pos_xyz(dest_NEU_p, 0, 1000.0);
 
                 // update horizontal position controller (vertical is updated in vehicle code)
