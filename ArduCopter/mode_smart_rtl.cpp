@@ -19,7 +19,9 @@ bool ModeSmartRTL::init(bool ignore_checks)
         Vector3f stopping_point;
         pos_control->get_stopping_point_xy(stopping_point);
         pos_control->get_stopping_point_z(stopping_point);
-        wp_nav->set_wp_destination(stopping_point);
+
+        stopping_point.z = -stopping_point.z; // REMOVE NEU -> NED 
+        wp_nav->set_wp_destination_NED(stopping_point * 0.01f); // convert cm to m
 
         // initialise yaw to obey user parameter
         auto_yaw.set_mode_to_default(true);
@@ -92,7 +94,7 @@ void ModeSmartRTL::path_follow_run()
 
     // if we are close to current target point, switch the next point to be our target.
     if (wp_nav->reached_wp_destination()) {
-        Vector3f next_point;
+        Vector3f next_point; // frame NEDfrom EKF origin in m
         // this pop_point can fail if the IO task currently has the
         // path semaphore.
         if (g2.smart_rtl.pop_point(next_point)) {
