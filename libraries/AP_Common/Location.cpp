@@ -215,6 +215,27 @@ bool Location::get_vector_from_origin_NEU(Vector3f &vec_neu) const
     return true;
 }
 
+// Vector from origin in NED (cm)
+bool Location::get_vector_from_origin_NED_cm(Vector3f &vec_ned) const
+{
+    // convert lat, lon
+    Vector2f vec_ne;
+    if (!get_vector_xy_from_origin_NE(vec_ne)) {
+        return false;
+    }
+    vec_ned.x = vec_ne.x;
+    vec_ned.y = vec_ne.y;
+
+    // convert altitude
+    int32_t alt_above_origin_cm = 0;
+    if (!get_alt_cm(AltFrame::ABOVE_ORIGIN, alt_above_origin_cm)) {
+        return false;
+    }
+    vec_ned.z = -alt_above_origin_cm;
+
+    return true;
+}
+
 // return distance in meters between two locations
 float Location::get_distance(const struct Location &loc2) const
 {
