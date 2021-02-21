@@ -238,7 +238,7 @@ bool ModeGuided::set_destination(const Vector3f& destination, bool use_yaw, floa
 {
 #if AC_FENCE == ENABLED
     // reject destination if outside the fence
-    const Location dest_loc(destination, terrain_alt ? Location::AltFrame::ABOVE_TERRAIN : Location::AltFrame::ABOVE_ORIGIN);
+    const Location dest_loc(destination, terrain_alt ? Location::AltFrame::ABOVE_TERRAIN : Location::AltFrame::ABOVE_ORIGIN); // Location constructor uses NEU
     if (!copter.fence.check_destination_within_fence(dest_loc)) {
         AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::DEST_OUTSIDE_FENCE);
         // failure is propagated to GCS with NAK
@@ -273,7 +273,7 @@ bool ModeGuided::set_destination(const Vector3f& destination, bool use_yaw, floa
     set_yaw_state(use_yaw, yaw_cd, use_yaw_rate, yaw_rate_cds, relative_yaw);
 
     // set position target and zero velocity and acceleration
-    guided_pos_target_cm = destination.topostype();
+    guided_pos_target_cm = destination.topostype().neu_to_ned();
     guided_pos_terrain_alt = terrain_alt;
     guided_vel_target_cms.zero();
     guided_accel_target_cmss.zero();
@@ -344,7 +344,7 @@ bool ModeGuided::set_destination(const Location& dest_loc, bool use_yaw, float y
         pos_control->set_pos_offset_z_cm(0.0);
     }
 
-    guided_pos_target_cm = pos_target_f.topostype();
+    guided_pos_target_cm = pos_target_f.topostype().neu_to_ned();
     guided_pos_terrain_alt = terrain_alt;
     guided_vel_target_cms.zero();
     guided_accel_target_cmss.zero();
@@ -439,7 +439,7 @@ bool ModeGuided::set_destination_posvelaccel(const Vector3f& destination, const 
     set_yaw_state(use_yaw, yaw_cd, use_yaw_rate, yaw_rate_cds, relative_yaw);
 
     update_time_ms = millis();
-    guided_pos_target_cm = destination.topostype();
+    guided_pos_target_cm = destination.topostype().neu_to_ned();
     guided_pos_terrain_alt = false;
     guided_vel_target_cms = velocity;
     guided_accel_target_cmss = acceleration;

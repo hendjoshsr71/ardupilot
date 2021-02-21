@@ -195,7 +195,6 @@ bool ModeAuto::loiter_start()
 
     // initialise waypoint controller target to stopping point
     wp_nav->set_wp_destination(stopping_point);
-
     // hold yaw at current heading
     auto_yaw.set_mode(AUTO_YAW_HOLD);
 
@@ -333,9 +332,9 @@ void ModeAuto::circle_movetoedge_start(const Location &circle_center, float radi
     }
 
     // check our distance from edge of circle
-    Vector3f circle_edge_neu;
-    copter.circle_nav->get_closest_point_on_circle(circle_edge_neu);
-    float dist_to_edge = (inertial_nav.get_position() - circle_edge_neu).length();
+    Vector3f circle_edge_ned;
+    copter.circle_nav->get_closest_point_on_circle_NED(circle_edge_ned);
+    float dist_to_edge = (inertial_nav.get_position().neu_to_ned() - circle_edge_ned).length();
 
     // if more than 3m then fly to edge
     if (dist_to_edge > 300.0f) {
@@ -343,7 +342,7 @@ void ModeAuto::circle_movetoedge_start(const Location &circle_center, float radi
         _mode = SubMode::CIRCLE_MOVE_TO_EDGE;
 
         // convert circle_edge_neu to Location
-        Location circle_edge(circle_edge_neu, Location::AltFrame::ABOVE_ORIGIN);
+        Location circle_edge(circle_edge_ned.neu_to_ned(), Location::AltFrame::ABOVE_ORIGIN);    // Location constructor uses NEU
 
         // convert altitude to same as command
         circle_edge.set_alt_cm(circle_center.alt, circle_center.get_alt_frame());
@@ -356,7 +355,7 @@ void ModeAuto::circle_movetoedge_start(const Location &circle_center, float radi
 
         // if we are outside the circle, point at the edge, otherwise hold yaw
         const Vector3p &circle_center_neu = copter.circle_nav->get_center();
-        const Vector3f &curr_pos = inertial_nav.get_position();
+        const Vector3f &curr_pos = inertial_nav.get_position();     // z not used here
         float dist_to_center = norm(circle_center_neu.x - curr_pos.x, circle_center_neu.y - curr_pos.y);
         // initialise yaw
         // To-Do: reset the yaw only when the previous navigation command is not a WP.  this would allow removing the special check for ROI
