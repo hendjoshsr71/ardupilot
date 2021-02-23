@@ -267,7 +267,7 @@ void ModeRTL::descent_start()
     _state_complete = false;
 
     // Set wp navigation target to above home
-    loiter_nav->init_target(wp_nav->get_wp_destination());
+    loiter_nav->init_target(wp_nav->get_wp_destination_NED().neu_tofrom_ned());
 
     // initialise altitude target to stopping point
     pos_control->set_target_to_stopping_point_z();
@@ -352,7 +352,7 @@ void ModeRTL::land_start()
     _state_complete = false;
 
     // Set wp navigation target to above home
-    loiter_nav->init_target(wp_nav->get_wp_destination());
+    loiter_nav->init_target(wp_nav->get_wp_destination_NED().neu_tofrom_ned());
 
     // initialise position and desired velocity
     if (!pos_control->is_active_z()) {

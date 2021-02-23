@@ -244,10 +244,10 @@ void ModeZigZag::return_to_manual_control(bool maintain_target)
         spray(false);
         loiter_nav->clear_pilot_desired_acceleration();
         if (maintain_target) {
-            const Vector3f& wp_dest = wp_nav->get_wp_destination();
+            const Vector3f& wp_dest = wp_nav->get_wp_destination_NED();
             loiter_nav->init_target(wp_dest);
             if (wp_nav->origin_and_destination_are_terrain_alt()) {
-                copter.surface_tracking.set_target_alt_cm(wp_dest.z);
+                copter.surface_tracking.set_target_alt_cm(-wp_dest.z); // convert to NEU
             }
         } else {
             loiter_nav->init_target();
@@ -456,7 +456,7 @@ bool ModeZigZag::calculate_next_dest(Destination ab_dest, bool use_wpnav_alt, Ve
     if (use_wpnav_alt) {
         // get altitude target from waypoint controller
         terrain_alt = wp_nav->origin_and_destination_are_terrain_alt();
-        next_dest.z = wp_nav->get_wp_destination().z;
+        next_dest.z = -wp_nav->get_wp_destination_NED().z; // convert to NEU
     } else {
         // if we have a downward facing range finder then use terrain altitude targets
         terrain_alt = copter.rangefinder_alt_ok() && wp_nav->rangefinder_used_and_healthy();
