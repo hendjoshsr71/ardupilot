@@ -196,7 +196,7 @@ void ModeZigZag::save_or_move_to_destination(Destination ab_dest)
             if (calculate_next_dest(ab_dest, stage == AUTO, next_dest, terr_alt)) {
                 wp_nav->wp_and_spline_init();
                 next_dest.z = -next_dest.z; // Delete NEU -> NED 
-                if (wp_nav->set_wp_destination_NED(next_dest * 0.01f, terr_alt)) {  // convert cm to m
+                if (wp_nav->set_wp_destination(next_dest * 0.01f, terr_alt)) {  // convert cm to m
                     stage = AUTO;
                     auto_stage = AutoState::AB_MOVING;
                     ab_dest_stored = ab_dest;
@@ -223,7 +223,7 @@ void ModeZigZag::move_to_side()
         if (calculate_side_dest(next_dest, terr_alt)) {
             wp_nav->wp_and_spline_init();
             next_dest.z = -next_dest.z; // Delete NEU -> NED 
-            if (wp_nav->set_wp_destination_NED(next_dest * 0.01f, terr_alt)) { // convert cm to m
+            if (wp_nav->set_wp_destination(next_dest * 0.01f, terr_alt)) { // convert cm to m
                 stage = AUTO;
                 auto_stage = AutoState::SIDEWAYS;
                 current_dest = next_dest;
@@ -244,7 +244,7 @@ void ModeZigZag::return_to_manual_control(bool maintain_target)
         spray(false);
         loiter_nav->clear_pilot_desired_acceleration();
         if (maintain_target) {
-            const Vector3f& wp_dest = wp_nav->get_wp_destination_NED();
+            const Vector3f& wp_dest = wp_nav->get_wp_destination();
             loiter_nav->init_target(wp_dest);
             if (wp_nav->origin_and_destination_are_terrain_alt()) {
                 copter.surface_tracking.set_target_alt_cm(-wp_dest.z); // convert to NEU
@@ -456,7 +456,7 @@ bool ModeZigZag::calculate_next_dest(Destination ab_dest, bool use_wpnav_alt, Ve
     if (use_wpnav_alt) {
         // get altitude target from waypoint controller
         terrain_alt = wp_nav->origin_and_destination_are_terrain_alt();
-        next_dest.z = -wp_nav->get_wp_destination_NED().z; // convert to NEU
+        next_dest.z = -wp_nav->get_wp_destination().z; // convert to NEU
     } else {
         // if we have a downward facing range finder then use terrain altitude targets
         terrain_alt = copter.rangefinder_alt_ok() && wp_nav->rangefinder_used_and_healthy();
@@ -547,7 +547,7 @@ void ModeZigZag::run_auto()
         } else if (auto_stage == AutoState::SIDEWAYS) {
             wp_nav->wp_and_spline_init();
             current_dest.z = -current_dest.z; // Delete NEU -> NED 
-            if (wp_nav->set_wp_destination_NED(current_dest * 0.01f, current_terr_alt)) { // cm to m
+            if (wp_nav->set_wp_destination(current_dest * 0.01f, current_terr_alt)) { // cm to m
                 stage = AUTO;
                 reach_wp_time_ms = 0;
                 char const *dir[] = {"forward", "right", "backward", "left"};

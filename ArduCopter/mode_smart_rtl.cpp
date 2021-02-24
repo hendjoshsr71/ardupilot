@@ -21,7 +21,7 @@ bool ModeSmartRTL::init(bool ignore_checks)
         pos_control->get_stopping_point_z(stopping_point);
 
         stopping_point.z = -stopping_point.z; // REMOVE NEU -> NED 
-        wp_nav->set_wp_destination_NED(stopping_point * 0.01f); // convert cm to m
+        wp_nav->set_wp_destination(stopping_point * 0.01f); // convert cm to m
 
         // initialise yaw to obey user parameter
         auto_yaw.set_mode_to_default(true);
@@ -107,7 +107,7 @@ void ModeSmartRTL::path_follow_run()
                 fast_waypoint = false;
             }
             // send target to waypoint controller
-            wp_nav->set_wp_destination_NED(next_point);
+            wp_nav->set_wp_destination(next_point);
             wp_nav->set_fast_waypoint(fast_waypoint);
         } else if (g2.smart_rtl.get_num_points() == 0) {
             // We should never get here; should always have at least

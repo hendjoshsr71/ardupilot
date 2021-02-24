@@ -144,7 +144,7 @@ void ModeGuided::pos_control_start()
     wp_nav->get_wp_stopping_point(stopping_point);
 
     // no need to check return status because terrain data is not used
-    wp_nav->set_wp_destination_NED(stopping_point  * 0.01f, false); // convert cm to m
+    wp_nav->set_wp_destination(stopping_point  * 0.01f, false); // convert cm to m
 
     // initialise yaw
     auto_yaw.set_mode_to_default(false);
@@ -255,7 +255,7 @@ bool ModeGuided::set_destination(const Vector3f& destination, bool use_yaw, floa
     // no need to check return status because terrain data is not used
     Vector3f temp = destination; // DELETE 
     temp.z = -temp.z; // REMOVE NEU -> NED 
-    wp_nav->set_wp_destination_NED(temp * 0.01f, terrain_alt); // convert cm to m
+    wp_nav->set_wp_destination(temp * 0.01f, terrain_alt); // convert cm to m
 
     // log target
     copter.Log_Write_GuidedTarget(guided_mode, destination, Vector3f());
@@ -401,7 +401,7 @@ void ModeGuided::takeoff_run()
         copter.landinggear.retract_after_takeoff();
 
         // switch to position control mode but maintain current target
-        const Vector3f target = wp_nav->get_wp_destination_NED().neu_tofrom_ned();
+        const Vector3f target = wp_nav->get_wp_destination().neu_tofrom_ned();
         set_destination(target, false, 0, false, 0, false, wp_nav->origin_and_destination_are_terrain_alt());
     }
 }

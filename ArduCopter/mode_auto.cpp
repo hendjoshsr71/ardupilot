@@ -132,7 +132,7 @@ bool ModeAuto::loiter_start()
     wp_nav->get_wp_stopping_point(stopping_point);
 
     // initialise waypoint controller target to stopping point
-    wp_nav->set_wp_destination_NED(stopping_point * 0.01f); // Convert cm to m
+    wp_nav->set_wp_destination(stopping_point * 0.01f); // Convert cm to m
 
     // hold yaw at current heading
     auto_yaw.set_mode(AUTO_YAW_HOLD);
@@ -1533,7 +1533,7 @@ bool ModeAuto::verify_land()
             // check if we've reached the location
             if (copter.wp_nav->reached_wp_destination()) {
                 // get destination so we can use it for loiter target
-                const Vector3f& dest = copter.wp_nav->get_wp_destination_NED().neu_tofrom_ned();
+                const Vector3f& dest = copter.wp_nav->get_wp_destination().neu_tofrom_ned();
 
                 // initialise landing controller
                 land_start(dest);
