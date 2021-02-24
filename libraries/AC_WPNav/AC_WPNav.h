@@ -97,12 +97,15 @@ public:
     /// get_wp_acceleration - returns acceleration in cm/s/s during missions
     float get_wp_acceleration() const { return _wp_accel_cmss.get(); }
 
-    /// get_wp_destination waypoint using position vector
+    /// get_wp_destination waypoint using position vector, frame NED from EKF origin in cm
     /// x,y are distance from ekf origin in cm
-    /// z may be cm above ekf origin or terrain (see origin_and_destination_are_terrain_alt method)
-    const Vector3f &get_wp_destination() const { return _destination; }
+    /// z may be cm above ekf origin or terrain (see origin_and_destination_are_terrain_alt method
+    const Vector3f &get_wp_destination_NED() const { 
+        
+        return get_wp_destination();  // Note get_wp_destination() should return NED from EKF origin in cm       
+    }
 
-    /// get origin using position vector (distance from ekf origin in cm)
+    /// get origin using position vector (distance from ekf origin Frame NED in cm)
     const Vector3f &get_wp_origin() const { return _origin; }
 
     /// true if origin.z and destination.z are alt-above-terrain, false if alt-above-ekf-origin
@@ -355,4 +358,6 @@ private:
     /// set_wp_destination waypoint using position vector (distance from ekf origin in cm)
     ///     terrain_alt should be true if destination.z is a desired altitude above terrain
     bool set_wp_destination(const Vector3f& destination, bool terrain_alt = false);
+
+    const Vector3f &get_wp_destination() const { return _destination; }
 };
