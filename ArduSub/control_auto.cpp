@@ -82,7 +82,7 @@ void Sub::auto_wp_start(const Vector3f& destination)
     
     Vector3f temp(destination); // DELETE
     temp.z = -temp.z; // Delete NEU -> NED
-    wp_nav.set_wp_destination_NED(temp * 0.01f, false); // convert cm to m
+    wp_nav.set_wp_destination(temp * 0.01f, false); // convert cm to m
 
     // initialise yaw
     // To-Do: reset the yaw only when the previous navigation command is not a WP.  this would allow removing the special check for ROI
@@ -367,16 +367,14 @@ bool Sub::auto_loiter_start()
     }
     auto_mode = Auto_Loiter;
 
-    Vector3f origin = inertial_nav.get_position();
-    origin.z = -origin.z;
+    Vector3f origin = inertial_nav.get_position().neu_tofrom_ned();
     // calculate stopping point
     Vector3f stopping_point;
     pos_control.get_stopping_point_xy(stopping_point);
     pos_control.get_stopping_point_z(stopping_point);
 
-    stopping_point.z = -stopping_point.z; // Convert NEU to NED
     // initialise waypoint controller target to stopping point
-    wp_nav.set_wp_origin_and_destination_NED(origin, stopping_point);
+    wp_nav.set_wp_origin_and_destination(origin, stopping_point.neu_tofrom_ned());
 
     // hold yaw at current heading
     set_auto_yaw_mode(AUTO_YAW_HOLD);
@@ -601,7 +599,7 @@ float Sub::get_auto_heading()
     case AUTO_YAW_CORRECT_XTRACK: {
         // TODO return current yaw if not in appropriate mode
         // Bearing of current track (centidegrees)
-        float track_bearing = get_bearing_cd(wp_nav.get_wp_origin(), wp_nav.get_wp_destination_NED());
+        float track_bearing = get_bearing_cd(wp_nav.get_wp_origin(), wp_nav.get_wp_destination());
 
         // Bearing from current position towards intermediate position target (centidegrees)
         float desired_angle = pos_control.get_bearing_to_target();

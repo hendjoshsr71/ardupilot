@@ -61,7 +61,7 @@ void Sub::guided_pos_control_start()
     wp_nav.get_wp_stopping_point(stopping_point);
 
     // no need to check return status because terrain data is not used
-    wp_nav.set_wp_destination_NED(stopping_point * 0.01f, false); // convert cm to m
+    wp_nav.set_wp_destination(stopping_point * 0.01f, false); // convert cm to m
 
     // initialise yaw
     set_auto_yaw_mode(get_default_auto_yaw_mode(false));
@@ -154,9 +154,7 @@ bool Sub::guided_set_destination(const Vector3f& destination)
 #endif
 
     // no need to check return status because terrain data is not used
-    Vector3f temp = destination; // DELETE NEU->NED
-    temp.z = -temp.z; // DELETE NEU->NED 
-    wp_nav.set_wp_destination_NED(temp * 0.01f, false); // convert cm to m 
+    wp_nav.set_wp_destination(destination.neu_tofrom_ned() * 0.01f, false); // convert cm to m  and NEU to NED
 
     // log target
     Log_Write_GuidedTarget(guided_mode, destination, Vector3f());
