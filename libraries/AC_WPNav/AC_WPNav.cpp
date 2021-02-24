@@ -188,12 +188,12 @@ bool AC_WPNav::set_wp_destination(const Location& destination)
     }
 
     // set target as vector from EKF origin
-    return set_wp_destination_NED(dest_ned * 0.01f, terr_alt); // convert from cm to m
+    return set_wp_destination(dest_ned * 0.01f, terr_alt); // convert from cm to m
 }
 
 bool AC_WPNav::get_wp_destination(Location& destination) const
 {
-    Vector3f dest = get_wp_destination_NED();
+    Vector3f dest = get_wp_destination();
     if (!AP::ahrs().get_origin(destination)) {
         return false;
     }
@@ -202,7 +202,7 @@ bool AC_WPNav::get_wp_destination(Location& destination) const
     return true;
 }
 
-/// set_wp_destination waypoint using position vector (distance from home in cm)
+/// set_wp_destination waypoint using NED position vector (distance from EKF origin in meters)
 ///     terrain_alt should be true if destination.z is a desired altitude above terrain
 ///
 /// THIS function will be removed in next steps by the NED version once all internal variables and get methods 
@@ -228,24 +228,10 @@ bool AC_WPNav::set_wp_destination(const Vector3f& destination, bool terrain_alt)
         }
         origin.z -= origin_terr_offset;
     }
-    origin.z = -origin.z;
+    origin.z = -origin.z; // convert to NED from NEU
 
     // set origin and destination
-    // Vector3f temp_origin(origin.x, origin.y, -origin.z);
-    // Vector3f temp_destination(destination.x, destination.y, -destination.z);
-    // return AC_WPNav::set_wp_origin_and_destination_NED(temp_origin, temp_destination, terrain_alt);
-    return AC_WPNav::set_wp_origin_and_destination(origin, destination, terrain_alt);
-}
-
-/// set waypoint destination using NED position vector from ekf origin in meters
-///     terrain_alt should be true if destination.z is a desired altitude above terrain
-bool AC_WPNav::set_wp_destination_NED(const Vector3f& destination_NED, bool terrain_alt)
-{
-    
-    // EDIT THIS comment about terrain follower MAY BE WRONG
-    // convert NED to NEU and do not use terrain following
-    // return AC_WPNav::set_wp_destination(Vector3f(destination_NED.x * 100.0f, destination_NED.y * 100.0f, -destination_NED.z * 100.0f), terrain_alt);
-    return AC_WPNav::set_wp_destination(Vector3f(destination_NED.x * 100.0f, destination_NED.y * 100.0f, destination_NED.z * 100.0f), terrain_alt);
+    return AC_WPNav::set_wp_origin_and_destination(origin, destination *100.0f, terrain_alt); // convert destination to cm
 }
 
 /// set_origin_and_destination - set origin and destination waypoints using position vectors (distance from home in cm)
@@ -300,16 +286,6 @@ bool AC_WPNav::set_wp_origin_and_destination(const Vector3f& origin, const Vecto
     _limited_speed_xy_cms = constrain_float(speed_along_track, 0, _pos_control.get_max_speed_xy());
 
     return true;
-}
-
-// NED in ?? units version DELETE
-bool AC_WPNav::set_wp_origin_and_destination_NED(const Vector3f& origin, const Vector3f& destination, bool terrain_alt)
-{
-    // Vector3f temp_origin(origin.x, origin.y, -origin.z);
-    // Vector3f temp_destination(destination.x, destination.y, -destination.z);
-    // return AC_WPNav::set_wp_origin_and_destination(temp_origin, temp_destination, terrain_alt);
-
-    return AC_WPNav::set_wp_origin_and_destination(origin, destination, terrain_alt);
 }
 
 /// shift_wp_origin_to_current_pos - shifts the origin and destination so the origin starts at the current position
@@ -707,7 +683,7 @@ bool AC_WPNav::set_spline_destination(const Location& destination, bool stopped_
     return set_spline_destination(dest_ned, dest_terr_alt, stopped_at_start, seg_end_type, next_dest_ned);
 }
 
-/// set_spline_destination waypoint using position vector (distance from home NED in cm)
+/// set_spline_destination waypoint using position vector (distance from ekf origin frame NED in cm)
 ///     returns false if conversion from location to vector from ekf origin cannot be calculated
 ///     terrain_alt should be true if destination.z is a desired altitudes above terrain (false if its desired altitudes above ekf origin)
 ///     stopped_at_start should be set to true if vehicle is stopped at the origin
@@ -737,10 +713,10 @@ bool AC_WPNav::set_spline_destination(const Vector3f& destination, bool terrain_
 
     // set origin and destination
     origin.z = -origin.z; // origin here is NEU convert to NED, destination & next_destination is in NED
-    return set_spline_origin_and_destination_NED(origin, destination, terrain_alt, stopped_at_start, seg_end_type, next_destination);
+    return set_spline_origin_and_destination(origin, destination, terrain_alt, stopped_at_start, seg_end_type, next_destination);
 }
 
-/// set_spline_origin_and_destination - set origin and destination waypoints using position vectors (distance from home in cm)
+/// set_spline_origin_and_destination - set origin and destination waypoints using position vectors (distance from ekf origin frame NED in cm)
 ///     terrain_alt should be true if origin.z and destination.z are desired altitudes above terrain (false if desired altitudes above ekf origin)
 ///     seg_type should be calculated by calling function based on the mission
 bool AC_WPNav::set_spline_origin_and_destination(const Vector3f& origin, const Vector3f& destination, bool terrain_alt, bool stopped_at_start, spline_segment_end_type seg_end_type, const Vector3f& next_destination)
@@ -854,19 +830,6 @@ bool AC_WPNav::set_spline_origin_and_destination(const Vector3f& origin, const V
     _track_length_xy = safe_sqrt(sq(_destination.x - _origin.x)+sq(_destination.y - _origin.y));  // horizontal track length (used to decide if we should update yaw)
 
     return true;
-}
-
-/// set_spline_origin_and_destination - set origin and destination waypoints using position vectors (distance from home in NED in cm)
-///     terrain_alt should be true if origin.z and destination.z are desired altitudes above terrain (false if desired altitudes above ekf origin)
-///     seg_type should be calculated by calling function based on the mission
-bool AC_WPNav::set_spline_origin_and_destination_NED(const Vector3f& origin, const Vector3f& destination, bool terrain_alt, bool stopped_at_start, spline_segment_end_type seg_end_type, const Vector3f& next_destination)
-{
-    // Vector3f temp_origin(origin.x, origin.y, -origin.z);
-    // Vector3f temp_destination(destination.x, destination.y, -destination.z);
-    // Vector3f temp_next_destination(next_destination.x, next_destination.y, -next_destination.z);
-
-    return set_spline_origin_and_destination(origin, destination, terrain_alt, stopped_at_start, seg_end_type, next_destination);
-    // return set_spline_origin_and_destination(temp_origin, temp_destination, terrain_alt, stopped_at_start, seg_end_type, temp_next_destination);
 }
 
 /// update_spline - update spline controller
@@ -1068,8 +1031,7 @@ bool AC_WPNav::get_terrain_offset(float& offset_cm)
     return false;
 }
 
-// EDIT Description since NED in cm
-// convert location to vector from ekf origin.  terrain_alt is set to true if resulting vector's z-axis should be treated as alt-above-terrain
+// convert location to vector (distance from ekf origin frame NED in cm).  terrain_alt is set to true if resulting vector's z-axis should be treated as alt-above-terrain
 //      returns false if conversion failed (likely because terrain data was not available)
 bool AC_WPNav::get_vector_NED_cm(const Location &loc, Vector3f &vec, bool &terrain_alt)
 {
@@ -1100,7 +1062,7 @@ bool AC_WPNav::get_vector_NED_cm(const Location &loc, Vector3f &vec, bool &terra
     // copy xy (we do this to ensure we do not adjust vector unless the overall conversion is successful
     vec.x = res_vec.x;
     vec.y = res_vec.y;
-    vec.z = -vec.z; // Convert from NEU to NED
+    vec.z = -vec.z; // Convert altitude from NEU to NED
 
     return true;
 }
