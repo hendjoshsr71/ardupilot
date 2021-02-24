@@ -2654,7 +2654,7 @@ void QuadPlane::setup_target_position(void)
         plane.next_WP_loc.alt != last_auto_target.alt ||
         now - last_loiter_ms > 500) {
         poscontrol.target.z = -poscontrol.target.z; // Delete NEU -> NED
-        wp_nav->set_wp_destination_NED(poscontrol.target * 0.01f); // convert cm to m
+        wp_nav->set_wp_destination(poscontrol.target * 0.01f); // convert cm to m
         last_auto_target = loc;
     }
     last_loiter_ms = now;
