@@ -6,8 +6,9 @@
 -- tests to run
 -- check on loss of GPS, that we switch to pitot airspeed
 
+done_init = false
 local button_number = 1
-local button_state = button:get_button_state(button_number)
+local button_state = 0
 
 local MODE_MANUAL = 0
 local MODE_AUTO = 10
@@ -343,18 +344,26 @@ function fix_WP_heights()
    end
 end
 
-get_landing_AMSL()
-get_glide_slope()
+-- init system
+function init()
+   button_state = button:get_button_state(button_number)
+   get_landing_AMSL()
+   get_glide_slope()
 
-gcs:send_text(0, string.format("LANDING_AMSL %.1f GLIDE_SLOPE %.1f", LANDING_AMSL, GLIDE_SLOPE))
+   gcs:send_text(0, string.format("LANDING_AMSL %.1f GLIDE_SLOPE %.1f", LANDING_AMSL, GLIDE_SLOPE))
 
-fix_WP_heights()
+   fix_WP_heights()
+   done_init = true
+end
 
 function update()
+   if not done_init then
+      init()
+   end
    if rc:has_valid_input() and rc:get_pwm(8) > 1800 then
       -- disable automation
       notify:handle_rgb(255,255,255,10)
-      return update, 100
+      return
    end
    local t = 0.001 * millis():tofloat()
    local state = button:get_button_state(button_number)
@@ -387,11 +396,21 @@ function update()
       notify:handle_rgb(0,255,0,0)
       mission_update()
    end
-
-   --reset_AHRS()
-
-   -- run at 10Hz
-   return update, 100
 end
 
-return update() -- run immediately before starting to reschedule
+-- wrapper around update(). This calls update() at 10Hz
+-- and if update faults then an error is displayed, but the script is not stopped
+function protected_wrapper()
+  local success, err = pcall(update)
+  if not success then
+     gcs:send_text(0, "Internal Error: " .. err)
+     -- when we fault we run the update function again after 1s, slowing it
+     -- down a bit so we don't flood the console with errors
+     return protected_wrapper, 1000
+  end
+  -- otherwise run at 10Hz
+  return protected_wrapper, 100
+end
+
+-- start running update loop
+return protected_wrapper()
