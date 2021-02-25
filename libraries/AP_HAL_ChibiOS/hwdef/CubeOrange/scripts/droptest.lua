@@ -290,7 +290,7 @@ function distance_to_land(cnum)
    end
    local loc1 = get_location(cnum)
    local distance = loc:get_distance(loc1)
-   return distance + distance_to_land_nopos(cnum)
+   return distance + distance_to_land_nopos(cnum) + wind_adjustment(loc, loc1)
 end
 
 -- see if we are on the optimal waypoint number for landing
