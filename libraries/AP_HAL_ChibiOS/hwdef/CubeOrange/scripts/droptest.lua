@@ -241,6 +241,11 @@ function wind_adjustment(loc1, loc2)
    return dist * change
 end
 
+function turn_adjustment(bearing_change_deg)
+   local height_loss = TURN_HEIGHT_LOSS * math.abs(bearing_change_deg / 180.0)
+   return height_loss * GLIDE_SLOPE
+end
+
 -- get distance to landing point, ignoring current location
 function distance_to_land_nopos(cnum)
    local N = mission:num_commands()
@@ -268,9 +273,7 @@ function distance_to_land_nopos(cnum)
       end
       local bearing_change = math.abs(wrap_180(bearing - last_bearing))
       last_bearing = bearing
-
-      local height_loss = TURN_HEIGHT_LOSS * (bearing_change / 180.0)
-      distance = distance + height_loss * GLIDE_SLOPE
+      distance = distance + turn_adjustment(bearing_change)
 
       -- account for wind
       distance = distance + wind_adjustment(loc1, loc2)
@@ -290,7 +293,15 @@ function distance_to_land(cnum)
    end
    local loc1 = get_location(cnum)
    local distance = loc:get_distance(loc1)
-   return distance + distance_to_land_nopos(cnum) + wind_adjustment(loc, loc1)
+   distance = distance + wind_adjustment(loc, loc1)
+
+   local gcrs = wrap_180(ground_course())
+   local wpcrs = wrap_180(math.deg(loc:get_bearing(loc1)))
+   local bearing_error = math.abs(wrap_180(gcrs - wpcrs))
+
+   distance = distance + turn_adjustment(bearing_error)
+
+   return distance + distance_to_land_nopos(cnum)
 end
 
 -- see if we are on the optimal waypoint number for landing
