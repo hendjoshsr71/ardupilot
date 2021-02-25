@@ -19,6 +19,11 @@ local CHANGE_MARGIN = 100.0
 
 local GLIDE_SLOPE = 6.0
 
+local MAX_WIND = 10.0
+
+-- expected height loss for a 180 degree turn, meters
+local TURN_HEIGHT_LOSS = 180
+
 local release_start_t = 0.0
 local last_tick_t = 0.0
 local last_mission_update_t = 0.0
@@ -30,6 +35,8 @@ NAV_LAND = 21
 
 -- see if we are running on SITL
 local is_SITL = param:get('SIM_SPEEDUP')
+
+local TARGET_AIRSPEED = param:get('TRIM_ARSPD_CM') * 0.01
 
 function get_glide_slope()
    GLIDE_SLOPE = param:get('SCR_USER2')
@@ -191,6 +198,49 @@ function get_position()
    return loc
 end
 
+-- vector2 cross product
+function vec2_cross(vec1, vec2)
+   return vec1:x()*vec2:y() - vec1:y()*vec2:x()
+end
+
+-- vector2 dot product
+function vec2_dot(vec1, vec2)
+   return vec1:x()*vec2:x() + vec1:y()*vec2:y()
+end
+
+function constrain(v, minv, maxv)
+   if v < minv then
+      v = minv
+   end
+   if v > maxv then
+      v = maxv
+   end
+   return v
+end
+
+-- calculate wind adjustment for a WP segment
+function wind_adjustment(loc1, loc2)
+   local distNE = loc1:get_distance_NE(loc2)
+   local dist = distNE:length()
+   if dist < 1 then
+      return 0.0
+   end
+   distNE:normalize()
+   local wind3d = ahrs:wind_estimate()
+
+   -- get 2d wind
+   local wind2d = Vector2f()
+   wind2d:x(wind3d:x())
+   wind2d:y(wind3d:y())
+
+   -- dot product gives component along flight path
+   local dot = vec2_dot(distNE, wind2d)
+   dot = constrain(dot, -MAX_WIND, MAX_WIND)
+
+   local change = -dot / TARGET_AIRSPEED
+   return dist * change
+end
+
 -- get distance to landing point, ignoring current location
 function distance_to_land_nopos(cnum)
    local N = mission:num_commands()
@@ -199,6 +249,7 @@ function distance_to_land_nopos(cnum)
    end
    local distance = 0
    local i = cnum
+   local last_bearing = 0
    while i < N do
       m = mission:get_item(i)
       if m:command() == NAV_LAND then
@@ -207,7 +258,23 @@ function distance_to_land_nopos(cnum)
       local i2 = resolve_jump(i+1)
       local loc1 = get_location(i)
       local loc2 = get_location(i2)
+
       distance = distance + loc1:get_distance(loc2)
+
+      -- account for height lost in turns
+      local bearing = wrap_180(math.deg(loc1:get_bearing(loc2)))
+      if i == cnum then
+         last_bearing = bearing
+      end
+      local bearing_change = math.abs(wrap_180(bearing - last_bearing))
+      last_bearing = bearing
+
+      local height_loss = TURN_HEIGHT_LOSS * (bearing_change / 180.0)
+      distance = distance + height_loss * GLIDE_SLOPE
+
+      -- account for wind
+      distance = distance + wind_adjustment(loc1, loc2)
+
       i = i2
    end
    -- subtract half runway length, for ideal landing mid-runway
