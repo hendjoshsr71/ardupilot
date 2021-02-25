@@ -417,6 +417,7 @@ function protected_wrapper()
      gcs:send_text(0, "Internal Error: " .. err)
      -- when we fault we run the update function again after 1s, slowing it
      -- down a bit so we don't flood the console with errors
+     pcall(notify:handle_rgb(255,255,0,2))
      return protected_wrapper, 1000
   end
   -- otherwise run at 10Hz
