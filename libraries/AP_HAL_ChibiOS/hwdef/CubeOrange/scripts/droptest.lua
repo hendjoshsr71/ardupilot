@@ -28,6 +28,8 @@ DO_JUMP = 177
 NAV_WAYPOINT = 16
 NAV_LAND = 21
 
+-- see if we are running on SITL
+local is_SITL = param:get('SIM_SPEEDUP')
 
 function get_glide_slope()
    GLIDE_SLOPE = param:get('SCR_USER2')
@@ -360,12 +362,21 @@ function update()
    if not done_init then
       init()
    end
-   if rc:has_valid_input() and rc:get_pwm(8) > 1800 then
+   if not is_SITL and rc:has_valid_input() and rc:get_pwm(8) > 1800 then
       -- disable automation
       notify:handle_rgb(255,255,255,10)
       return
    end
    local t = 0.001 * millis():tofloat()
+
+   local state
+   if is_SITL then
+      -- use armed state for button in SITL
+      state = arming:is_armed()
+   else
+      state = button:get_button_state(button_number)
+   end
+
    local state = button:get_button_state(button_number)
    if state ~= button_state then
       gcs:send_text(0, string.format("release: " .. tostring(state)))
