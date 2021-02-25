@@ -409,6 +409,11 @@ function update()
    end
 end
 
+function set_fault_led()
+   -- setup LED for lua fault condition
+   notify:handle_rgb(255,255,0,2)
+end
+
 -- wrapper around update(). This calls update() at 10Hz
 -- and if update faults then an error is displayed, but the script is not stopped
 function protected_wrapper()
@@ -417,7 +422,7 @@ function protected_wrapper()
      gcs:send_text(0, "Internal Error: " .. err)
      -- when we fault we run the update function again after 1s, slowing it
      -- down a bit so we don't flood the console with errors
-     pcall(notify:handle_rgb(255,255,0,2))
+     local success, err = pcall(set_fault_led)
      return protected_wrapper, 1000
   end
   -- otherwise run at 10Hz
