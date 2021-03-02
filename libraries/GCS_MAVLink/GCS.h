@@ -268,7 +268,9 @@ public:
     void send_rpm() const;
     void send_generator_status() const;
     virtual void send_winch_status() const {};
-
+    void send_smart_battery_info(const uint8_t instance) const;
+    bool send_smart_battery_info();
+    
     // lock a channel, preventing use by MAVLink
     void lock(bool _lock) {
         _locked = _lock;
@@ -846,14 +848,14 @@ private:
 #endif
 
     uint32_t last_mavlink_stats_logged;
-
     uint8_t last_battery_status_idx;
+    uint8_t last_smart_battery_info_idx;
 
     // if we've ever sent a DISTANCE_SENSOR message out of an
     // orientation we continue to send it out, even if it is not
     // longer valid.
     uint8_t proximity_ever_valid_bitmask;
-
+    
     // true if we should NOT do MAVLink on this port (usually because
     // someone's doing SERIAL_CONTROL over mavlink)
     bool _locked;
@@ -1058,4 +1060,3 @@ void can_printf(const char *fmt, ...);
 #define GCS_SEND_TEXT(severity, format, args...)
 
 #endif // HAL_NO_GCS
-
