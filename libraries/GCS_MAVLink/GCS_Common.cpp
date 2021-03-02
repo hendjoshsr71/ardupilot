@@ -3568,6 +3568,9 @@ void GCS_MAVLINK::send_banner()
             send_text(MAV_SEVERITY_INFO, "%s", banner_msg);
         }
     }
+
+    // send smart_battery_info MAVLink message for each monitor
+    send_smart_battery_info();
 }
 
 
@@ -4648,6 +4651,71 @@ void GCS_MAVLINK::send_set_position_target_global_int(uint8_t target_system, uin
             0,0);   // yaw, yaw_rate
 }
 
+void GCS_MAVLINK::send_smart_battery_info(const uint8_t instance) const
+{
+#if SMART_BATTMON_ENABLED
+    const AP_BattMonitor &battery = AP::battery();
+
+    uint16_t cycles;
+    const bool got_cycle_count = battery.get_cycle_count(instance,cycles);
+
+    int32_t design_capacity;
+    const bool got_design_capacity = battery.get_design_capacity(instance, design_capacity);
+
+    int32_t capacity_full;
+    const bool got_capacity_full = battery.get_full_charge_capacity(instance, capacity_full);
+
+    char serial_number[MAVLINK_MSG_SMART_BATTERY_INFO_FIELD_SERIAL_NUMBER_LEN]{};
+    battery.get_serial_number(instance, serial_number, ARRAY_SIZE(serial_number));
+
+    char product_name[MAVLINK_MSG_SMART_BATTERY_INFO_FIELD_DEVICE_NAME_LEN]{};
+    battery.get_product_name(instance, product_name, ARRAY_SIZE(product_name));
+
+    mavlink_msg_smart_battery_info_send(
+        chan,
+        instance,                       // Battery ID
+        MAV_BATTERY_FUNCTION_UNKNOWN,   // (not provided) Function of the battery
+        MAV_BATTERY_TYPE_UNKNOWN,       // (not provided) Type (chemistry) of the battery
+        got_design_capacity ? design_capacity : -1, // [mAh] Design capacity when full according to manufacturer, -1: field not provided.
+        got_capacity_full ? capacity_full : -1,     // [mAh] Capacity when full (accounting for battery degradation), -1: field not provided.
+        got_cycle_count ? cycles : UINT16_MAX,      // Charge/discharge cycle count. UINT16_MAX: field not provided.
+        serial_number,                  // Serial number in ASCII characters, 0 terminated. All 0: field not provided.
+        product_name,                   // Static device name. Encode as manufacturer and product names separated using an underscore.
+        0,                              // (not provided) [g] Battery weight. 0: field not provided.
+        UINT16_MAX,                     // (not provided) [mV] Minimum per-cell voltage when discharging. If not supplied set to UINT16_MAX value.
+        UINT16_MAX,                     // (not provided) [mV] Minimum per-cell voltage when charging. If not supplied set to UINT16_MAX value.
+        UINT16_MAX);                    // (not provided) [mV] Minimum per-cell voltage when resting. If not supplied set to UINT16_MAX value.
+#endif
+}
+
+// returns true if all battery instances were reported
+bool GCS_MAVLINK::send_smart_battery_info()
+{
+#if SMART_BATTMON_ENABLED
+    const AP_BattMonitor &battery = AP::battery();
+
+    for(uint8_t i = 0; i < battery.num_instances(); i++) {
+        const uint8_t battery_id = (last_smart_battery_info_idx + 1) % battery.num_instances();
+        AP_BattMonitor::Type batt_type = battery.get_type(battery_id);
+        if (batt_type != AP_BattMonitor::Type::NONE &&
+            batt_type != AP_BattMonitor::Type::ANALOG_VOLTAGE_ONLY &&
+            batt_type != AP_BattMonitor::Type::ANALOG_VOLTAGE_AND_CURRENT) {
+
+            CHECK_PAYLOAD_SIZE(SMART_BATTERY_INFO);
+            send_smart_battery_info(battery_id);
+            last_smart_battery_info_idx = battery_id;
+            //return true;
+        } else {
+            last_smart_battery_info_idx = battery_id;
+        }
+    }
+    return true;
+#else
+    return false;
+#endif    
+}
+
+
 void GCS_MAVLINK::send_generator_status() const
 {
 #if GENERATOR_ENABLED
@@ -4738,6 +4806,11 @@ bool GCS_MAVLINK::try_send_message(const enum ap_message id)
     case MSG_BATTERY2:
         CHECK_PAYLOAD_SIZE(BATTERY2);
         send_battery2();
+        break;
+
+    case MSG_SMART_BATTERY_INFO:
+        CHECK_PAYLOAD_SIZE(SMART_BATTERY_INFO);
+        ret = send_smart_battery_info();
         break;
 
     case MSG_EKF_STATUS_REPORT:
