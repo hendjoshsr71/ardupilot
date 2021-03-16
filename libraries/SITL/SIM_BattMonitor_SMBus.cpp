@@ -18,39 +18,39 @@ SITL::SIM_BattMonitor_SMBus::SIM_BattMonitor_SMBus() :
     add_register("Manufacture Data", SMBusBattDevReg::MANUFACTURE_DATA, O_RDONLY);
 
     set_register(SMBusBattDevReg::TEMP, (int16_t)((15 + C_TO_KELVIN)*10));
-     // see update for voltage
-     // see update for current
-     // TODO: remaining capacity
-     // TODO: full capacity
-     set_register(SMBusBattDevReg::CYCLE_COUNT, (uint16_t(39U)));
+    // see update for voltage
+    // see update for current
+    // TODO: remaining capacity
+    // TODO: full capacity
+    set_register(SMBusBattDevReg::CYCLE_COUNT, (uint16_t(39U)));
 
-     // Set SPECIFICATION_INFO
-     union {
-         struct {
-             uint8_t revision : 4;
-             uint8_t version: 4;
-             uint8_t vscale: 4;
-             uint8_t ipscale: 4;
-         } fields;
-         uint16_t word;
-     } specinfo;
+    // Set SPECIFICATION_INFO
+    union {
+        struct {
+            uint8_t revision : 4;
+            uint8_t version: 4;
+            uint8_t vscale: 4;
+            uint8_t ipscale: 4;
+        } fields;
+        uint16_t word;
+    } specinfo;
 
-     specinfo.fields.revision = 0b0001;  // version 1
-//     specinfo.fields.version = 0b0011;  // 1.1 with PEC; TODO!
-     specinfo.fields.version = 0b0001;  // 1.0
-     specinfo.fields.vscale = 0b0000;  // unknown...
-     specinfo.fields.ipscale = 0b0000;  // unknown...
-     set_register(SMBusBattDevReg::SPECIFICATION_INFO, specinfo.word);
+    specinfo.fields.revision = 0b0001;  // version 1
+//    specinfo.fields.version = 0b0011;  // 1.1 with PEC; TODO!
+    specinfo.fields.version = 0b0001;  // 1.0
+    specinfo.fields.vscale = 0b0000;  // unknown...
+    specinfo.fields.ipscale = 0b0000;  // unknown...
+    set_register(SMBusBattDevReg::SPECIFICATION_INFO, specinfo.word);
 
-     set_register(SMBusBattDevReg::SERIAL, (uint16_t)12345);
+    set_register(SMBusBattDevReg::SERIAL, (uint16_t)12345);
 
-     const char *manufacturer_name = "ArduPilot";
-     set_block(SMBusBattDevReg::MANUFACTURE_NAME, manufacturer_name);
+    const char *manufacturer_name = "ArduPilot";
+    set_block(SMBusBattDevReg::MANUFACTURE_NAME, manufacturer_name);
 
-     const char *device_name = "SITLBatMon_V0.99";
-     set_block(SMBusBattDevReg::DEVICE_NAME, device_name);
+    const char *device_name = "SITLBatMon_V0.99";
+    set_block(SMBusBattDevReg::DEVICE_NAME, device_name);
 
-     // TODO: manufacturer data
+    // TODO: manufacturer data
 }
 
 void SITL::SIM_BattMonitor_SMBus::update(const class Aircraft &aircraft)
