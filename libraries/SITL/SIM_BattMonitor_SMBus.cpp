@@ -10,19 +10,31 @@ SITL::SIM_BattMonitor_SMBus::SIM_BattMonitor_SMBus() :
     add_register("Current", SMBusBattDevReg::CURRENT, O_RDONLY);
     add_register("Remaining Capacity", SMBusBattDevReg::REMAINING_CAPACITY, O_RDONLY);
     add_register("Full Charge Capacity", SMBusBattDevReg::FULL_CHARGE_CAPACITY, O_RDONLY);
+    add_register("Design Charge Capacity", SMBusBattDevReg::DESIGN_CAPACITY, O_RDONLY);
+    add_register("Design Maximum Voltage", SMBusBattDevReg::DESIGN_VOLTAGE, O_RDONLY);
     add_register("Cycle_Count", SMBusBattDevReg::CYCLE_COUNT, O_RDONLY);
     add_register("Specification Info", SMBusBattDevReg::SPECIFICATION_INFO, O_RDONLY);
     add_register("Serial", SMBusBattDevReg::SERIAL, O_RDONLY);
     add_block("Manufacture Name", SMBusBattDevReg::MANUFACTURE_NAME, O_RDONLY);
     add_block("Device Name", SMBusBattDevReg::DEVICE_NAME, O_RDONLY);
     add_register("Manufacture Data", SMBusBattDevReg::MANUFACTURE_DATA, O_RDONLY);
+    add_block("Device Chemistry", SMBusBattDevReg::DEVICE_CHEMISTRY, O_RDONLY);
 
     set_register(SMBusBattDevReg::TEMP, (int16_t)((15 + C_TO_KELVIN)*10));
     // see update for voltage
     // see update for current
-    // TODO: remaining capacity
-    // TODO: full capacity
-    set_register(SMBusBattDevReg::CYCLE_COUNT, (uint16_t(39U)));
+
+    set_register(SMBusBattDevReg::DESIGN_VOLTAGE, (uint16_t(50000U)));          // (mV) Design maximum voltage
+
+    // TODO: remaining capacity connect to sim capacity add to update method below?
+    // TODO: Battery mode bit set to mAh vs 10 mWh
+    set_register(SMBusBattDevReg::REMAINING_CAPACITY, (uint16_t(42042U)));      // (mAh) Remaining Capacity
+
+    // TODO: full capacity fill via SIM parameter
+    set_register(SMBusBattDevReg::FULL_CHARGE_CAPACITY, (uint16_t(45000U)));    // (mAh) Full charge capacity
+    set_register(SMBusBattDevReg::DESIGN_CAPACITY, (uint16_t(52000U)));         // (mAh) Design capacity
+
+    set_register(SMBusBattDevReg::CYCLE_COUNT, (uint16_t(42U)));
 
     // Set SPECIFICATION_INFO
     union {
@@ -49,6 +61,9 @@ SITL::SIM_BattMonitor_SMBus::SIM_BattMonitor_SMBus() :
 
     const char *device_name = "SITLBatMon_V0.99";
     set_block(SMBusBattDevReg::DEVICE_NAME, device_name);
+
+    const char *device_chemistry = "LION";
+    set_block(SMBusBattDevReg::DEVICE_CHEMISTRY, device_chemistry);
 
     // TODO: manufacturer data
 }
