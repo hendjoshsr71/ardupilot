@@ -578,6 +578,22 @@ bool AP_BattMonitor::reset_remaining(uint16_t battery_mask, float percentage)
     return ret;
 }
 
+// Logs smart battery messages
+void AP_BattMonitor::log_smart_battery_info() const
+{    
+#if SMART_BATTMON_ENABLED
+    AP_Logger *logger = AP_Logger::get_singleton();
+
+    for(uint8_t i = 0; i < _num_instances; i++) {
+        if (drivers[i] != nullptr && get_type(i) != Type::NONE) {
+            if (logger != nullptr && logger->should_log(_log_battery_bit)) {
+                drivers[i]->Log_Write_BATI(i);
+            }
+        }
+    }
+#endif
+}
+
 namespace AP {
 
 AP_BattMonitor &battery()

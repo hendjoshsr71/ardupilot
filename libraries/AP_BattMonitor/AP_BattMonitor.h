@@ -210,6 +210,9 @@ public:
     // reset battery remaining percentage
     bool reset_remaining(uint16_t battery_mask, float percentage);
 
+    // log smart_battery_info
+    void log_smart_battery_info(void) const;
+
     static const struct AP_Param::GroupInfo var_info[];
 
 protected:

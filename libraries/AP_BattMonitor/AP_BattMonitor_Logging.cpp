@@ -45,3 +45,41 @@ void AP_BattMonitor_Backend::Log_Write_BCL(const uint8_t instance, const uint64_
     static_assert(ARRAY_SIZE(_state.cell_voltages.cells) == ARRAY_SIZE(cell_pkt.cell_voltages),
                     "Battery cell number doesn't match in library and log structure");
 }
+
+
+void AP_BattMonitor_Backend::Log_Write_BATI(uint8_t instance) const
+{
+#if SMART_BATTMON_ENABLED  // SMART_BATT_LOGGING_ENABELED
+    uint16_t cycles;
+    const bool got_cycle_count = get_cycle_count(cycles);
+
+    int32_t capacity_design;
+    const bool got_capacity_design = get_design_capacity(capacity_design);
+
+    int32_t capacity_full;
+    const bool got_capacity_full = get_full_charge_capacity(capacity_full);
+
+    char serial_number[MAVLINK_MSG_SMART_BATTERY_INFO_FIELD_SERIAL_NUMBER_LEN]{};
+    get_serial_number(serial_number, ARRAY_SIZE(serial_number));
+
+    char product_name[MAVLINK_MSG_SMART_BATTERY_INFO_FIELD_DEVICE_NAME_LEN]{};
+    get_product_name(product_name, ARRAY_SIZE(product_name));
+
+    struct log_BATI pkt{
+        LOG_PACKET_HEADER_INIT(LOG_BATI_MSG),
+        time_us             : AP_HAL::micros64(),
+        instance            : instance,
+        function            : MAV_BATTERY_FUNCTION_UNKNOWN,
+        type                : MAV_BATTERY_TYPE_UNKNOWN,
+        capacity_design     : got_capacity_design ? capacity_design : -1,
+        capacity_full       : got_capacity_full ? capacity_full : -1,
+        cycles              : (uint16_t) (got_cycle_count ? cycles : UINT16_MAX),
+        serial_number       : {},
+        product_name        : {}
+    };
+
+    strncpy_noterm(pkt.serial_number, serial_number, sizeof(pkt.serial_number));
+    strncpy_noterm(pkt.product_name, product_name, sizeof(pkt.product_name));
+    AP::logger().WriteBlock(&pkt, sizeof(pkt));
+#endif
+}
