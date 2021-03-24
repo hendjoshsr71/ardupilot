@@ -22,7 +22,7 @@ private:
     // returns true once PEC is confirmed as working or not working
     bool check_pec_support();
 
-    uint8_t _pec_confirmed; // count of the number of times PEC has been confirmed as working
+    bool _pec_confirmed; // true if PEC has been confirmed as working
     uint32_t _last_cell_update_us[BATTMONITOR_SMBUS_NUM_CELLS_MAX]; // system time of last successful read of cell voltage
     uint32_t _cell_count_check_start_us;  // system time we started attempting to count the number of cells
     uint8_t _cell_count;    // number of cells returning voltages

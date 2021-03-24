@@ -29,6 +29,10 @@
 #define HAL_BATTMON_FUEL_ENABLE 1
 #endif
 
+#ifndef SMART_BATTMON_ENABLED
+#define SMART_BATTMON_ENABLED !HAL_MINIMIZE_FEATURES
+#endif
+
 // declare backend class
 class AP_BattMonitor_Backend;
 class AP_BattMonitor_Analog;
@@ -162,6 +166,12 @@ public:
     int32_t pack_capacity_mah(uint8_t instance) const;
     int32_t pack_capacity_mah() const { return pack_capacity_mah(AP_BATT_PRIMARY_INSTANCE); }
  
+    // get and fill design capacity (capacity when newly manufactured)
+    bool get_design_capacity(uint8_t instance, int32_t &design_capacity) const;
+
+    // get and fill full charge capacity (capacity accounting for battery degradation)
+    bool get_full_charge_capacity(uint8_t instance, int32_t &full_capacity) const;
+    
     /// returns true if a battery failsafe has ever been triggered
     bool has_failsafed(void) const { return _has_triggered_failsafe; };
 
@@ -180,6 +190,12 @@ public:
         return _params[instance]._serial_number;
     }
 
+    // get_serial_number() as char[buflen]
+    bool get_serial_number(uint8_t instance, char *serial_number, uint8_t buflen) const;
+
+    // get product name as 'device_name'_'manufacturer'
+    bool get_product_name(uint8_t instance, char *product_name, uint8_t buflen) const;
+    
     /// true when (voltage * current) > watt_max
     bool overpower_detected() const;
     bool overpower_detected(uint8_t instance) const;

@@ -1,4 +1,5 @@
 #include "AP_BattMonitor_SMBus.h"
+#include <stdio.h>
 
 #define AP_BATTMONITOR_SMBUS_PEC_POLYNOME 0x07 // Polynome for CRC generation
 
@@ -27,6 +28,80 @@ bool AP_BattMonitor_SMBus::get_cycle_count(uint16_t &cycles) const
         return false;
     }
     cycles = _cycle_count;
+    return true;
+}
+
+// return true if serial number can be provided and fills in serial number argument
+bool AP_BattMonitor_SMBus::get_serial_number(char *serial_number, uint8_t buflen) const 
+{
+    WITH_SEMAPHORE(_dev->get_semaphore());
+
+    uint16_t serial;
+    if (!read_word(BATTMONITOR_SMBUS_SERIAL, serial)) {
+        return false;
+    }
+
+    snprintf(serial_number, buflen, "%i", (signed) serial);
+
+    // Set serial number parameter
+    if (serial != _params._serial_number) {
+        _params._serial_number.set_and_notify(serial);
+    }
+
+    return true;
+}
+
+// return true if manufacturer name can be provided and fills in manufacturer name
+bool AP_BattMonitor_SMBus::get_name(AP_BattMonitor_SMBus::BATTMONITOR_SMBUS reg_name,  char * name_out, uint8_t buflen) const
+{    
+    WITH_SEMAPHORE(_dev->get_semaphore());
+
+    // Should I check the ENUM to be sure it is Product_Name or Device_Name??
+    if (reg_name == AP_BattMonitor_SMBus::BATTMONITOR_SMBUS::BATTMONITOR_SMBUS_MANUFACTURE_NAME ||
+        reg_name == AP_BattMonitor_SMBus::BATTMONITOR_SMBUS::BATTMONITOR_SMBUS_DEVICE_NAME) {
+
+        uint8_t name[SMBUS_READ_BLOCK_MAXIMUM_TRANSFER+1];    
+        const uint8_t name_len = read_block(reg_name, name, true) + 1;
+        
+        if (name_len) {
+            bool len_cmp = name_len < buflen -1;
+            strncpy(name_out, (char*)name, len_cmp ? name_len : buflen -1);
+            name_out[len_cmp ? name_len + 1 : buflen] = '\0';
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool AP_BattMonitor_SMBus::get_product_name(char *product_name, uint8_t buflen) const
+{
+    char manufacturer_name[SMBUS_READ_BLOCK_MAXIMUM_TRANSFER+1];
+    if (!get_name(BATTMONITOR_SMBUS_MANUFACTURE_NAME, manufacturer_name, ARRAY_SIZE(manufacturer_name))) {
+        return false;
+    }
+
+    char device_name[SMBUS_READ_BLOCK_MAXIMUM_TRANSFER+1];
+    if (!get_name(BATTMONITOR_SMBUS_DEVICE_NAME, device_name, ARRAY_SIZE(device_name))) {
+        return false;
+    }
+
+    snprintf(product_name, buflen, "%s_%s", device_name, manufacturer_name);
+
+    return true;
+}
+
+// return true if design_capacity can be provided and fills it in
+bool AP_BattMonitor_SMBus::get_design_capacity(int32_t &design_capacity) const
+{
+    WITH_SEMAPHORE(_dev->get_semaphore());
+
+    uint16_t data;
+    if (!read_word(BATTMONITOR_SMBUS_DESIGN_CAPACITY, data)) {
+        return false;
+    }
+
+    design_capacity = data * get_capacity_scaler();
     return true;
 }
 
@@ -233,4 +308,3 @@ uint8_t AP_BattMonitor_SMBus::get_PEC(const uint8_t i2c_addr, uint8_t cmd, bool 
     // return result
     return crc;
 }
-

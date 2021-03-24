@@ -17,7 +17,6 @@ uint8_t smbus_cell_ids[] = { 0x3f,  // cell 1
                              0x35,  // cell 11
                              0x34}; // cell 12
 
-#define SMBUS_READ_BLOCK_MAXIMUM_TRANSFER    0x20   // A Block Read or Write is allowed to transfer a maximum of 32 data bytes.
 #define SMBUS_CELL_COUNT_CHECK_TIMEOUT       15     // check cell count for up to 15 seconds
 
 /*

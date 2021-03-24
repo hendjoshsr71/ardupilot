@@ -49,8 +49,20 @@ public:
     /// capacity_remaining_pct - returns the % battery capacity remaining (0 ~ 100)
     virtual uint8_t capacity_remaining_pct() const;
 
+    // gets and fills in the design capacity (capacity when newly manufactured)
+    virtual bool get_design_capacity(int32_t &design_capacity) const { return false; }
+
+    // gets and fills in full charge capacity (capacity accounting for battery degradation)
+    virtual bool get_full_charge_capacity(int32_t &full_capacity) const { return false; };
+
     // return true if cycle count can be provided and fills in cycles argument
     virtual bool get_cycle_count(uint16_t &cycles) const { return false; }
+
+    // return true if serial number can be provided and fills in serial number
+    virtual bool get_serial_number(char *serial_number, uint8_t serial_name_len) const { return false; }
+
+    // return true if product name can be provided from manufacturer name and device name
+    virtual bool get_product_name(char *product_name, uint8_t buflen) const { return false; };
 
     /// get voltage with sag removed (based on battery current draw and resistance)
     /// this will always be greater than or equal to the raw voltage
