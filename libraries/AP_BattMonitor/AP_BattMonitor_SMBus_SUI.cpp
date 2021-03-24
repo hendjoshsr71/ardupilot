@@ -56,10 +56,10 @@ void AP_BattMonitor_SMBus_SUI::timer()
         _state.last_time_micros = tnow;
     }
 
-    read_full_charge_capacity();
+    //read_full_charge_capacity();
 
     read_temp();
-    read_serial_number();
+    //read_serial_number();
     read_remaining_capacity();
     update_health();
 }

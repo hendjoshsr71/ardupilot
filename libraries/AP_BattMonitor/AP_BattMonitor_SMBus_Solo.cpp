@@ -71,7 +71,7 @@ void AP_BattMonitor_SMBus_Solo::timer()
         _state.last_time_micros = tnow;
     }
 
-    read_full_charge_capacity();
+    //read_full_charge_capacity();
     read_remaining_capacity();
 
     // read the button press indicator
@@ -92,9 +92,9 @@ void AP_BattMonitor_SMBus_Solo::timer()
 
     read_temp();
 
-    read_serial_number();
+    //read_serial_number();
 
-    read_cycle_count();
+    //read_cycle_count();
 }
 
 // read_block - returns number of characters read if successful, zero if unsuccessful

@@ -105,16 +105,16 @@ void AP_BattMonitor_SMBus_Generic::timer()
         _state.last_time_micros = tnow;
     }
 
-    read_full_charge_capacity();
+    //read_full_charge_capacity();
 
     // FIXME: Perform current integration if the remaining capacity can't be requested
     read_remaining_capacity();
 
     read_temp();
 
-    read_serial_number();
+    //read_serial_number();
 
-    read_cycle_count();
+    //read_cycle_count();
 }
 
 // check if PEC supported with the version value in SpecificationInfo() function

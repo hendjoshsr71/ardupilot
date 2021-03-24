@@ -72,8 +72,7 @@ void AP_BattMonitor_SMBus_NeoDesign::timer()
         _state.last_time_micros = tnow;
     }
 
-    read_full_charge_capacity();
+    //read_full_charge_capacity();
     read_remaining_capacity();
     read_temp();
 }
-
