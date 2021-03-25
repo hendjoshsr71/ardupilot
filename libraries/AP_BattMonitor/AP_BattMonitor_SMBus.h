@@ -66,15 +66,14 @@ public:
     // gets the design capacity (capacity when newly manufactured)
     bool get_design_capacity(int32_t &design_capacity) const override;
 
+    // reads and gets the full charge capacity (capacity when accounting for degradation)
+    bool get_full_charge_capacity(int32_t &full_capacity) const override;
+
     virtual void init(void) override;
 
 protected:
 
     void read(void) override;
-
-    // reads the pack full charge capacity (accounting for battery degradation)
-    // returns true if the read was successful, or if we already knew the pack capacity
-    bool read_full_charge_capacity(void);
 
     // reads the remaining capacity
     // returns true if the read was successful, which is only considered to be the
@@ -88,12 +87,6 @@ protected:
     // returns true if the read was successful
     virtual bool read_temp(void);
 
-    // reads the serial number if it's not already known
-    // returns true if the read was successful, or the number was already known
-    bool read_serial_number(void);
-
-    // reads the battery's cycle count
-    void read_cycle_count();
     // return true if manufacturer name can be provided and fills in manufacturer name
     bool get_name(AP_BattMonitor_SMBus::BATTMONITOR_SMBUS reg_name,  char * name_out, uint8_t buflen) const;
 
@@ -111,11 +104,7 @@ protected:
     AP_HAL::OwnPtr<AP_HAL::I2CDevice> _dev;
     bool _pec_supported; // true if PEC is supported
 
-    int32_t _serial_number = -1;    // battery serial number
-    uint16_t _full_charge_capacity; // full charge capacity, used to stash the value before setting the parameter
     bool _has_cell_voltages;        // smbus backends flag this as true once they have received a valid cell voltage report
-    uint16_t _cycle_count = 0;      // number of cycles the battery has experienced. An amount of discharge approximately equal to the value of DesignCapacity.
-    bool _has_cycle_count;          // true if cycle count has been retrieved from the battery
     bool _has_temperature;
 
     virtual void timer(void) = 0;   // timer function to read from the battery

@@ -21,13 +21,15 @@ void AP_BattMonitor_SMBus::init(void)
     }
 }
 
-// return true if cycle count can be provided and fills in cycles argument
+// return true if cycle count has been read and fills in cycles argument
 bool AP_BattMonitor_SMBus::get_cycle_count(uint16_t &cycles) const
 {
-    if (!_has_cycle_count) {
+    WITH_SEMAPHORE(_dev->get_semaphore());
+
+    if (!read_word(BATTMONITOR_SMBUS_CYCLE_COUNT, cycles)) {
         return false;
     }
-    cycles = _cycle_count;
+
     return true;
 }
 
@@ -105,34 +107,30 @@ bool AP_BattMonitor_SMBus::get_design_capacity(int32_t &design_capacity) const
     return true;
 }
 
+// reads the pack full charge capacity
+// returns true if the read was successful
+bool AP_BattMonitor_SMBus::get_full_charge_capacity(int32_t &full_capacity) const
+{
+    WITH_SEMAPHORE(_dev->get_semaphore());
+
+    uint16_t data;
+    if (!read_word(BATTMONITOR_SMBUS_FULL_CHARGE_CAPACITY, data)) {
+        return false;
+    }
+    full_capacity = data * get_capacity_scaler();
+
+    if (data != _params._pack_capacity) {
+        _params._pack_capacity.set_and_notify(full_capacity);
+    }
+
+    return true;
+}
+
 /// read the battery_voltage and current, should be called at 10hz
 void AP_BattMonitor_SMBus::read(void)
 {
     // nothing to be done here for actually interacting with the battery
     // however we can use this to set any parameters that need to be set
-
-    if (_serial_number != _params._serial_number) {
-        _params._serial_number.set_and_notify(_serial_number);
-    }
-
-    if (_full_charge_capacity != _params._pack_capacity) {
-        _params._pack_capacity.set_and_notify(_full_charge_capacity);
-    }
-}
-
-// reads the pack full charge capacity
-// returns true if the read was successful, or if we already knew the pack capacity
-bool AP_BattMonitor_SMBus::read_full_charge_capacity(void)
-{
-    uint16_t data;
-
-    if (_full_charge_capacity != 0) {
-        return true;
-    } else if (read_word(BATTMONITOR_SMBUS_FULL_CHARGE_CAPACITY, data)) {
-        _full_charge_capacity = data * get_capacity_scaler();
-        return true;
-    }
-    return false;
 }
 
 // reads the remaining capacity
@@ -169,33 +167,6 @@ bool AP_BattMonitor_SMBus::read_temp(void)
     _has_temperature = false;
 
     return false;
-}
-
-// reads the serial number if it's not already known
-// returns true if the read was successful or the number was already known
-bool AP_BattMonitor_SMBus::read_serial_number(void)
-{
-    uint16_t data;
-
-    // don't recheck the serial number if we already have it
-    if (_serial_number != -1) {
-        return true;
-    } else if (read_word(BATTMONITOR_SMBUS_SERIAL, data)) {
-        _serial_number = data;
-        return true;
-    }
-
-    return false;
-}
-
-// reads the battery's cycle count
-void AP_BattMonitor_SMBus::read_cycle_count()
-{
-    // only read cycle count once
-    if (_has_cycle_count) {
-        return;
-    }
-    _has_cycle_count = read_word(BATTMONITOR_SMBUS_CYCLE_COUNT, _cycle_count);
 }
 
 // read word from register
