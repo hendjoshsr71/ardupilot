@@ -93,9 +93,10 @@ void GCS_MAVLINK_Copter::send_position_target_global_int()
         return;
     }
 
-    // convert altitude frame to AMSL (this may use the terrain database)
-    if (!target.change_alt_frame(Location::AltFrame::ABSOLUTE)) {
-        return;
+    // Note, currently get_wp() only returns either ABOVE_TERRAIN or ABOVE_ORIGIN
+    MAV_FRAME frame;
+    if (!location_alt_frame_to_mavlink_coordinate_frame(target, frame)) {
+        return; // failed altitude frame conversion
     }
     static constexpr uint16_t POSITION_TARGET_TYPEMASK_LAST_BYTE = 0xF000;
     static constexpr uint16_t TYPE_MASK = POSITION_TARGET_TYPEMASK_VX_IGNORE | POSITION_TARGET_TYPEMASK_VY_IGNORE | POSITION_TARGET_TYPEMASK_VZ_IGNORE |
@@ -104,7 +105,7 @@ void GCS_MAVLINK_Copter::send_position_target_global_int()
     mavlink_msg_position_target_global_int_send(
         chan,
         AP_HAL::millis(), // time_boot_ms
-        MAV_FRAME_GLOBAL, // targets are always global altitude
+        frame,      // target MAV_FRAME
         TYPE_MASK, // ignore everything except the x/y/z components
         target.lat, // latitude as 1e7
         target.lng, // longitude as 1e7
