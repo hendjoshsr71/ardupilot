@@ -153,6 +153,8 @@ public:
     // returns the inertial navigation origin in lat/lon/alt
     bool get_origin(Location &ret) const override WARN_IF_UNUSED;
 
+    bool origin_is_set(void) const override;
+
     bool have_inertial_nav() const override;
 
     bool get_velocity_NED(Vector3f &vec) const override;

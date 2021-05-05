@@ -2350,6 +2350,45 @@ bool AP_AHRS_NavEKF::get_origin(Location &ret) const
     return false;
 }
 
+// passes a reference to the location of the inertial navigation origin
+// in WGS-84 coordinates
+// returns a boolean true when the inertial navigation origin has been set
+bool AP_AHRS_NavEKF::origin_is_set(void) const
+{
+    switch (ekf_type()) {
+    case EKFType::NONE:
+        return false;
+
+#if HAL_NAVEKF2_AVAILABLE
+    case EKFType::TWO:
+        return EKF2.origin_is_set();
+#endif
+
+#if HAL_NAVEKF3_AVAILABLE
+    case EKFType::THREE:
+        return EKF3.origin_is_set();
+#endif
+
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+    case EKFType::SITL: {
+        if (!_sitl) {
+            return false;
+        }
+        // const struct SITL::sitl_fdm &fdm = _sitl->state;
+        // ret = fdm.home;
+        return true;
+    }
+#endif
+
+#if HAL_EXTERNAL_AHRS_ENABLED
+    case EKFType::EXTERNAL:
+        return AP::externalAHRS().origin_is_set();
+#endif
+    }
+
+    return false;
+}
+
 // get_hgt_ctrl_limit - get maximum height to be observed by the control loops in metres and a validity flag
 // this is used to limit height during optical flow navigation
 // it will return false when no limiting is required
