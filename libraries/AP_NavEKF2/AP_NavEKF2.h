@@ -154,6 +154,9 @@ public:
     // Returns false if the filter has rejected the attempt to set the origin
     bool setOriginLLH(const Location &loc);
 
+    // returns true is the origin is set
+    bool origin_is_set() const { return common_origin_valid; }
+
     // return estimated height above ground level
     // return false if ground height is not being estimated.
     bool getHAGL(float &HAGL) const;
