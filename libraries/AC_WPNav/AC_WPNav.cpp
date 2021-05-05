@@ -232,7 +232,7 @@ bool AC_WPNav::set_wp_destination_next_loc(const Location& destination)
 // returns false if unable to return a destination (for example if origin has not yet been set)
 bool AC_WPNav::get_wp_destination_loc(Location& destination) const
 {
-    if (!AP::ahrs().get_origin(destination)) {
+    if (!AP::ahrs().origin_is_set()) {
         return false;
     }
     destination.offset(_destination.x*0.01f, _destination.y*0.01f);
