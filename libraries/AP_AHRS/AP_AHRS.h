@@ -463,6 +463,14 @@ public:
     // returns the inertial navigation origin in lat/lon/alt
     virtual bool get_origin(Location &ret) const  WARN_IF_UNUSED { return false; }
 
+    // returns true if origin is set
+    // bool origin_is_set(void) const {
+    //     return _origin_is_set;
+    // }
+
+    // returns true if origin is set
+    virtual bool origin_is_set(void) const WARN_IF_UNUSED { return false; }
+
     void Log_Write_Home_And_Origin();
 
     // return true if the AHRS object supports inertial navigation,
@@ -702,6 +710,7 @@ protected:
     struct Location _home;
     bool _home_is_set :1;
     bool _home_locked :1;
+    bool _origin_is_set;
 
     // helper trig variables
     float _cos_roll, _cos_pitch, _cos_yaw;
