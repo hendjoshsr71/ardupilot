@@ -82,6 +82,7 @@ public:
     bool initialised(void) const;
     bool get_quaternion(Quaternion &quat);
     bool get_origin(Location &loc);
+    bool origin_is_set(void) { return state.have_origin;}
     bool get_location(Location &loc);
     Vector2f get_groundspeed_vector();
     bool get_velocity_NED(Vector3f &vel);
@@ -146,4 +147,3 @@ namespace AP {
 };
 
 #endif  // HAL_EXTERNAL_AHRS_ENABLED
-
