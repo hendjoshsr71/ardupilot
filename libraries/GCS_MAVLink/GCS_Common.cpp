@@ -3026,8 +3026,7 @@ void GCS_MAVLINK::set_ekf_origin(const Location& loc)
     AP_AHRS &ahrs = AP::ahrs();
 
     // check if EKF origin has already been set
-    Location ekf_origin;
-    if (ahrs.get_origin(ekf_origin)) {
+    if (ahrs.origin_is_set()) {
         return;
     }
 
