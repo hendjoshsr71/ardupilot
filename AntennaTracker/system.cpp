@@ -131,8 +131,7 @@ bool Tracker::set_home_eeprom(const Location &temp)
 bool Tracker::set_home(const Location &temp)
 {
     // check EKF origin has been set
-    Location ekf_origin;
-    if (ahrs.get_origin(ekf_origin)) {
+    if (ahrs.origin_is_set()) {
         if (!ahrs.set_home(temp)) {
             return false;
         }
