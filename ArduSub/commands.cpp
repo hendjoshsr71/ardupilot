@@ -56,8 +56,7 @@ bool Sub::set_home_to_current_location(bool lock)
 bool Sub::set_home(const Location& loc, bool lock)
 {
     // check if EKF origin has been set
-    Location ekf_origin;
-    if (!ahrs.get_origin(ekf_origin)) {
+    if (!ahrs.origin_is_set()) {
         return false;
     }
 
