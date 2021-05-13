@@ -378,9 +378,9 @@ struct PACKED log_GuidedTarget {
 };
 
 // Write a Guided mode target
-// pos_target is lat, lon, alt OR offset from ekf origin in cm OR roll, pitch, yaw target in centi-degrees
+// pos_target is lat, lon, alt OR offset from ekf origin in cm, frame NEU OR roll, pitch, yaw target in centi-degrees
 // terrain should be 0 if pos_target.z is alt-above-ekf-origin, 1 if alt-above-terrain
-// vel_target is cm/s
+// vel_target is cm/s, frame NEU
 void Copter::Log_Write_GuidedTarget(ModeGuided::SubMode target_type, const Vector3f& pos_target, bool terrain_alt, const Vector3f& vel_target, const Vector3f& accel_target)
 {
     struct log_GuidedTarget pkt = {
