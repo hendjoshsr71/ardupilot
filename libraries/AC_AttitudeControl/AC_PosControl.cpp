@@ -673,8 +673,9 @@ void AC_PosControl::update_xy_controller()
 ///     by the kinematic shaping.
 void AC_PosControl::set_max_speed_accel_z(float speed_down, float speed_up, float accel_cmss)
 {
-    // ensure speed_down is always negative
+    // ensure speed_down is always negative & speed_up is always positive
     speed_down = -fabsf(speed_down);
+    speed_up = fabsf(speed_up);
 
     // sanity check and update
     if (is_negative(speed_down)) {
