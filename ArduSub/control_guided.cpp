@@ -144,7 +144,7 @@ bool Sub::guided_set_destination(const Vector3f& destination)
 #endif
 
     // no need to check return status because terrain data is not used
-    wp_nav.set_wp_destination(destination, false);
+    wp_nav.set_wp_destination(destination.neu_to_ned() * 0.01f, false); // convert cm to m and NEU to NED
 
     // log target
     Log_Write_GuidedTarget(guided_mode, destination, Vector3f());
