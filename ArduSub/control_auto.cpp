@@ -75,7 +75,7 @@ void Sub::auto_wp_start(const Vector3f& destination)
     auto_mode = Auto_WP;
 
     // initialise wpnav (no need to check return status because terrain data is not used)
-    wp_nav.set_wp_destination(destination, false);
+    wp_nav.set_wp_destination(destination.neu_to_ned() * 0.01f, false); // convert cm to m
 
     // initialise yaw
     // To-Do: reset the yaw only when the previous navigation command is not a WP.  this would allow removing the special check for ROI
@@ -184,9 +184,9 @@ void Sub::auto_circle_movetoedge_start(const Location &circle_center, float radi
     }
 
     // check our distance from edge of circle
-    Vector3f circle_edge_neu;
-    circle_nav.get_closest_point_on_circle(circle_edge_neu);
-    float dist_to_edge = (inertial_nav.get_position() - circle_edge_neu).length();
+    Vector3f circle_edge_ned;
+    circle_nav.get_closest_point_on_circle_NED(circle_edge_ned);
+    float dist_to_edge = (inertial_nav.get_position().neu_to_ned() - circle_edge_ned).length();
 
     // if more than 3m then fly to edge
     if (dist_to_edge > 300.0f) {
@@ -194,7 +194,7 @@ void Sub::auto_circle_movetoedge_start(const Location &circle_center, float radi
         auto_mode = Auto_CircleMoveToEdge;
 
         // convert circle_edge_neu to Location
-        Location circle_edge(circle_edge_neu, Location::AltFrame::ABOVE_ORIGIN);
+        Location circle_edge(circle_edge_ned.neu_to_ned(), Location::AltFrame::ABOVE_ORIGIN); // Convert to NEU for Location constructor
 
         // convert altitude to same as command
         circle_edge.set_alt_cm(circle_center.alt, circle_center.get_alt_frame());
@@ -206,9 +206,9 @@ void Sub::auto_circle_movetoedge_start(const Location &circle_center, float radi
         }
 
         // if we are outside the circle, point at the edge, otherwise hold yaw
-        const Vector3p &circle_center_neu = circle_nav.get_center();
-        const Vector3f &curr_pos = inertial_nav.get_position();
-        float dist_to_center = norm(circle_center_neu.x - curr_pos.x, circle_center_neu.y - curr_pos.y);
+        const Vector3p &circle_center_ned = circle_nav.get_center();
+        const Vector3f &curr_pos = inertial_nav.get_position().neu_to_ned();
+        float dist_to_center = norm(circle_center_ned.x - curr_pos.x, circle_center_ned.y - curr_pos.y);
         if (dist_to_center > circle_nav.get_radius() && dist_to_center > 500) {
             set_auto_yaw_mode(get_default_auto_yaw_mode(false));
         } else {
