@@ -371,7 +371,7 @@ float stopping_distance(float velocity, float p, float accel_max)
     return inv_sqrt_controller(velocity, p, accel_max);
 }
 
-// calculate the maximum acceleration or velocity in a given direction
+// calculate the maximum acceleration or velocity in a given direction (NEU frame)
 // based on horizontal and vertical limits.
 float kinematic_limit(Vector3f direction, float max_xy, float max_z_pos, float max_z_neg)
 {
