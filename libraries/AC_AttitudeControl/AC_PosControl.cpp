@@ -649,8 +649,9 @@ void AC_PosControl::update_xy_controller()
 ///     speed_down can be positive or negative but will always be interpreted as a descent speed
 void AC_PosControl::set_max_speed_accel_z(float speed_down, float speed_up, float accel_cmss)
 {
-    // ensure speed_down is always negative
+    // ensure speed_down is always negative & speed_up is always positive
     speed_down = -fabsf(speed_down);
+    speed_up = fabsf(speed_up);
 
     // exit immediately if no change in speed up or down
     if (is_equal(_vel_max_down_cms, speed_down) && is_equal(_vel_max_up_cms, speed_up) && is_equal(_accel_max_z_cmss, accel_cmss)) {
