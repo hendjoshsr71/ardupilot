@@ -838,6 +838,8 @@ class AutoTestPlane(vehicle_test_suite.TestSuite):
         self.disarm_vehicle()
         if not self.current_onboard_log_contains_message("BCL2"):
             raise NotAchievedException("Expected BCL2 message")
+        if not self.current_onboard_log_contains_message("BATI"):
+            raise NotAchievedException("Expected BATI message")
 
     def context_push_do_change_speed(self):
         # the following lines ensure we revert these parameter values
