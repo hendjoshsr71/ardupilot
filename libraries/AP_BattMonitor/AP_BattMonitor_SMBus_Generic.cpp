@@ -156,7 +156,7 @@ uint8_t AP_BattMonitor_SMBus_Generic::read_block(uint8_t reg, uint8_t* data, boo
 
     // check PEC
     if (_pec_supported) {
-        uint8_t pec = get_PEC(AP_BATTMONITOR_SMBUS_I2C_ADDR, reg, true, buff, bufflen+1);
+        uint8_t pec = get_PEC(_params._i2c_address, reg, true, buff, bufflen+1);
         if (pec != buff[bufflen+1]) {
             return 0;
         }
@@ -215,4 +215,3 @@ bool AP_BattMonitor_SMBus_Generic::check_pec_support()
 	_pec_confirmed = true;
 	return true;
 }
-

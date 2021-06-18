@@ -167,7 +167,7 @@ const AP_Param::GroupInfo AP_BattMonitor_Params::var_info[] = {
     // @Description: Battery monitor I2C bus number
     // @Range: 0 3
     // @User: Standard
-    AP_GROUPINFO("BUS", 20, AP_BattMonitor_Params, _i2c_bus, 0),
+    AP_GROUPINFO("I2C_BUS", 20, AP_BattMonitor_Params, _i2c_bus, 0),
 
     // @Param: OPTIONS
     // @DisplayName: Battery monitor options
@@ -175,6 +175,13 @@ const AP_Param::GroupInfo AP_BattMonitor_Params::var_info[] = {
     // @Bitmask: 0:Ignore UAVCAN SoC
     // @User: Advanced
     AP_GROUPINFO("OPTIONS", 21, AP_BattMonitor_Params, _options, 0),
+
+    // @Param: ADDR
+    // @DisplayName: Battery monitor I2C address
+    // @Description: Battery monitor I2C address
+    // @Range: 0 127
+    // @User: Advanced
+    AP_GROUPINFO("I2C_ADDR", 22, AP_BattMonitor_Params, _i2c_address, 0x0B), // Previous default SMBUS I2C address
 
     AP_GROUPEND
 

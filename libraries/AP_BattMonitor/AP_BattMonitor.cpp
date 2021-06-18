@@ -122,38 +122,41 @@ AP_BattMonitor::init()
 #if HAL_BATTMON_SMBUS_ENABLE
             case Type::SOLO:
                 _params[instance]._i2c_bus.set_default(AP_BATTMONITOR_SMBUS_BUS_INTERNAL);
+                _params[instance]._i2c_address.set_default(AP_BATTMONITOR_SMBUS_I2C_ADDR);
                 drivers[instance] = new AP_BattMonitor_SMBus_Solo(*this, state[instance], _params[instance],
-                                                                  hal.i2c_mgr->get_device(_params[instance]._i2c_bus, AP_BATTMONITOR_SMBUS_I2C_ADDR,
-                                                                                          100000, true, 20));
+                                                                  hal.i2c_mgr->get_device(_params[instance]._i2c_bus,
+                                                                  _params[instance]._i2c_address, 100000, true, 20));
                 break;
             case Type::SMBus_Generic:
                 _params[instance]._i2c_bus.set_default(AP_BATTMONITOR_SMBUS_BUS_EXTERNAL);
                 drivers[instance] = new AP_BattMonitor_SMBus_Generic(*this, state[instance], _params[instance],
-                                                                     hal.i2c_mgr->get_device(_params[instance]._i2c_bus, AP_BATTMONITOR_SMBUS_I2C_ADDR,
-                                                                                             100000, true, 20));
+                                                                     hal.i2c_mgr->get_device(_params[instance]._i2c_bus,
+                                                                     _params[instance]._i2c_address, 100000, true, 20));
                 break;
             case Type::SUI3:
-                _params[instance]._i2c_bus.set_default(AP_BATTMONITOR_SMBUS_BUS_INTERNAL),
+                _params[instance]._i2c_bus.set_default(AP_BATTMONITOR_SMBUS_BUS_INTERNAL);
+                _params[instance]._i2c_address.set_default(AP_BATTMONITOR_SMBUS_I2C_ADDR);
                 drivers[instance] = new AP_BattMonitor_SMBus_SUI(*this, state[instance], _params[instance],
-                                                                 hal.i2c_mgr->get_device(_params[instance]._i2c_bus, AP_BATTMONITOR_SMBUS_I2C_ADDR,
-                                                                                          100000, true, 20), 3);
+                                                                 hal.i2c_mgr->get_device(_params[instance]._i2c_bus,
+                                                                 _params[instance]._i2c_address, 100000, true, 20), 3);
                 break;
             case Type::SUI6:
-                _params[instance]._i2c_bus.set_default(AP_BATTMONITOR_SMBUS_BUS_INTERNAL),
+                _params[instance]._i2c_bus.set_default(AP_BATTMONITOR_SMBUS_BUS_INTERNAL);
+                _params[instance]._i2c_address.set_default(AP_BATTMONITOR_SMBUS_I2C_ADDR);
                 drivers[instance] = new AP_BattMonitor_SMBus_SUI(*this, state[instance], _params[instance],
-                                                                 hal.i2c_mgr->get_device(_params[instance]._i2c_bus, AP_BATTMONITOR_SMBUS_I2C_ADDR,
-                                                                                         100000, true, 20), 6);
+                                                                 hal.i2c_mgr->get_device(_params[instance]._i2c_bus,
+                                                                 _params[instance]._i2c_address, 100000, true, 20), 6);
                 break;
             case Type::MAXELL:
                 _params[instance]._i2c_bus.set_default(AP_BATTMONITOR_SMBUS_BUS_EXTERNAL);
                 drivers[instance] = new AP_BattMonitor_SMBus_Maxell(*this, state[instance], _params[instance],
-                                                                    hal.i2c_mgr->get_device(_params[instance]._i2c_bus, AP_BATTMONITOR_SMBUS_I2C_ADDR,
-                                                                                            100000, true, 20));
+                                                                    hal.i2c_mgr->get_device(_params[instance]._i2c_bus,
+                                                                    _params[instance]._i2c_address, 100000, true, 20));
                 break;
             case Type::Rotoye:
                 drivers[instance] = new AP_BattMonitor_SMBus_Rotoye(*this, state[instance], _params[instance],
-                                                                    hal.i2c_mgr->get_device(_params[instance]._i2c_bus, AP_BATTMONITOR_SMBUS_I2C_ADDR,
-                                                                                            100000, true, 20));
+                                                                    hal.i2c_mgr->get_device(_params[instance]._i2c_bus,
+                                                                    _params[instance]._i2c_address, 100000, true, 20));
                 break;
 #endif // HAL_BATTMON_SMBUS_ENABLE
             case Type::BEBOP:
@@ -183,10 +186,11 @@ AP_BattMonitor::init()
                 break;
 #endif // HAL_BATTMON_FUEL_ENABLE
             case Type::NeoDesign:
-                _params[instance]._i2c_bus.set_default(AP_BATTMONITOR_SMBUS_BUS_INTERNAL),
+                _params[instance]._i2c_bus.set_default(AP_BATTMONITOR_SMBUS_BUS_INTERNAL);
+                _params[instance]._i2c_address.set_default(AP_BATTMONITOR_SMBUS_I2C_ADDR);
                 drivers[instance] = new AP_BattMonitor_SMBus_NeoDesign(*this, state[instance], _params[instance],
-                                                                 hal.i2c_mgr->get_device(_params[instance]._i2c_bus, AP_BATTMONITOR_SMBUS_I2C_ADDR,
-                                                                                         100000, true, 20));
+                                                                 hal.i2c_mgr->get_device(_params[instance]._i2c_bus,
+                                                                 _params[instance]._i2c_address, 100000, true, 20));
                 break;
 #if GENERATOR_ENABLED
             case Type::GENERATOR_ELEC:
