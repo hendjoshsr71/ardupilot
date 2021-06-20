@@ -58,7 +58,7 @@ public:
     // x, y and z are in centimetres
     bool get_vector_xy_from_origin_NE(Vector2f &vec_ne) const WARN_IF_UNUSED;
     bool get_vector_from_origin_NEU(Vector3f &vec_neu) const WARN_IF_UNUSED;
-    bool get_vector_from_origin_NED_cm(Vector3f &vec_ned) const WARN_IF_UNUSED;
+    bool get_vector_from_origin_NED(Vector3f &vec_ned) const WARN_IF_UNUSED;
 
     // return distance in meters between two locations
     float get_distance(const struct Location &loc2) const;
