@@ -20,7 +20,7 @@ public:
     ///     returns false on failure (likely caused by missing terrain data)
     virtual bool set_wp_destination(const Vector3f& destination, bool terrain_alt = false) override;
 
-    /// get horizontal distance to destination in cm
+    /// get horizontal distance to destination in meters
     /// always returns distance to final destination (i.e. does not use oa adjusted destination)
     float get_wp_distance_to_destination() const override;
 
@@ -38,8 +38,8 @@ protected:
 
     // oa path planning variables
     AP_OAPathPlanner::OA_RetState _oa_state;    // state of object avoidance, if OA_SUCCESS we use _oa_destination to avoid obstacles
-    Vector3f    _origin_oabak;          // backup of _origin so it can be restored when oa completes, frame NED in cm
-    Vector3f    _destination_oabak;     // backup of _destination so it can be restored when oa completes, frame NED in cm
+    Vector3f    _origin_oabak;          // backup of _origin so it can be restored when oa completes, frame NED in meters
+    Vector3f    _destination_oabak;     // backup of _destination so it can be restored when oa completes, frame NED in meters
     bool        _terrain_alt_oabak;     // true if backup origin and destination z-axis are terrain altitudes
-    Location    _oa_destination;        // intermediate destination during avoidance, frame NED in cm
+    Location    _oa_destination;        // intermediate destination during avoidance, frame NED in meters
 };
