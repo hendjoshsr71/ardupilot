@@ -75,7 +75,8 @@ void Sub::auto_wp_start(const Vector3f& destination)
     auto_mode = Auto_WP;
 
     // initialise wpnav (no need to check return status because terrain data is not used)
-    wp_nav.set_wp_destination(destination.neu_to_ned() * 0.01f, false); // convert cm to m
+    //wp_nav.set_wp_destination(destination.neu_to_ned() * 0.01f, false); // convert cm to m
+    wp_nav.set_wp_destination(Vector3f{destination.x, destination.y, -destination.z} * 0.01f, false); // convert cm to m
 
     // initialise yaw
     // To-Do: reset the yaw only when the previous navigation command is not a WP.  this would allow removing the special check for ROI
@@ -179,13 +180,13 @@ void Sub::auto_circle_movetoedge_start(const Location &circle_center, float radi
 
     // set circle radius
     if (!is_zero(radius_m)) {
-        circle_nav.set_radius(radius_m * 100.0f);
+        circle_nav.set_radius(radius_m);
     }
 
     // check our distance from edge of circle
     Vector3f circle_edge_ned;
-    circle_nav.get_closest_point_on_circle_NED(circle_edge_ned);
-    float dist_to_edge = (inertial_nav.get_position().neu_to_ned() - circle_edge_ned).length();
+    circle_nav.get_closest_point_on_circle(circle_edge_ned);
+    float dist_to_edge = ((inertial_nav.get_position().neu_to_ned()*0.01f) - circle_edge_ned).length();
 
     // if more than 3m then fly to edge
     if (dist_to_edge > 300.0f) {
@@ -193,7 +194,7 @@ void Sub::auto_circle_movetoedge_start(const Location &circle_center, float radi
         auto_mode = Auto_CircleMoveToEdge;
 
         // convert circle_edge_neu to Location
-        Location circle_edge(circle_edge_ned.neu_to_ned(), Location::AltFrame::ABOVE_ORIGIN); // Convert to NEU for Location constructor
+        Location circle_edge(circle_edge_ned.neu_to_ned() * 100.0f, Location::AltFrame::ABOVE_ORIGIN); // Convert to NEU for Location constructor
 
         // convert altitude to same as command
         circle_edge.set_alt_cm(circle_center.alt, circle_center.get_alt_frame());
@@ -571,7 +572,7 @@ bool Sub::auto_terrain_recover_start()
     pos_control.relax_z_controller(motors.get_throttle_hover());
 
     // initialize vertical maximum speeds and acceleration
-    pos_control.set_max_speed_accel_z(wp_nav.get_default_speed_down(), wp_nav.get_default_speed_up(), wp_nav.get_accel_z());
+    pos_control.set_max_speed_accel_z(wp_nav.get_default_speed_down() * 100.0f, wp_nav.get_default_speed_up() * 100.0f, wp_nav.get_accel_z() * 100.0f);  // convert m to cm
 
     gcs().send_text(MAV_SEVERITY_WARNING, "Attempting auto failsafe recovery");
     return true;
@@ -596,12 +597,12 @@ void Sub::auto_terrain_recover_run()
     switch (rangefinder.status_orient(ROTATION_PITCH_270)) {
 
     case RangeFinder::Status::OutOfRangeLow:
-        target_climb_rate = wp_nav.get_default_speed_up();
+        target_climb_rate = wp_nav.get_default_speed_up() * 100.0f;  // convert m to cm
         rangefinder_recovery_ms = 0;
         break;
 
     case RangeFinder::Status::OutOfRangeHigh:
-        target_climb_rate = wp_nav.get_default_speed_down();
+        target_climb_rate = wp_nav.get_default_speed_down() * 100.0f;  // convert m to cm
         rangefinder_recovery_ms = 0;
         break;
 
