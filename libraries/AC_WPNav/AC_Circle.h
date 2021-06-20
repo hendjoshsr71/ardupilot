@@ -7,10 +7,10 @@
 #include <AC_AttitudeControl/AC_PosControl.h>      // Position control library
 
 // loiter maximum velocities and accelerations
-#define AC_CIRCLE_RADIUS_DEFAULT    1000.0f     // radius of the circle in cm that the vehicle will fly
-#define AC_CIRCLE_RATE_DEFAULT      20.0f       // turn rate in deg/sec.  Positive to turn clockwise, negative for counter clockwise
-#define AC_CIRCLE_ANGULAR_ACCEL_MIN 2.0f        // angular acceleration should never be less than 2deg/sec
-#define AC_CIRCLE_RADIUS_MAX        200000.0f   // maximum allowed circle radius of 2km
+#define AC_CIRCLE_RADIUS_DEFAULT    10.0f     // radius of the circle in meters that the vehicle will fly
+#define AC_CIRCLE_RATE_DEFAULT      20.0f     // turn rate in deg/sec. Positive to turn clockwise, negative for counter clockwise
+#define AC_CIRCLE_ANGULAR_ACCEL_MIN 2.0f      // angular acceleration should never be less than 2deg/sec
+#define AC_CIRCLE_RADIUS_MAX        2000.0f   // maximum allowed circle radius of 2km, units meters
 
 class AC_Circle
 {
@@ -31,21 +31,21 @@ public:
     /// set circle center to a Location
     void set_center(const Location& center);
 
-    /// set_circle_center as a vector from ekf origin frame NED in cm 
+    /// set_circle_center as a vector from ekf origin frame NED in meters
     ///     terrain_alt should be true if center.z is alt is above terrain
     void set_center(const Vector3f& center, bool terrain_alt) { _center = center; _terrain_alt = terrain_alt; }
 
-    /// get_circle_center frame NED in cm from home
+    /// get_circle_center frame NED in meters from home
     const Vector3f& get_center() const { return _center; }
 
     /// returns true if using terrain altitudes
     bool center_is_terrain_alt() const { return _terrain_alt; }
 
-    /// get_radius - returns radius of circle in cm
-    float get_radius() const { return is_positive(_radius)?_radius:_radius_parm; }
+    /// get_radius - returns radius of circle in meters
+    float get_radius() const { return is_positive(_radius) ? _radius : _radius_parm * 0.01f; }
 
-    /// set_radius - sets circle radius in cm
-    void set_radius(float radius_cm);
+    /// set_radius - sets circle radius in meters
+    void set_radius(float radius);
 
     /// get_rate - returns target rate in deg/sec held in RATE parameter
     float get_rate() const { return _rate; }
@@ -60,8 +60,9 @@ public:
     float get_angle_total() const { return _angle_total; }
 
     /// update - update circle controller
+    /// climb_rate in m/s
     ///     returns false on failure which indicates a terrain failsafe
-    bool update(float climb_rate_cms = 0.0f) WARN_IF_UNUSED;
+    bool update(float climb_rate = 0.0f) WARN_IF_UNUSED;
 
     /// get desired roll, pitch which should be fed into stabilize controllers
     float get_roll() const { return _pos_control.get_roll_cd(); }
@@ -73,22 +74,15 @@ public:
     /// used by vehicle code to determine if get_yaw() is valid
     bool is_active() const;
 
-    // get_closest_point_on_circle - returns closest point on the circle
+    // get_closest_point_on_circle - returns closest point on the circle, frame NED in meters
     //  circle's center should already have been set
     //  closest point on the circle will be placed in result
     //  result's altitude (i.e. z) will be set to the circle_center's altitude
     //  if vehicle is at the center of the circle, the edge directly behind vehicle will be returned
     void get_closest_point_on_circle(Vector3f &result) const;
 
-    // get_closest_point_on_circle - returns closest point on the circle in NED 
-    //  circle's center should already have been set
-    //  closest point on the circle will be placed in result
-    //  result's altitude (i.e. -z) will be set to the circle_center's altitude
-    //  if vehicle is at the center of the circle, the edge directly behind vehicle will be returned
-    void get_closest_point_on_circle_NED(Vector3f &result) const;
-
-    /// get horizontal distance to loiter target in cm
-    float get_distance_to_target() const { return _pos_control.get_pos_error_xy_cm(); }
+    /// get horizontal distance to loiter target in meters
+    float get_distance_to_target() const { return _pos_control.get_pos_error_xy_cm() * 0.01f; }
 
     /// get bearing to target in centi-degrees
     int32_t get_bearing_to_target() const { return _pos_control.get_bearing_to_target_cd(); }
@@ -97,7 +91,7 @@ public:
     bool pilot_control_enabled() const { return (_options.get() & CircleOptions::MANUAL_CONTROL) != 0; }
 
     /// provide rangefinder altitude
-    void set_rangefinder_alt(bool use, bool healthy, float alt_cm) { _rangefinder_available = use; _rangefinder_healthy = healthy; _rangefinder_alt_cm = alt_cm; }
+    void set_rangefinder_alt(bool use, bool healthy, float alt) { _rangefinder_available = use; _rangefinder_healthy = healthy; _rangefinder_alt = alt; }
 
     /// check for a change in the radius params
     void check_param_change();
@@ -125,8 +119,8 @@ private:
     };
     AC_Circle::TerrainSource get_terrain_source() const;
 
-    // get terrain's altitude (in cm above the ekf origin) at the current position (+ve means terrain below vehicle is above ekf origin's altitude)
-    bool get_terrain_offset(float& offset_cm);
+    // get terrain's altitude (in meters above the ekf origin) at the current position (+ve means terrain below vehicle is above ekf origin's altitude)
+    bool get_terrain_offset(float& offset);
 
     // flags structure
     struct circle_flags {
@@ -145,13 +139,13 @@ private:
     };
 
     // parameters
-    AP_Float    _radius_parm;   // radius of circle in cm loaded from params
+    AP_Float    _radius_parm;   // radius of circle in meters loaded from params
     AP_Float    _rate;          // rotation speed in deg/sec
     AP_Int16    _options;       // stick control enable/disable
 
     // internal variables
-    Vector3f    _center;        // center of circle frame NED in cm from home
-    float       _radius;        // radius of circle in cm
+    Vector3f    _center;        // center of circle frame NED in meters from home
+    float       _radius;        // radius of circle in meters
     float       _yaw;           // yaw heading (normally towards circle center)
     float       _angle;         // current angular position around circle in radians (0=directly north of the center of the circle)
     float       _angle_total;   // total angle traveled in radians
@@ -165,5 +159,5 @@ private:
     bool        _terrain_alt;           // true if _center.z is alt-above-terrain, false if alt-above-ekf-origin
     bool        _rangefinder_available; // true if range finder could be used
     bool        _rangefinder_healthy;   // true if range finder is healthy
-    float       _rangefinder_alt_cm;    // latest rangefinder altitude
+    float       _rangefinder_alt;       // latest rangefinder altitude in meters
 };
