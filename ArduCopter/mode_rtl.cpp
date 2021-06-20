@@ -18,7 +18,7 @@ bool ModeRTL::init(bool ignore_checks)
         }
     }
     // initialise waypoint and spline controller
-    wp_nav->wp_and_spline_init(g.rtl_speed_cms);
+    wp_nav->wp_and_spline_init(g.rtl_speed_cms * 0.01);
     _state = SubMode::STARTING;
     _state_complete = true; // see run() method below
     terrain_following_allowed = !copter.failsafe.terrain;
@@ -271,7 +271,7 @@ void ModeRTL::descent_start()
     _state_complete = false;
 
     // Set wp navigation target to above home
-    loiter_nav->init_target(wp_nav->get_wp_destination().xy());
+    loiter_nav->init_target(wp_nav->get_wp_destination().xy() * 100.0); // convert m to cm
 
     // initialise altitude target to stopping point
     pos_control->init_z_controller_stopping_point();
@@ -364,7 +364,7 @@ void ModeRTL::land_start()
     _state_complete = false;
 
     // Set wp navigation target to above home
-    loiter_nav->init_target(wp_nav->get_wp_destination().xy());
+    loiter_nav->init_target(wp_nav->get_wp_destination().xy() * 100.0); // convert m to cm 
 
     // initialise the vertical position controller
     if (!pos_control->is_active_z()) {
@@ -572,7 +572,7 @@ bool ModeRTL::get_wp(Location& destination) const
 
 uint32_t ModeRTL::wp_distance() const
 {
-    return wp_nav->get_wp_distance_to_destination();
+    return wp_nav->get_wp_distance_to_destination() * 100.0; // convert m to cm
 }
 
 int32_t ModeRTL::wp_bearing() const
