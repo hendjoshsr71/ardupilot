@@ -13,9 +13,9 @@ bool ModeLand::init(bool ignore_checks)
     }
 
     // set vertical speed and acceleration limits
-    pos_control->set_max_speed_accel_z(wp_nav->get_default_speed_down(), wp_nav->get_default_speed_up(), wp_nav->get_accel_z());
-    pos_control->set_correction_speed_accel_z(wp_nav->get_default_speed_down(), wp_nav->get_default_speed_up(), wp_nav->get_accel_z());
-    pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy(), wp_nav->get_wp_acceleration());
+    pos_control->set_max_speed_accel_z(wp_nav->get_default_speed_down() * 100.0, wp_nav->get_default_speed_up() * 100.0, wp_nav->get_accel_z() * 100.0);
+    pos_control->set_correction_speed_accel_z(wp_nav->get_default_speed_down() * 100.0, wp_nav->get_default_speed_up() * 100.0, wp_nav->get_accel_z() * 100.0);
+    pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy() * 100.0, wp_nav->get_wp_acceleration() * 100.0);  // CHECK & FIXME these wp_nav function may be new...
 
     // initialise the vertical position controller
     if (!pos_control->is_active_z()) {
