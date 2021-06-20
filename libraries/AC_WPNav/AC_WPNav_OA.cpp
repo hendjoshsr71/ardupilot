@@ -46,7 +46,7 @@ float AC_WPNav_OA::get_wp_distance_to_destination() const
     }
 
     // get current location
-    const Vector3f &curr = _inav.get_position(); // _inav returns neu but z not used here
+    const Vector3f &curr = _inav.get_position() * 0.01; // convert cm to meters, _inav returns neu but z not used here
     return norm(_destination_oabak.x-curr.x, _destination_oabak.y-curr.y);
 }
 
@@ -83,8 +83,8 @@ bool AC_WPNav_OA::update_wpnav()
         }
 
         // convert origin and destination to Locations and pass into oa
-        const Location origin_loc(_origin_oabak.neu_to_ned(), _terrain_alt_oabak ? Location::AltFrame::ABOVE_TERRAIN : Location::AltFrame::ABOVE_ORIGIN);                // I didnt have neu to ned and it worked ???
-        const Location destination_loc(_destination_oabak.neu_to_ned(), _terrain_alt_oabak ? Location::AltFrame::ABOVE_TERRAIN : Location::AltFrame::ABOVE_ORIGIN);      // I didnt have neu to ned and it worked ???
+        const Location origin_loc(_origin_oabak.neu_to_ned() * 100.0, _terrain_alt_oabak ? Location::AltFrame::ABOVE_TERRAIN : Location::AltFrame::ABOVE_ORIGIN);                // I didnt have neu to ned and it worked ???
+        const Location destination_loc(_destination_oabak.neu_to_ned() * 100.0, _terrain_alt_oabak ? Location::AltFrame::ABOVE_TERRAIN : Location::AltFrame::ABOVE_ORIGIN);      // I didnt have neu to ned and it worked ???
         Location oa_origin_new, oa_destination_new;
         AP_OAPathPlanner::OAPathPlannerUsed path_planner_used = AP_OAPathPlanner::OAPathPlannerUsed::None;
         const AP_OAPathPlanner::OA_RetState oa_retstate = oa_ptr->mission_avoidance(current_loc, origin_loc, destination_loc, oa_origin_new, oa_destination_new, path_planner_used);
@@ -94,7 +94,7 @@ bool AC_WPNav_OA::update_wpnav()
         case AP_OAPathPlanner::OA_NOT_REQUIRED:
             if (_oa_state != oa_retstate) {
                 // object avoidance has become inactive so reset target to original destination
-                set_wp_destination(_destination_oabak * 0.01f, _terrain_alt_oabak); // convert from cm to m
+                set_wp_destination(_destination_oabak, _terrain_alt_oabak);
                 _oa_state = oa_retstate;
             }
             break;
@@ -109,7 +109,7 @@ bool AC_WPNav_OA::update_wpnav()
                 get_wp_stopping_point(stopping_point);
                 
                 // convert to NEU for Location below FIX ME
-                _oa_destination = Location(stopping_point.neu_to_ned() * 100.0f, Location::AltFrame::ABOVE_ORIGIN); // convert to cm
+                _oa_destination = Location(stopping_point.neu_to_ned() * 100.0, Location::AltFrame::ABOVE_ORIGIN); // convert meters to cm
                 if (set_wp_destination(stopping_point, false)) {
                     _oa_state = oa_retstate;
                 }
@@ -183,7 +183,7 @@ bool AC_WPNav_OA::update_wpnav()
 
                 // calculate final destination as an offset from EKF origin in NED
                 Vector3f dest_NED;
-                if (!_oa_destination.get_vector_from_origin_NED_cm(dest_NED)) {
+                if (!_oa_destination.get_vector_from_origin_NED(dest_NED)) {
                     // this should never happen because we can only get here if we have an EKF origin
                     INTERNAL_ERROR(AP_InternalError::error_t::flow_of_control);
                     return false;
