@@ -29,7 +29,7 @@ bool ModeCircle::init(bool ignore_checks)
 void ModeCircle::run()
 {
     // set speed and acceleration limits
-    pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy() * 100.0f wp_nav->get_wp_acceleration() * 100.0);  // convert m to cm
+    pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy() * 100.0, wp_nav->get_wp_acceleration() * 100.0);  // convert m to cm
     pos_control->set_max_speed_accel_z(-get_pilot_speed_dn(), g.pilot_speed_up, g.pilot_accel_z);
 
     // get pilot's desired yaw rate (or zero if in radio failsafe)
