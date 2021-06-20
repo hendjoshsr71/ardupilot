@@ -88,8 +88,8 @@ void Sub::guided_posvel_control_start()
     guided_mode = Guided_PosVel;
 
     // set vertical speed and acceleration
-    pos_control.set_max_speed_accel_z(wp_nav.get_default_speed_down(), wp_nav.get_default_speed_up(), wp_nav.get_accel_z());
-    pos_control.set_correction_speed_accel_z(wp_nav.get_default_speed_down(), wp_nav.get_default_speed_up(), wp_nav.get_accel_z());
+    pos_control.set_max_speed_accel_z(wp_nav.get_default_speed_down() * 100.0, wp_nav.get_default_speed_up() * 100.0, wp_nav.get_accel_z() * 100.0); // convert m to cm
+    pos_control.set_correction_speed_accel_z(wp_nav.get_default_speed_down() * 100.0, wp_nav.get_default_speed_up() * 100.0, wp_nav.get_accel_z() * 100.0); // convert m to cm
 
     // initialise velocity controller
     pos_control.init_z_controller();
@@ -106,8 +106,8 @@ void Sub::guided_angle_control_start()
     guided_mode = Guided_Angle;
 
     // set vertical speed and acceleration
-    pos_control.set_max_speed_accel_z(wp_nav.get_default_speed_down(), wp_nav.get_default_speed_up(), wp_nav.get_accel_z());
-    pos_control.set_correction_speed_accel_z(wp_nav.get_default_speed_down(), wp_nav.get_default_speed_up(), wp_nav.get_accel_z());
+    pos_control.set_max_speed_accel_z(wp_nav.get_default_speed_down() * 100.0, wp_nav.get_default_speed_up() * 100.0, wp_nav.get_accel_z() * 100.0); // convert m to cm
+    pos_control.set_correction_speed_accel_z(wp_nav.get_default_speed_down() * 100.0, wp_nav.get_default_speed_up() * 100.0, wp_nav.get_accel_z() * 100.0); // convert m to cm
 
     // initialise velocity controller
     pos_control.init_z_controller();
@@ -479,7 +479,7 @@ void Sub::guided_angle_control_run()
     float yaw_in = wrap_180_cd(guided_angle_state.yaw_cd);
 
     // constrain climb rate
-    float climb_rate_cms = constrain_float(guided_angle_state.climb_rate_cms, -wp_nav.get_default_speed_down(), wp_nav.get_default_speed_up());
+    float climb_rate_cms = constrain_float(guided_angle_state.climb_rate_cms, -wp_nav.get_default_speed_down() * 100.0, wp_nav.get_default_speed_up() * 100.0); // convert m to cm
 
     // check for timeout - set lean angles and climb rate to zero if no updates received for 3 seconds
     uint32_t tnow = AP_HAL::millis();

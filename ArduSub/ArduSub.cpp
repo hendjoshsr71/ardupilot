@@ -328,7 +328,7 @@ bool Sub::control_check_barometer()
 bool Sub::get_wp_distance_m(float &distance) const
 {
     // see GCS_MAVLINK_Sub::send_nav_controller_output()
-    distance = sub.wp_nav.get_wp_distance_to_destination() * 0.01;
+    distance = sub.wp_nav.get_wp_distance_to_destination();
     return true;
 }
 
