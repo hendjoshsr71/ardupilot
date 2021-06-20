@@ -162,10 +162,10 @@ void ModeGuided::vel_control_start()
     guided_mode = SubMode::Velocity;
 
     // initialise horizontal speed, acceleration
-    pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy(), wp_nav->get_wp_acceleration());
+    pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy() * 100.0f, wp_nav->get_wp_acceleration() * 100.0f); // convert m to cm
 
     // set vertical speed and acceleration limits
-    pos_control->set_max_speed_accel_z(wp_nav->get_default_speed_down(), wp_nav->get_default_speed_up(), wp_nav->get_accel_z());
+    pos_control->set_max_speed_accel_z(wp_nav->get_default_speed_down() * 100.0f, wp_nav->get_default_speed_up() * 100.0f, wp_nav->get_accel_z() * 100.0f); // convert m to cm
 
     // initialise the position controller
     pos_control->init_z_controller();
@@ -179,10 +179,10 @@ void ModeGuided::posvel_control_start()
     guided_mode = SubMode::PosVel;
 
     // initialise horizontal speed, acceleration
-    pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy(), wp_nav->get_wp_acceleration());
+    pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy() * 100.0f, wp_nav->get_wp_acceleration() * 100.0f);  // convert m to cm
 
     // set vertical speed and acceleration limits
-    pos_control->set_max_speed_accel_z(wp_nav->get_default_speed_down(), wp_nav->get_default_speed_up(), wp_nav->get_accel_z());
+    pos_control->set_max_speed_accel_z(wp_nav->get_default_speed_down() * 100.0f, wp_nav->get_default_speed_up() * 100.0f, wp_nav->get_accel_z() * 100.0f); // convert m to cm
 
     // initialise the position controller
     pos_control->init_z_controller();
@@ -204,7 +204,7 @@ void ModeGuided::angle_control_start()
     guided_mode = SubMode::Angle;
 
     // set vertical speed and acceleration limits
-    pos_control->set_max_speed_accel_z(wp_nav->get_default_speed_down(), wp_nav->get_default_speed_up(), wp_nav->get_accel_z());
+    pos_control->set_max_speed_accel_z(wp_nav->get_default_speed_down() * 100.0f, wp_nav->get_default_speed_up() * 100.0f, wp_nav->get_accel_z() * 100.0f); // convert m to cm
 
     // initialise the vertical position controller
     if (!pos_control->is_active_z()) {
@@ -408,7 +408,7 @@ void ModeGuided::takeoff_run()
 #endif
 
         // switch to position control mode but maintain current target
-        const Vector3f target = wp_nav->get_wp_destination().neu_to_ned();  // cm
+        const Vector3f target = wp_nav->get_wp_destination().neu_to_ned() * 100.0f; // convert m to cm
         set_destination(target, false, 0, false, 0, false, wp_nav->origin_and_destination_are_terrain_alt());
     }
 }
@@ -599,7 +599,7 @@ void ModeGuided::angle_control_run()
     float climb_rate_cms = 0.0f;
     if (!guided_angle_state.use_thrust) {
         // constrain climb rate
-        climb_rate_cms = constrain_float(guided_angle_state.climb_rate_cms, -fabsf(wp_nav->get_default_speed_down()), wp_nav->get_default_speed_up());
+        climb_rate_cms = constrain_float(guided_angle_state.climb_rate_cms, -fabsf(wp_nav->get_default_speed_down()) * 100.0f, wp_nav->get_default_speed_up() * 100.0f);  // convert m to cm
 
         // get avoidance adjusted climb rate
         climb_rate_cms = get_avoidance_adjusted_climbrate(climb_rate_cms);
@@ -760,7 +760,7 @@ uint32_t ModeGuided::wp_distance() const
 {
     switch(guided_mode) {
     case SubMode::WP:
-        return wp_nav->get_wp_distance_to_destination();
+        return wp_nav->get_wp_distance_to_destination() * 100.0f; // convert m to cm
         break;
     case SubMode::PosVel:
         return pos_control->get_pos_error_xy_cm();

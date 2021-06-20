@@ -13,7 +13,7 @@ bool ModeCircle::init(bool ignore_checks)
     speed_changing = false;
 
     // set speed and acceleration limits
-    pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy(), wp_nav->get_wp_acceleration());
+    pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy() * 100.0f, wp_nav->get_wp_acceleration() * 100.0f); // convert cm to m
     pos_control->set_max_speed_accel_z(-get_pilot_speed_dn(), g.pilot_speed_up, g.pilot_accel_z);
 
     // initialise circle controller including setting the circle center based on vehicle speed
@@ -27,7 +27,7 @@ bool ModeCircle::init(bool ignore_checks)
 void ModeCircle::run()
 {
     // set speed and acceleration limits
-    pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy(), wp_nav->get_wp_acceleration());
+    pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy() * 100.0f, wp_nav->get_wp_acceleration() * 100.0f);  // convert cm to m
     pos_control->set_max_speed_accel_z(-get_pilot_speed_dn(), g.pilot_speed_up, g.pilot_accel_z);
 
     // get pilot's desired yaw rate (or zero if in radio failsafe)
@@ -45,7 +45,7 @@ void ModeCircle::run()
         // update the circle controller's radius target based on pilot pitch stick inputs
         const float radius_current = copter.circle_nav->get_radius();           // circle controller's radius target, which begins as the circle_radius parameter
         const float pitch_stick = channel_pitch->norm_input_dz();               // pitch stick normalized -1 to 1
-        const float nav_speed = copter.wp_nav->get_default_speed_xy();          // copter WP_NAV parameter speed
+        const float nav_speed = copter.wp_nav->get_default_speed_xy() * 100.0f;          // copter WP_NAV parameter speed,  // convert cm to m
         const float radius_pilot_change = (pitch_stick * nav_speed) * G_Dt;     // rate of change (pitch stick up reduces the radius, as in moving forward)
         const float radius_new = MAX(radius_current + radius_pilot_change,0);   // new radius target
 
@@ -103,7 +103,7 @@ void ModeCircle::run()
     motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
     // run circle controller
-    copter.failsafe_terrain_set_status(copter.circle_nav->update(target_climb_rate));
+    copter.failsafe_terrain_set_status(copter.circle_nav->update(target_climb_rate * 0.01f)); // convert cm to meters
 
     // call attitude controller
     if (pilot_yaw_override) {
@@ -116,7 +116,7 @@ void ModeCircle::run()
 
 uint32_t ModeCircle::wp_distance() const
 {
-    return copter.circle_nav->get_distance_to_target();
+    return copter.circle_nav->get_distance_to_target() * 100.0f; // convert meters to cm
 }
 
 int32_t ModeCircle::wp_bearing() const

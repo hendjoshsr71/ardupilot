@@ -101,7 +101,7 @@ void Copter::tuning()
         break;
 
     case TUNING_WP_SPEED:
-        wp_nav->set_speed_xy(tuning_value);
+        wp_nav->set_speed_xy(tuning_value * 0.01f); // convert cm to m
         break;
 
     // Acro roll pitch gain

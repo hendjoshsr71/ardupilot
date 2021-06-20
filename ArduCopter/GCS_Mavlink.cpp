@@ -139,7 +139,7 @@ void GCS_MAVLINK_Copter::send_position_target_local_ned()
         type_mask = POSITION_TARGET_TYPEMASK_VX_IGNORE | POSITION_TARGET_TYPEMASK_VY_IGNORE | POSITION_TARGET_TYPEMASK_VZ_IGNORE |
                     POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
                     POSITION_TARGET_TYPEMASK_FORCE_SET | POSITION_TARGET_TYPEMASK_YAW_IGNORE| POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE; // ignore everything except position
-        target_pos = copter.wp_nav->get_wp_destination() * 0.01f; // convert to metres
+        target_pos = copter.wp_nav->get_wp_destination();
 
         break;
     case ModeGuided::SubMode::Velocity:
@@ -152,7 +152,7 @@ void GCS_MAVLINK_Copter::send_position_target_local_ned()
     case ModeGuided::SubMode::PosVel:
         type_mask = POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
                     POSITION_TARGET_TYPEMASK_FORCE_SET | POSITION_TARGET_TYPEMASK_YAW_IGNORE| POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE; // ignore everything except position & velocity
-        target_pos = copter.wp_nav->get_wp_destination() * 0.01f;
+        target_pos = copter.wp_nav->get_wp_destination();
         target_vel = copter.flightmode->get_vel_desired_cms() * 0.01f;
         break;
     }
@@ -800,11 +800,11 @@ MAV_RESULT GCS_MAVLINK_Copter::handle_command_long_packet(const mavlink_command_
         // param4 : unused
         if (packet.param2 > 0.0f) {
             if (packet.param1 > 2.9f) { // 3 = speed down
-                copter.wp_nav->set_speed_down(packet.param2 * 100.0f);
+                copter.wp_nav->set_speed_down(packet.param2);
             } else if (packet.param1 > 1.9f) { // 2 = speed up
-                copter.wp_nav->set_speed_up(packet.param2 * 100.0f);
+                copter.wp_nav->set_speed_up(packet.param2);
             } else {
-                copter.wp_nav->set_speed_xy(packet.param2 * 100.0f);
+                copter.wp_nav->set_speed_xy(packet.param2);
             }
             return MAV_RESULT_ACCEPTED;
         }
@@ -1076,10 +1076,10 @@ void GCS_MAVLINK_Copter::handleMessage(const mavlink_message_t &msg)
                 climb_rate_or_thrust = 0.0f;
             } else if (packet.thrust > 0.5f) {
                 // climb at up to WPNAV_SPEED_UP
-                climb_rate_or_thrust = (packet.thrust - 0.5f) * 2.0f * copter.wp_nav->get_default_speed_up();
+                climb_rate_or_thrust = (packet.thrust - 0.5f) * 2.0f * copter.wp_nav->get_default_speed_up() * 100.0f; // conver m to cm
             } else {
                 // descend at up to WPNAV_SPEED_DN
-                climb_rate_or_thrust = (0.5f - packet.thrust) * 2.0f * -fabsf(copter.wp_nav->get_default_speed_down());
+                climb_rate_or_thrust = (0.5f - packet.thrust) * 2.0f * -fabsf(copter.wp_nav->get_default_speed_down() * 100.0f); // convert m to cm
             }
         }
 

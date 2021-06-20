@@ -200,7 +200,7 @@ bool ModeSmartRTL::get_wp(Location& destination)
 
 uint32_t ModeSmartRTL::wp_distance() const
 {
-    return wp_nav->get_wp_distance_to_destination();
+    return wp_nav->get_wp_distance_to_destination() * 100.0f; // convert m to cm
 }
 
 int32_t ModeSmartRTL::wp_bearing() const
