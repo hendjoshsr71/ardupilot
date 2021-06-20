@@ -182,7 +182,7 @@ void GCS_MAVLINK_Plane::send_nav_controller_output() const
             targets.y * 0.01,
             targets.z * 0.01,
             wp_nav_valid ? quadplane.wp_nav->get_wp_bearing_to_destination() : 0,
-            wp_nav_valid ? MIN(quadplane.wp_nav->get_wp_distance_to_destination() * 0.01, UINT16_MAX) : 0,
+            wp_nav_valid ? MIN(quadplane.wp_nav->get_wp_distance_to_destination(), UINT16_MAX) : 0,
             (plane.control_mode != &plane.mode_qstabilize) ? quadplane.pos_control->get_pos_error_z_cm() * 0.01 : 0,
             plane.airspeed_error * 100,  // incorrect units; see PR#7933
             wp_nav_valid ? quadplane.wp_nav->crosstrack_error() : 0);
