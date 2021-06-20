@@ -236,13 +236,13 @@ bool Location::get_vector_from_origin_NEU(Vector3f &vec_neu) const
     return true;
 }
 
-// Vector from origin in NED (cm)
-bool Location::get_vector_from_origin_NED_cm(Vector3f &vec_ned) const
+// Vector from origin in NED (meters)
+bool Location::get_vector_from_origin_NED(Vector3f &vec_ned) const
 {
     if (!get_vector_from_origin_NEU(vec_ned)) {
         return false;
     }
-
+    vec_ned *= 0.01f;
     vec_ned.z = -vec_ned.z;
     return true;
 }
