@@ -29,7 +29,7 @@ struct Guided_Limit {
     float alt_max_cm;   // upper altitude limit in cm above home (0 = no limit)
     float horiz_max_cm; // horizontal position limit in cm from where guided mode was initiated (0 = no limit)
     uint32_t start_time;// system time in milliseconds that control was handed to the external computer
-    Vector3f start_pos; // start position as a distance from home in cm.  used for checking horiz_max limit
+    Vector3f start_pos; // only xy used start position as a distance from home in cm.  used for checking horiz_max limit
 } guided_limit;
 
 // guided_init - initialise guided controller
@@ -530,7 +530,7 @@ void Sub::guided_limit_init_time_and_pos()
     guided_limit.start_time = AP_HAL::millis();
 
     // initialise start position from current position
-    guided_limit.start_pos = inertial_nav.get_position();
+    guided_limit.start_pos = inertial_nav.get_position(); // xy only gets used
 }
 
 // guided_limit_check - returns true if guided mode has breached a limit
@@ -543,15 +543,16 @@ bool Sub::guided_limit_check()
     }
 
     // get current location
-    const Vector3f& curr_pos = inertial_nav.get_position();
+    const Vector3f& curr_pos = inertial_nav.get_position(); // xy only used here
+    const float& curr_alt = inertial_nav.get_altitude();
 
     // check if we have gone below min alt
-    if (!is_zero(guided_limit.alt_min_cm) && (curr_pos.z < guided_limit.alt_min_cm)) {
+    if (!is_zero(guided_limit.alt_min_cm) && (curr_alt < guided_limit.alt_min_cm)) {
         return true;
     }
 
     // check if we have gone above max alt
-    if (!is_zero(guided_limit.alt_max_cm) && (curr_pos.z > guided_limit.alt_max_cm)) {
+    if (!is_zero(guided_limit.alt_max_cm) && (curr_alt > guided_limit.alt_max_cm)) {
         return true;
     }
 

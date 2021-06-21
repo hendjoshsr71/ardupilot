@@ -114,9 +114,8 @@ void AC_Circle::set_center(const Location& center)
             set_center(Vector3f(center_xy.x, center_xy.y, -terr_alt_cm) * 0.01, true); // convert altitude to NED, convert cm to meters
         } else {
             // failed to convert location so set to current position and log error
-            Vector3f circle_center_neu = _inav.get_position() * 0.01; // convert cm to meters
-            circle_center_neu.z = -circle_center_neu.z; // convert neu to ned
-            set_center(circle_center_neu, false);
+            Vector3f circle_center_ned = _inav.get_position() * 0.01; // convert cm to meters
+            set_center(circle_center_ned, false);
             AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::FAILED_CIRCLE_INIT);
         }
     } else {
@@ -125,7 +124,6 @@ void AC_Circle::set_center(const Location& center)
         if (!center.get_vector_from_origin_NED(circle_center_ned)) {
             // default to current position and log error
             circle_center_ned = _inav.get_position() * 0.01; // convert cm to meters
-            circle_center_ned.z = -circle_center_ned.z; // Convert what was NEU to NED
             AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::FAILED_CIRCLE_INIT);
         }
         set_center(circle_center_ned, false);

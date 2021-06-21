@@ -2504,7 +2504,7 @@ void QuadPlane::vtol_position_controller(void)
 
         // reset position controller xy target to current position
         // because we only want velocity control (no position control)
-        const Vector3f& curr_pos = inertial_nav.get_position();
+        const Vector3f& curr_pos = inertial_nav.get_position(); // xy only
         pos_control->set_pos_target_xy_cm(curr_pos.x, curr_pos.y);
         pos_control->set_accel_desired_xy_cmss(Vector2f());
 
@@ -3132,7 +3132,7 @@ bool QuadPlane::verify_vtol_land(void)
         if (poscontrol.pilot_correction_done) {
             reached_position = !poscontrol.pilot_correction_active;
         } else {
-            const float dist = (inertial_nav.get_position().topostype() - poscontrol.target_cm).xy().length() * 0.01;
+            const float dist = (inertial_nav.get_position().neu_to_ned().topostype() - poscontrol.target_cm).xy().length() * 0.01; // z not used here
             reached_position = dist < descend_dist_threshold;
         }
         if (reached_position &&
