@@ -368,7 +368,7 @@ void AC_PosControl::input_pos_xyz(const Vector3p& pos, float pos_offset_z, float
         dest_vector.normalize();
         float dest_vector_xy_length = dest_vector.xy().length();
 
-        float vel_max_cms = kinematic_limit(dest_vector, _vel_max_xy_cms, _vel_max_up_cms, _vel_max_down_cms);
+        float vel_max_cms = kinematic_limit(dest_vector.neu_to_ned(), _vel_max_xy_cms, _vel_max_up_cms, _vel_max_down_cms);
         vel_max_xy_cms = vel_max_cms * dest_vector_xy_length;
         vel_max_z_cms = fabsf(vel_max_cms * dest_vector.z);
     }
