@@ -1876,7 +1876,7 @@ void QuadPlane::update_throttle_suppression(void)
     }
 
     // if our vertical velocity is greater than 1m/s then allow motors to run
-    if (fabsf(inertial_nav.get_velocity_z()) > 100) {
+    if (fabsf(inertial_nav.get_climb_rate()) > 100) {
         return;
     }
 
@@ -1931,7 +1931,7 @@ void QuadPlane::update_throttle_hover()
 
     float aspeed;
     // calc average throttle if we are in a level hover and low airspeed
-    if (throttle > 0.0f && fabsf(inertial_nav.get_velocity_z()) < 60 &&
+    if (throttle > 0.0f && fabsf(inertial_nav.get_climb_rate()) < 60 &&
         labs(ahrs_view->roll_sensor) < 500 && labs(ahrs_view->pitch_sensor) < 500 &&
         ahrs.airspeed_estimate(aspeed) && aspeed < plane.aparm.airspeed_min*0.3) {
         // Can we set the time constant automatically
@@ -2925,7 +2925,7 @@ bool QuadPlane::do_vtol_takeoff(const AP_Mission::Mission_Command& cmd)
     const float d_total = (plane.next_WP_loc.alt - plane.current_loc.alt) * 0.01f;
     const float accel_m_s_s = MAX(10, pilot_accel_z) * 0.01f;
     const float vel_max = MAX(10, pilot_velocity_z_max_up) * 0.01f;
-    const float vel_z = inertial_nav.get_velocity_z() * 0.01f;
+    const float vel_z = inertial_nav.get_climb_rate() * 0.01f;
     const float t_accel = (vel_max - vel_z) / accel_m_s_s;
     const float d_accel = vel_z * t_accel + 0.5f * accel_m_s_s * sq(t_accel);
     const float d_remaining = d_total - d_accel;
@@ -3198,7 +3198,7 @@ void QuadPlane::Log_Write_QControl_Tuning()
         inav_alt            : inertial_nav.get_altitude() / 100.0f,
         baro_alt            : int32_t(plane.barometer.get_altitude() * 100),
         target_climb_rate   : target_climb_rate_cms,
-        climb_rate          : int16_t(inertial_nav.get_velocity_z()),
+        climb_rate          : int16_t(inertial_nav.get_climb_rate()),
         throttle_mix        : attitude_control->get_throttle_mix(),
         speed_scaler        : tailsitter.log_spd_scaler,
         transition_state    : static_cast<uint8_t>(transition_state),
