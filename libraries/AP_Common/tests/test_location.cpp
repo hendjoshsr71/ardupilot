@@ -239,7 +239,7 @@ TEST(Location, Tests)
     Location test_origin = test_home;
     test_origin.offset(2, 2);
     EXPECT_TRUE(vehicle.ahrs.set_origin(test_origin));
-    const Vector3f test_vecto{200, 200, 10};
+    const Vector3f test_vecto{200, 200, -10};
     const Location test_location4{test_vecto, Location::AltFrame::ABOVE_ORIGIN};
     EXPECT_EQ(-35362580, test_location4.lat);
     EXPECT_EQ(149165445, test_location4.lng);
