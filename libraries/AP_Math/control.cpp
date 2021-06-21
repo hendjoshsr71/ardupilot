@@ -371,7 +371,7 @@ float stopping_distance(float velocity, float p, float accel_max)
     return inv_sqrt_controller(velocity, p, accel_max);
 }
 
-// calculate the maximum acceleration or velocity in a given direction (NEU frame)
+// calculate the maximum acceleration or velocity in a given direction (NED frame)
 // based on horizontal and vertical limits.
 float kinematic_limit(Vector3f direction, float max_xy, float max_z_pos, float max_z_neg)
 {
@@ -394,16 +394,17 @@ float kinematic_limit(Vector3f direction, float max_xy, float max_z_pos, float m
         return max_xy;
     }
 
-    const float slope = direction.z/xy_length;
+    // convert direction.z to NEU before changing logic below
+    const float slope = -direction.z/xy_length;
     if (is_positive(slope)) {
         if (fabsf(slope) < max_z_pos/max_xy) {
             return max_xy/xy_length;
         }
-        return fabsf(max_z_pos/direction.z);
+        return fabsf(max_z_pos/-direction.z);
     }
 
     if (fabsf(slope) < max_z_neg/max_xy) {
         return max_xy/xy_length;
     }
-    return fabsf(max_z_neg/direction.z);
+    return fabsf(max_z_neg/-direction.z);
 }

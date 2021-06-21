@@ -181,8 +181,8 @@ void SplineCurve::calc_dt_speed_max(float time, float distance_delta, float &spl
     const float spline_accel_norm_length = spline_accel_norm.length();
 
     // limit the maximum speed along the track to that which will achieve a cornering (aka lateral) acceleration of LATERAL_SPEED_SCALER * acceleration limit
-    const float tangential_speed_max = kinematic_limit(spline_vel_unit.neu_to_ned(), _speed_xy, _speed_up, _speed_down);
-    const float accel_norm_max = LATERAL_ACCEL_SCALER * kinematic_limit(spline_accel_norm.neu_to_ned(), _accel_xy, _accel_z, _accel_z);
+    const float tangential_speed_max = kinematic_limit(spline_vel_unit, _speed_xy, _speed_up, _speed_down);
+    const float accel_norm_max = LATERAL_ACCEL_SCALER * kinematic_limit(spline_accel_norm, _accel_xy, _accel_z, _accel_z);
 
     // sanity check to avoid divide by zero
     if (is_zero(tangential_speed_max)) {
@@ -202,7 +202,7 @@ void SplineCurve::calc_dt_speed_max(float time, float distance_delta, float &spl
     }
 
     // calculate accel max and sanity check
-    accel_max = TANGENTIAL_ACCEL_SCALER * kinematic_limit(spline_vel_unit.neu_to_ned(), _accel_xy, _accel_z, _accel_z);
+    accel_max = TANGENTIAL_ACCEL_SCALER * kinematic_limit(spline_vel_unit, _accel_xy, _accel_z, _accel_z);
     if (is_zero(accel_max)) {
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
         ::printf("SplineCurve::calc_dt_speed_max accel_max is zero\n");
@@ -249,4 +249,3 @@ void SplineCurve::calc_target_pos_vel(float time, Vector3f &position, Vector3f &
 
     jerk = _hermite_solution[3] * 6.0f;
 }
-
