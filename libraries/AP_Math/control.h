@@ -112,7 +112,7 @@ float inv_sqrt_controller(float output, float p, float D_max);
 // calculate the stopping distance for the square root controller based deceleration path
 float stopping_distance(float velocity, float p, float accel_max);
 
-// calculate the maximum acceleration or velocity in a given direction
+// calculate the maximum acceleration or velocity in a given direction (NED frame)
 // based on horizontal and vertical limits.
 float kinematic_limit(Vector3f direction, float max_xy, float max_z_pos, float max_z_neg);
 
