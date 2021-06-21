@@ -96,13 +96,13 @@ float AP_InertialNav_NavEKF::get_altitude() const
 }
 
 /**
- * get_velocity_z - returns the current climbrate.
+ * get_climb_rate - returns the current climbrate.
  *
- * @see get_velocity().z
+ * @see get_climb_rate()
  *
  * @return climbrate in cm/s
  */
-float AP_InertialNav_NavEKF::get_velocity_z() const
+float AP_InertialNav_NavEKF::get_climb_rate() const
 {
     return _velocity_cm.z;
 }
