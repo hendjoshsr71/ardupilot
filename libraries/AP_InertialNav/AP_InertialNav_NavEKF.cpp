@@ -23,7 +23,7 @@ void AP_InertialNav_NavEKF::update(bool high_vibes)
     // get the D position relative to the local earth frame origin
     float posD;
     if (_ahrs_ekf.get_relative_position_D_origin(posD)) {
-        _relpos_cm.z = - posD * 100; // convert from m in NED to cm in NEU
+        _relpos_cm.z = posD * 100; // convert from m in NED to cm
     }
 
     // get the velocity relative to the local earth frame
@@ -37,7 +37,6 @@ void AP_InertialNav_NavEKF::update(bool high_vibes)
             }
         }
         _velocity_cm = velNED * 100; // convert to cm/s
-        _velocity_cm.z = -_velocity_cm.z; // convert from NED to NEU
     }
 }
 
@@ -90,7 +89,7 @@ float AP_InertialNav_NavEKF::get_speed_xy() const
  */
 float AP_InertialNav_NavEKF::get_altitude() const
 {
-    return _relpos_cm.z;
+    return -_relpos_cm.z; // convert to altitude: NED -> NEU
 }
 
 /**
@@ -102,5 +101,5 @@ float AP_InertialNav_NavEKF::get_altitude() const
  */
 float AP_InertialNav_NavEKF::get_climb_rate() const
 {
-    return _velocity_cm.z;
+    return -_velocity_cm.z; // convert to climb rate: NED -> NEU
 }
