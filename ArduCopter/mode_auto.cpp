@@ -361,8 +361,7 @@ void ModeAuto::circle_movetoedge_start(const Location &circle_center, float radi
         // set the state to move to the edge of the circle
         _mode = SubMode::CIRCLE_MOVE_TO_EDGE;
 
-        // convert circle_edge_neu to Location
-        Location circle_edge(circle_edge_ned.neu_to_ned(), Location::AltFrame::ABOVE_ORIGIN);    // Location constructor uses NEU
+        Location circle_edge(circle_edge_ned, Location::AltFrame::ABOVE_ORIGIN);
 
         // convert altitude to same as command
         circle_edge.set_alt_cm(circle_center.alt, circle_center.get_alt_frame());
@@ -1820,7 +1819,7 @@ bool ModeAuto::verify_payload_place()
         }
         FALLTHROUGH;
     case PayloadPlaceStateType_Ascending_Start: {
-        Location target_loc(inertial_nav.get_position(), Location::AltFrame::ABOVE_ORIGIN);
+        Location target_loc(inertial_nav.get_position().neu_to_ned(), Location::AltFrame::ABOVE_ORIGIN);
         target_loc.alt = nav_payload_place.descend_start_altitude;
         wp_start(target_loc);
         nav_payload_place.state = PayloadPlaceStateType_Ascending;
