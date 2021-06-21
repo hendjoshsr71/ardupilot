@@ -139,7 +139,7 @@ void Copter::thrust_loss_check()
     }
 
     // check for descent
-    if (!is_negative(inertial_nav.get_velocity_z())) {
+    if (!is_negative(inertial_nav.get_climb_rate())) {
         thrust_loss_counter = 0;
         return;
     }
@@ -242,7 +242,7 @@ void Copter::parachute_check()
     parachute.set_is_flying(!ap.land_complete);
 
     // pass sink rate to parachute library
-    parachute.set_sink_rate(-inertial_nav.get_velocity_z() * 0.01f);
+    parachute.set_sink_rate(-inertial_nav.get_climb_rate() * 0.01f);
 
     // exit immediately if in standby
     if (standby_active) {

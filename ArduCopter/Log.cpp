@@ -59,7 +59,7 @@ void Copter::Log_Write_Control_Tuning()
         rangefinder_alt     : surface_tracking.get_dist_for_logging(),
         terr_alt            : terr_alt,
         target_climb_rate   : target_climb_rate_cms,
-        climb_rate          : int16_t(inertial_nav.get_velocity_z()) // float -> int16_t
+        climb_rate          : int16_t(inertial_nav.get_climb_rate()) // float -> int16_t
     };
     logger.WriteBlock(&pkt, sizeof(pkt));
 }
