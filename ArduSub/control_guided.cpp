@@ -133,7 +133,7 @@ bool Sub::guided_set_destination(const Vector3f& destination)
 
 #if AC_FENCE == ENABLED
     // reject destination if outside the fence
-    const Location dest_loc(destination, Location::AltFrame::ABOVE_ORIGIN);
+    const Location dest_loc(destination.neu_to_ned(), Location::AltFrame::ABOVE_ORIGIN); // Location uses NED
     if (!fence.check_destination_within_fence(dest_loc)) {
         AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::DEST_OUTSIDE_FENCE);
         // failure is propagated to GCS with NAK
@@ -205,7 +205,7 @@ bool Sub::guided_set_destination_posvel(const Vector3f& destination, const Vecto
 
 #if AC_FENCE == ENABLED
     // reject destination if outside the fence
-    const Location dest_loc(destination, Location::AltFrame::ABOVE_ORIGIN);
+    const Location dest_loc(destination.neu_to_ned(), Location::AltFrame::ABOVE_ORIGIN); // Location use NED
     if (!fence.check_destination_within_fence(dest_loc)) {
         AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::DEST_OUTSIDE_FENCE);
         // failure is propagated to GCS with NAK
