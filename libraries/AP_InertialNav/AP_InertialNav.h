@@ -47,7 +47,7 @@ public:
     virtual const Vector3f&    get_position() const = 0;
 
     /**
-     * get_velocity - returns the current velocity in cm/s
+     * get_velocity - returns the current velocity in cm/s, frame NED
      *
      * @return velocity vector:
      *      		.x : latitude  velocity in cm/s

@@ -27,7 +27,7 @@ public:
     nav_filter_status get_filter_status() const override;
 
     /**
-     * get_position - returns the current position relative to the home location in cm.
+     * get_position - returns the current position relative to the home location in cm. Frame NED
      *
      * the home location was set with AP_InertialNav::set_home_position(int32_t, int32_t)
      *
@@ -36,7 +36,7 @@ public:
     const Vector3f&    get_position() const override;
 
     /**
-     * get_velocity - returns the current velocity in cm/s
+     * get_velocity - returns the current velocity in cm/s, frame NED
      *
      * @return velocity vector:
      *      		.x : latitude  velocity in cm/s
@@ -68,7 +68,7 @@ public:
     float       get_climb_rate() const override;
 
 private:
-    Vector3f _relpos_cm;   // NEU
-    Vector3f _velocity_cm; // NEU
+    Vector3f _relpos_cm;        // NED
+    Vector3f _velocity_cm;      // NED
     AP_AHRS_NavEKF &_ahrs_ekf;
 };
