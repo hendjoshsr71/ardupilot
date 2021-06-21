@@ -115,7 +115,6 @@ void AC_Circle::set_center(const Location& center)
         } else {
             // failed to convert location so set to current position and log error
             Vector3f circle_center_neu = _inav.get_position() * 0.01f; // convert cm to meters
-            circle_center_neu.z = -circle_center_neu.z; // convert neu to ned
             set_center(circle_center_neu, false);
             AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::FAILED_CIRCLE_INIT);
         }
@@ -125,7 +124,6 @@ void AC_Circle::set_center(const Location& center)
         if (!center.get_vector_from_origin_NED(circle_center_ned)) {
             // default to current position and log error
             circle_center_ned = _inav.get_position() * 0.01f; // convert cm to meters
-            circle_center_ned.z = -circle_center_ned.z; // Convert what was NEU to NED
             AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::FAILED_CIRCLE_INIT);
         }
         set_center(circle_center_ned, false);
@@ -205,7 +203,7 @@ bool AC_Circle::update(float climb_rate)
         target.y += - _radius * sinf(-_angle);
 
         // heading is from vehicle to center of circle
-        _yaw = get_bearing_cd(_inav.get_position() * 0.01f, _center);
+        _yaw = get_bearing_cd(_inav.get_position() * 0.01f, _center); // xy only
 
         if ((_options.get() & CircleOptions::FACE_DIRECTION_OF_TRAVEL) != 0) {
             _yaw += is_positive(_rate)?-9000.0f:9000.0f;
@@ -319,7 +317,7 @@ void AC_Circle::init_start_angle(bool use_heading)
         _angle = wrap_PI(_ahrs.yaw-M_PI);
     } else {
         // if we are exactly at the center of the circle, init angle to directly behind vehicle (so vehicle will backup but not change heading)
-        const Vector3f &curr_pos = _inav.get_position() * 0.01f;
+        const Vector3f &curr_pos = _inav.get_position() * 0.01f; // xy only
         if (is_equal(curr_pos.x,_center.x) && is_equal(curr_pos.y,_center.y)) {
             _angle = wrap_PI(_ahrs.yaw-M_PI);
         } else {

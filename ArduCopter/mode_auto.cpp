@@ -303,7 +303,7 @@ void ModeAuto::circle_movetoedge_start(const Location &circle_center, float radi
     // check our distance from edge of circle
     Vector3f circle_edge_ned;
     copter.circle_nav->get_closest_point_on_circle(circle_edge_ned);
-    float dist_to_edge = ((inertial_nav.get_position().neu_to_ned() * 0.01f) - circle_edge_ned).length();
+    float dist_to_edge = ((inertial_nav.get_position() * 0.01f) - circle_edge_ned).length();
 
     // if more than 3m then fly to edge
     if (dist_to_edge > 300.0f) {
@@ -323,7 +323,7 @@ void ModeAuto::circle_movetoedge_start(const Location &circle_center, float radi
 
         // if we are outside the circle, point at the edge, otherwise hold yaw
         const Vector3f &circle_center_ned = copter.circle_nav->get_center();
-        const Vector3f &curr_pos = inertial_nav.get_position().neu_to_ned();    // z not used here
+        const Vector3f &curr_pos = inertial_nav.get_position();    // xy only
         float dist_to_center = norm(circle_center_ned.x - curr_pos.x, circle_center_ned.y - curr_pos.y);
         // initialise yaw
         // To-Do: reset the yaw only when the previous navigation command is not a WP.  this would allow removing the special check for ROI
@@ -1759,7 +1759,7 @@ bool ModeAuto::verify_payload_place()
         }
         FALLTHROUGH;
     case PayloadPlaceStateType_Ascending_Start: {
-        Location target_loc(inertial_nav.get_position().neu_to_ned(), Location::AltFrame::ABOVE_ORIGIN);
+        Location target_loc(inertial_nav.get_position(), Location::AltFrame::ABOVE_ORIGIN);
         target_loc.alt = nav_payload_place.descend_start_altitude;
         wp_start(target_loc);
         nav_payload_place.state = PayloadPlaceStateType_Ascending;

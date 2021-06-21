@@ -44,7 +44,7 @@ float AC_WPNav_OA::get_wp_distance_to_destination() const
     }
 
     // get current location
-    const Vector3f &curr = _inav.get_position() * 0.01f; // convert cm to meters, _inav returns neu but z not used here
+    const Vector3f &curr = _inav.get_position() * 0.01f; // convert cm to meters
     return norm(_destination_oabak.x-curr.x, _destination_oabak.y-curr.y);
 }
 
@@ -56,7 +56,7 @@ int32_t AC_WPNav_OA::get_wp_bearing_to_destination() const
         return AC_WPNav::get_wp_bearing_to_destination();
     }
 
-    return get_bearing_cd(_inav.get_position(), _destination_oabak); // _inav returns neu but z not used here
+    return get_bearing_cd(_inav.get_position(), _destination_oabak);
 }
 
 /// true when we have come within RADIUS cm of the waypoint

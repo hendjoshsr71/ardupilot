@@ -227,13 +227,13 @@ public:
     void get_stopping_point_z_cm(Vector3f& stopping_point) const;
 
     /// get_pos_error_cm - get position error vector between the current and target position
-    const Vector3f get_pos_error_cm() const { return _pos_target - _inav.get_position(); }
+    const Vector3f get_pos_error_cm() const { return _pos_target - _inav.get_position().neu_to_ned(); } // get_pos is NED
 
     /// get_pos_error_xy_cm - get the length of the position error vector in the xy plane
-    float get_pos_error_xy_cm() const { return norm(_pos_target.x - _inav.get_position().x, _pos_target.y - _inav.get_position().y); }
+    float get_pos_error_xy_cm() const { return norm(_pos_target.x - _inav.get_position().x, _pos_target.y - _inav.get_position().y); } // XY only
 
     /// get_pos_error_z_cm - returns altitude error in cm
-    float get_pos_error_z_cm() const { return (_pos_target.z - _inav.get_position().z); }
+    float get_pos_error_z_cm() const { return (_pos_target.z - -_inav.get_position().z); } // get_pos is NED 
 
 
     /// Velocity

@@ -168,7 +168,7 @@ private:
     bool     twitch_first_iter   : 1;    // true on first iteration of a twitch (used to signal we must step the attitude or rate target)
     bool     use_poshold         : 1;    // true = enable position hold
     bool     have_position       : 1;    // true = start_position is value
-    Vector3f start_position;
+    Vector3f start_position;    // xy only gets used
     uint8_t  axes_completed;             // bitmask of completed axes
 
     // variables

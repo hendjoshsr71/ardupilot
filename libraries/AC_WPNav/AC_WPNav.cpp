@@ -359,7 +359,7 @@ void AC_WPNav::shift_wp_origin_and_destination_to_current_pos_xy()
     _pos_control.init_xy_controller();
 
     // get current and target locations
-    const Vector3f& curr_pos = _inav.get_position().neu_to_ned() * 0.01f;  // inav returns neu but z not used here, convert cm to m
+    const Vector3f& curr_pos = _inav.get_position() * 0.01f;  // convert cm to m
 
     // shift origin and destination horizontally
     _origin.x = curr_pos.x;
@@ -419,7 +419,7 @@ bool AC_WPNav::advance_wp_target_along_track(float dt)
     }
 
     // get current position and adjust altitude to origin and destination's frame (i.e. _frame)
-    const Vector3f &curr_pos = (_inav.get_position().neu_to_ned() * 0.01f) + Vector3f{0, 0, terr_offset}; // _inav returns in cm convert cm to meters
+    const Vector3f &curr_pos = (_inav.get_position() * 0.01f) + Vector3f{0, 0, terr_offset}; // _inav returns in cm convert cm to meters
 
 
     // Use _track_scalar_dt to slow down S-Curve time to prevent target moving too far in front of aircraft
@@ -431,7 +431,7 @@ bool AC_WPNav::advance_wp_target_along_track(float dt)
     if (is_positive(curr_target_vel.length())) {
         Vector3f track_direction = curr_target_vel.normalized();
         const float track_error = (_pos_control.get_pos_error_cm().neu_to_ned() * 0.01f) * track_direction; // convert cm to m
-        const float track_velocity = (_inav.get_velocity().neu_to_ned() * 0.01f) * track_direction; // convert cm to m
+        const float track_velocity = (_inav.get_velocity() * 0.01f) * track_direction; // convert cm to m
         // set time scaler to be consistent with the achievable aircraft speed with a 5% buffer for short term variation.
         
         // FIXME ??? the scale for _pos_control.get_pos_xy_p().kP() may be off but it should matter should be unitless.....
@@ -525,14 +525,14 @@ void AC_WPNav::update_track_with_speed_accel_limits()
 float AC_WPNav::get_wp_distance_to_destination() const
 {
     // get current location
-    const Vector3f &curr = _inav.get_position().neu_to_ned() * 0.01f;    // cm -> meters, inav returns neu but z not used here
+    const Vector3f &curr = _inav.get_position() * 0.01f;    // cm -> meters
     return norm(_destination.x-curr.x,_destination.y-curr.y);
 }
 
 /// get_wp_bearing_to_destination - get bearing to next waypoint in centi-degrees
 int32_t AC_WPNav::get_wp_bearing_to_destination() const
 {
-    return get_bearing_cd(_inav.get_position().neu_to_ned() * 0.01f, _destination);  // convert cm to m, inav returns neu but z not used here
+    return get_bearing_cd(_inav.get_position() * 0.01f, _destination);  // convert cm to m
 }
 
 /// update_wpnav - run the wp controller - should be called at 100hz or higher
