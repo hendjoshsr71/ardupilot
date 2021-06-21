@@ -60,13 +60,13 @@ public:
     float       get_altitude() const override;
 
     /**
-     * get_velocity_z - returns the current climbrate.
+     * get_climb_rate - returns the current climbrate.
      *
-     * @see get_velocity().z
+     * @see get_climb_rate()
      *
      * @return climbrate in cm/s
      */
-    float       get_velocity_z() const override;
+    float       get_climb_rate() const override;
 
 private:
     Vector3f _relpos_cm;   // NEU

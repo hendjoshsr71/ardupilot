@@ -75,11 +75,11 @@ public:
     virtual float       get_altitude() const = 0;
 
     /**
-     * get_velocity_z - returns the current climbrate.
+     * get_climb_rate - returns the current climbrate.
      *
-     * @see get_velocity().z
+     * @see get_climb_rate()
      *
      * @return climbrate in cm/s (positive up)
      */
-    virtual float       get_velocity_z() const = 0;
+    virtual float       get_climb_rate() const = 0;
 };
