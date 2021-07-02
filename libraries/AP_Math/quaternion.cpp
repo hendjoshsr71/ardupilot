@@ -424,16 +424,25 @@ void Quaternion::from_vector312(float roll, float pitch, float yaw)
 }
 
 // create a quaternion from its axis-angle representation
-void Quaternion::from_axis_angle(Vector3f v)
+void Quaternion::from_axis_angle(const Vector3f &v)
 {
-    const float theta = v.length();
-    if (is_zero(theta)) {
-        q1 = 1.0f;
-        q2=q3=q4=0.0f;
-        return;
+    const float theta_sq = v.length_squared();
+    float re_coeff, im_coeff;
+    if (theta_sq < radians(0.1f) * radians(0.1f)) {
+        // When theta is close to 0, cannot divide v by theta to get the rotation axis
+        // Use Taylor series approximation of `sin(theta/2)/theta` and cos(theta/2) with second-order expansion
+        re_coeff = 1.0f - 0.125f * theta_sq;
+        im_coeff = 0.5f - 1.0f / 48.0f * theta_sq;
+    } else {
+        const float theta = sqrtf(theta_sq);
+        const float half_theta = 0.5f * theta;
+        re_coeff = cosf(half_theta);
+        im_coeff = sinf(half_theta) / theta;
     }
-    v /= theta;
-    from_axis_angle(v,theta);
+    q1 = re_coeff;
+    q2 = im_coeff * v.x;
+    q3 = im_coeff * v.y;
+    q4 = im_coeff * v.z;
 }
 
 // create a quaternion from its axis-angle representation
@@ -441,17 +450,21 @@ void Quaternion::from_axis_angle(Vector3f v)
 void Quaternion::from_axis_angle(const Vector3f &axis, float theta)
 {
     // axis must be a unit vector as there is no check for length
-    if (is_zero(theta)) {
-        q1 = 1.0f;
-        q2=q3=q4=0.0f;
-        return;
+    float re_coeff, im_coeff;
+    if (theta < radians(0.1f)) {
+        const float theta_sq = sq(theta);
+        // Use Taylor series approximation of `sin(theta/2)` and cos(theta/2) with second-order expansion
+        re_coeff = 1.0f - 0.125f * theta_sq;
+        im_coeff = theta * (0.5f - 1.0f / 48.0f * theta_sq);
+    } else {
+        const float half_theta = 0.5f * theta;
+        re_coeff = cosf(half_theta);
+        im_coeff = sinf(half_theta);
     }
-    const float st2 = sinf(theta/2.0f);
-
-    q1 = cosf(theta/2.0f);
-    q2 = axis.x * st2;
-    q3 = axis.y * st2;
-    q4 = axis.z * st2;
+    q1 = re_coeff;
+    q2 = im_coeff * axis.x;
+    q3 = im_coeff * axis.y;
+    q4 = im_coeff * axis.z;
 }
 
 // rotate by the provided axis angle
