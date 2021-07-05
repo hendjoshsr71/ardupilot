@@ -489,6 +489,7 @@ void Quaternion::to_axis_angle(Vector3f &v) const
     if (sin_half_theta_sq < radians(0.05f) * radians(0.05f)) {
         if (is_zero(cos_half_theta)) {
             vec_coeff = 0.0f; // The code goes here if the quaternion is [0,0,0,0]. Really shouldn't happen.
+            INTERNAL_ERROR(AP_InternalError::error_t::flow_of_control);
         } else {
             const float cos_half_theta_sq = sq(cos_half_theta);
             vec_coeff = (2.0f - 2.0f / 3.0f * sin_half_theta_sq / cos_half_theta_sq) / cos_half_theta;
