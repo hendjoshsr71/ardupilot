@@ -183,6 +183,34 @@ bool Sub::guided_set_destination(const Location& dest_loc)
     return true;
 }
 
+bool Sub::guided_get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const
+{
+    switch (guided_mode) {
+    case GuidedMode::Guided_Angle:
+        return false;
+    case GuidedMode::Guided_PosVel:
+        type_mask = POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
+                    POSITION_TARGET_TYPEMASK_YAW_IGNORE| POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE; // ignore acceleration, yaw, & yaw rate
+        target = Location(pos_control.get_pos_target_cm(), Location::AltFrame::ABOVE_ORIGIN);
+        target_vel = pos_control.get_vel_target_cms() * 0.01; // convert to meters/s, frame NEU
+        return true;
+    case GuidedMode::Guided_Velocity:
+        type_mask = POSITION_TARGET_TYPEMASK_X_IGNORE | POSITION_TARGET_TYPEMASK_Y_IGNORE | POSITION_TARGET_TYPEMASK_Z_IGNORE |
+                    POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
+                    POSITION_TARGET_TYPEMASK_YAW_IGNORE| POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE; // ignore position, acceleration, yaw, & yaw rate
+        target_vel = pos_control.get_vel_target_cms() * 0.01; // convert to meters/s, frame NEU
+        return true;
+
+    case GuidedMode::Guided_WP:
+        type_mask = POSITION_TARGET_TYPEMASK_VX_IGNORE | POSITION_TARGET_TYPEMASK_VY_IGNORE | POSITION_TARGET_TYPEMASK_VZ_IGNORE |
+                    POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
+                    POSITION_TARGET_TYPEMASK_YAW_IGNORE| POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE; // ignore velocity, acceleration, yaw, & yaw rate
+        return wp_nav.get_oa_wp_destination(target);
+    }
+
+    return false;
+}
+
 // guided_set_velocity - sets guided mode's target velocity
 void Sub::guided_set_velocity(const Vector3f& velocity)
 {

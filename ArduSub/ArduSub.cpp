@@ -334,6 +334,34 @@ bool Sub::get_wp_distance_m(float &distance) const
     return true;
 }
 
+bool Sub::get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const
+{
+    // call the correct controller
+    switch (control_mode) {
+
+    case AUTO:
+        return auto_get_target_info(type_mask, target, target_vel, target_accel);
+
+    case GUIDED:
+#if NAV_GUIDED == ENABLED
+        return guided_get_target_info(type_mask, target, target_vel, target_accel);
+#endif
+    case SURFACE:   // automatically return to surface, pilot maintains horizontal control
+        // return surface_get_target_info(type_mask, target, target_vel, target_accel);
+    case STABILIZE:
+    case ACRO:
+    case ALT_HOLD:
+    case CIRCLE:
+    case POSHOLD:
+    case MANUAL:
+    case MOTOR_DETECT:
+        return false;
+    }
+
+    // we should never reach here but just in case
+    return false;
+}
+
 // vehicle specific waypoint info helpers
 bool Sub::get_wp_bearing_deg(float &bearing) const
 {

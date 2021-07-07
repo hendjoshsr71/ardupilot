@@ -343,6 +343,34 @@ void Sub::auto_loiter_run()
     attitude_control.input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
 }
 
+// get desired location
+bool Sub::auto_get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const
+{
+    // call the correct auto controller
+    switch (auto_mode) {
+
+    case Auto_WP:
+        type_mask = POSITION_TARGET_TYPEMASK_VX_IGNORE | POSITION_TARGET_TYPEMASK_VY_IGNORE | POSITION_TARGET_TYPEMASK_VZ_IGNORE |
+                    POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
+                    POSITION_TARGET_TYPEMASK_YAW_IGNORE| POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE; // ignore everything except position
+        return wp_nav.get_oa_wp_destination(target);
+
+    case Auto_NavGuided:
+#if NAV_GUIDED == ENABLED
+        return guided_get_target_info(type_mask, target, target_vel, target_accel);
+#endif
+
+    case Auto_CircleMoveToEdge:
+    case Auto_Circle:
+    case Auto_Loiter:
+    case Auto_TerrainRecover:
+        return false;
+    }
+
+    // we should never reach here but just in case
+    return false;
+}
+
 // get_default_auto_yaw_mode - returns auto_yaw_mode based on WP_YAW_BEHAVIOR parameter
 // set rtl parameter to true if this is during an RTL
 uint8_t Sub::get_default_auto_yaw_mode(bool rtl) const
