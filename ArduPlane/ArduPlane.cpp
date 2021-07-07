@@ -690,4 +690,26 @@ bool Plane::get_target_location(Location& target_loc)
     return false;
 }
 
+bool Plane::get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const
+{
+    switch (control_mode->mode_number()) {
+    case Mode::Number::RTL:
+    case Mode::Number::AVOID_ADSB:
+    case Mode::Number::GUIDED:
+    case Mode::Number::AUTO:
+    case Mode::Number::LOITER:
+    case Mode::Number::QLOITER:
+    case Mode::Number::QLAND:
+    case Mode::Number::QRTL:
+        type_mask = POSITION_TARGET_TYPEMASK_VX_IGNORE | POSITION_TARGET_TYPEMASK_VY_IGNORE | POSITION_TARGET_TYPEMASK_VZ_IGNORE |
+                    POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
+                    POSITION_TARGET_TYPEMASK_YAW_IGNORE| POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE; // ignore everything except position
+        target = next_WP_loc;
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+
 AP_HAL_MAIN_CALLBACKS(&plane);
