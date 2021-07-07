@@ -451,6 +451,9 @@ private:
     const char* get_frame_string();
     void allocate_motors(void);
 
+    // vehicle specific target info helper
+    bool get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const override;
+
     Mode *flightmode;
     ModeManual mode_manual;
     ModeLand mode_land;

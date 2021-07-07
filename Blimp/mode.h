@@ -64,7 +64,7 @@ public:
     }
 
     // functions for reporting to GCS
-    virtual bool get_wp(Location &loc)
+    virtual bool get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const
     {
         return false;
     };
