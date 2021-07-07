@@ -187,8 +187,9 @@ public:
     virtual bool set_target_velocity_NED(const Vector3f& vel_ned) { return false; }
     virtual bool set_target_angle_and_climbrate(float roll_deg, float pitch_deg, float yaw_deg, float climb_rate_ms, bool use_yaw_rate, float yaw_rate_degs) { return false; }
 
-    // get target location (for use by scripting)
+    // get target location (also used by scripting)
     virtual bool get_target_location(Location& target_loc) { return false; }
+    virtual bool get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const { return false; }
 
     // set steering and throttle (-1 to +1) (for use by scripting with Rover)
     virtual bool set_steering_and_throttle(float steering, float throttle) { return false; }
