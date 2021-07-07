@@ -657,6 +657,9 @@ private:
     bool get_circle_radius(float &radius_m) override;
     bool set_circle_rate(float rate_dps) override;
 #endif // ENABLE_SCRIPTING
+
+    bool get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const override;
+
     void rc_loop();
     void throttle_loop();
     void update_batt_compass(void);
