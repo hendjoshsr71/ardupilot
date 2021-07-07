@@ -623,6 +623,12 @@ bool Copter::get_wp_distance_m(float &distance) const
     return true;
 }
 
+// get the location of the next target
+bool Copter::get_target_location(Location &loc) const
+{
+    return flightmode->get_wp(loc);
+}
+
 // vehicle specific waypoint info helpers
 bool Copter::get_wp_bearing_deg(float &bearing) const
 {
