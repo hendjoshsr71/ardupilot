@@ -208,6 +208,7 @@ public:
     virtual bool set_steering_and_throttle(float steering, float throttle) { return false; }
 #endif // ENABLE_SCRIPTING
 
+    virtual bool get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const { return false; }
 
     // control outputs enumeration
     enum class ControlOutput {
