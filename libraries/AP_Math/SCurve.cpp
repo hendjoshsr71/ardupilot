@@ -780,8 +780,8 @@ void SCurve::calculate_path(float tj, float Jm, float V0, float Am, float Vm, fl
             const float c2 = safe_sqrt((Am_sq * Am_sq) * (1.0f / 4.0f) + (Jm_sq) * (V0 * V0) + (Am_sq) * (Jm_sq) * (tj_sq) * (1.0f / 4.0f) + Am * (Jm_sq) * L * 2.0f - (Am_sq) * Jm * V0 + (Am_sq * Am) * Jm * tj * (1.0f / 2.0f) - Am * (Jm_sq) * V0 * tj) - Jm * V0 - Am * Jm * tj * (3.0f / 2.0f);
 
             t2_out = 0.0f;
-            t4_out = MIN(-a1 / Am, MAX((c1 + c2) / (Am * Jm),
-                                       (c1 - c2) / (Am * Jm)));
+            t4_out = 1 / Am * MIN(-a1, MAX((c1 + c2) / Jm,
+                                           (c1 - c2) / Jm));
             t4_out = MAX(t4_out, 0.0);
             t6_out = 0.0f;
         }
@@ -791,11 +791,11 @@ void SCurve::calculate_path(float tj, float Jm, float V0, float Am, float Vm, fl
             // solution = 5 - t6 t4 t2 = 1 0 1
             const float c1 = safe_sqrt((V0 * -4.0f + Vm * 4.0f + Jm * (tj_sq)) / Jm);
             const float c2 = L * (1.0f / 2.0f);
-            const float c3 = (Jm_sq * Jm) * (tj_sq * tj) * (8.0f / 2.7E1f);
-            const float c4 = Jm * tj * ((Jm_sq) * (tj_sq) + Jm * V0 * 2.0f) * (1.0f / 3.0f);
-            const float c5 = (Jm_sq) * V0 * tj;
+            const float c3 = Jm * (tj_sq * tj) * (8.0f / 2.7E1f);
+            const float c4 = tj * (Jm * (tj_sq) + V0 * 2.0f) * (1.0f / 3.0f);
+            const float c5 = V0 * tj;
 
-            const float b1 = powf(safe_sqrt(powf(- (Jm_sq) * c2 + c3 - c4 + c5, 2.0f) - powf((Jm_sq) * (tj_sq) * (1.0f / 9.0f) - Jm * V0 * (2.0f / 3.0f), 3.0f)) + (Jm_sq) * c2 - c3 + c4 - c5, 1.0f / 3.0f);
+            const float b1 = powf(safe_sqrt(powf(- (Jm_sq) * (c2 + c3 - c4 + c5), 2.0f) - powf((Jm_sq) * (tj_sq) * (1.0f / 9.0f) - Jm * V0 * (2.0f / 3.0f), 3.0f)) + (Jm_sq) * (c2 - c3 + c4 - c5), 1.0f / 3.0f);
             Am = MIN(MIN(Am, MAX(Jm * (tj + c1) * (-1.0f / 2.0f), Jm * (tj - c1) * (-1.0f / 2.0f))), Jm * tj * (-2.0f / 3.0f) + ((Jm_sq) * (tj_sq) * (1.0f / 9.0f) - Jm * V0 * (2.0f / 3.0f)) * 1.0f / b1 + b1);
             t2_out = Am / Jm - tj;
             t4_out = 0.0f;
@@ -806,8 +806,8 @@ void SCurve::calculate_path(float tj, float Jm, float V0, float Am, float Vm, fl
             const float c2 = safe_sqrt((Am_sq * Am_sq) * (1.0f / 4.0f) + (Jm_sq) * (V0 * V0) + (Am_sq) * (Jm_sq) * (tj_sq) * (1.0f / 4.0f) + Am * (Jm_sq) * L * 2.0f - (Am_sq) * Jm * V0 + (Am_sq * Am) * Jm * tj * (1.0f / 2.0f) - Am * (Jm_sq) * V0 * tj) - Jm * V0 - Am * Jm * tj * (3.0f / 2.0f);
 
             t2_out = Am / Jm - tj;
-            t4_out = MIN(-a1 / Am, MAX((c1 + c2) / (Am * Jm),
-                                       (c1 - c2) / (Am * Jm)));
+            t4_out = 1 / Am * MIN(-a1, MAX((c1 + c2) / Jm,
+                                           (c1 - c2) / Jm));
             t4_out = MAX(t4_out, 0.0);
             t6_out = t2_out;
         }
