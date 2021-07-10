@@ -5,6 +5,11 @@
 #include <AP_Math/vector3.h>
 #include <AP_Math/SCurve.h>
 
+// Tests that T4 is positive for the following solutions
+
+// FIX ME nly  one of these is tested here
+// solution = 2 - t6 t4 t2 = 0 1 0
+// solution = 7 - t6 t4 t2 = 1 1 1
 TEST(LinesScurve, test_calculate_path)
 {
     float Jm_out, t2_out, t4_out, t6_out;
@@ -14,6 +19,19 @@ TEST(LinesScurve, test_calculate_path)
     EXPECT_FLOAT_EQ(t2_out, 0.0);
     EXPECT_FLOAT_EQ(t4_out, 0.0);
     EXPECT_FLOAT_EQ(t6_out, 0.0);
+}
+
+// Test that no velocity change returns
+TEST(LinesScurve, test_calculate_path)
+{
+    float Jm_out = 1, t2_out = 2, t4_out = 3, t6_out = 4;
+    SCurve::calculate_path(0.0, 0.0, 10.0, 0.0, 1.0, 2.09772229,
+                           Jm_out, t2_out, t4_out, t6_out);
+    // How to check 
+    EXPECT_FLOAT_EQ(Jm_out, 1.0);
+    EXPECT_FLOAT_EQ(t2_out, 2.0);
+    EXPECT_FLOAT_EQ(t4_out, 3.0);
+    EXPECT_FLOAT_EQ(t6_out, 4.0);
 }
 
 
