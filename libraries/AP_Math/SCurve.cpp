@@ -761,6 +761,10 @@ void SCurve::calculate_path(float tj, float Jm, float V0, float Am, float Vm, fl
     }
 
     Am = MIN(MIN(Am, (Vm - V0) / (2.0f * tj)), (L + 4.0f * V0 * tj) / (4.0f * sq(tj)));
+
+    const float Am_sq = Am * Am;
+    const float tj_sq = tj * tj;
+
     if (fabsf(Am) < Jm * tj) {
         Jm = Am / tj;
         if ((Vm <= V0 + 2.0f * Am * tj) || (L <= 4.0f * V0 * tj + 4.0f * Am * sq(tj))) {
@@ -770,22 +774,25 @@ void SCurve::calculate_path(float tj, float Jm, float V0, float Am, float Vm, fl
             t6_out = 0.0f;
         } else {
             // solution = 2 - t6 t4 t2 = 0 1 0
+            const float Jm_sq = Jm * Jm;
+
             t2_out = 0.0f;
-            t4_out = MIN(-(V0 - Vm + Am * tj + (Am * Am) / Jm) / Am, MAX(((Am * Am) * (-3.0f / 2.0f) + safe_sqrt((Am * Am * Am * Am) * (1.0f / 4.0f) + (Jm * Jm) * (V0 * V0) + (Am * Am) * (Jm * Jm) * (tj * tj) * (1.0f / 4.0f) + Am * (Jm * Jm) * L * 2.0f - (Am * Am) * Jm * V0 + (Am * Am * Am) * Jm * tj * (1.0f / 2.0f) - Am * (Jm * Jm) * V0 * tj) - Jm * V0 - Am * Jm * tj * (3.0f / 2.0f)) / (Am * Jm), ((Am * Am) * (-3.0f / 2.0f) - safe_sqrt((Am * Am * Am * Am) * (1.0f / 4.0f) + (Jm * Jm) * (V0 * V0) + (Am * Am) * (Jm * Jm) * (tj * tj) * (1.0f / 4.0f) + Am * (Jm * Jm) * L * 2.0f - (Am * Am) * Jm * V0 + (Am * Am * Am) * Jm * tj * (1.0f / 2.0f) - Am * (Jm * Jm) * V0 * tj) - Jm * V0 - Am * Jm * tj * (3.0f / 2.0f)) / (Am * Jm)));
+            t4_out = MIN(-(V0 - Vm + Am * tj + (Am_sq) / Jm) / Am, MAX(((Am_sq) * (-3.0f / 2.0f) + safe_sqrt((Am_sq * Am_sq) * (1.0f / 4.0f) + (Jm_sq) * (V0 * V0) + (Am_sq) * (Jm_sq) * (tj_sq) * (1.0f / 4.0f) + Am * (Jm_sq) * L * 2.0f - (Am_sq) * Jm * V0 + (Am_sq * Am) * Jm * tj * (1.0f / 2.0f) - Am * (Jm_sq) * V0 * tj) - Jm * V0 - Am * Jm * tj * (3.0f / 2.0f)) / (Am * Jm), ((Am_sq) * (-3.0f / 2.0f) - safe_sqrt((Am_sq * Am_sq) * (1.0f / 4.0f) + (Jm_sq) * (V0 * V0) + (Am_sq) * (Jm_sq) * (tj_sq) * (1.0f / 4.0f) + Am * (Jm_sq) * L * 2.0f - (Am_sq) * Jm * V0 + (Am_sq * Am) * Jm * tj * (1.0f / 2.0f) - Am * (Jm_sq) * V0 * tj) - Jm * V0 - Am * Jm * tj * (3.0f / 2.0f)) / (Am * Jm)));
             t4_out = MAX(t4_out, 0.0);
             t6_out = 0.0f;
         }
     } else {
-        if ((Vm < V0 + Am * tj + (Am * Am) / Jm) || (L < 1.0f / (Jm * Jm) * (Am * Am * Am + Am * Jm * (V0 * 2.0f + Am * tj * 2.0f)) + V0 * tj * 2.0f + Am * (tj * tj))) {
+        const float Jm_sq = Jm * Jm;
+        if ((Vm < V0 + Am * tj + (Am_sq) / Jm) || (L < 1.0f / (Jm_sq) * (Am_sq * Am + Am * Jm * (V0 * 2.0f + Am * tj * 2.0f)) + V0 * tj * 2.0f + Am * (tj_sq))) {
             // solution = 5 - t6 t4 t2 = 1 0 1
-            Am = MIN(MIN(Am, MAX(Jm * (tj + safe_sqrt((V0 * -4.0f + Vm * 4.0f + Jm * (tj * tj)) / Jm)) * (-1.0f / 2.0f), Jm * (tj - safe_sqrt((V0 * -4.0f + Vm * 4.0f + Jm * (tj * tj)) / Jm)) * (-1.0f / 2.0f))), Jm * tj * (-2.0f / 3.0f) + ((Jm * Jm) * (tj * tj) * (1.0f / 9.0f) - Jm * V0 * (2.0f / 3.0f)) * 1.0f / powf(safe_sqrt(powf(- (Jm * Jm) * L * (1.0f / 2.0f) + (Jm * Jm * Jm) * (tj * tj * tj) * (8.0f / 2.7E1f) - Jm * tj * ((Jm * Jm) * (tj * tj) + Jm * V0 * 2.0f) * (1.0f / 3.0f) + (Jm * Jm) * V0 * tj, 2.0f) - powf((Jm * Jm) * (tj * tj) * (1.0f / 9.0f) - Jm * V0 * (2.0f / 3.0f), 3.0f)) + (Jm * Jm) * L * (1.0f / 2.0f) - (Jm * Jm * Jm) * (tj * tj * tj) * (8.0f / 2.7E1f) + Jm * tj * ((Jm * Jm) * (tj * tj) + Jm * V0 * 2.0f) * (1.0f / 3.0f) - (Jm * Jm) * V0 * tj, 1.0f / 3.0f) + powf(safe_sqrt(powf(- (Jm * Jm) * L * (1.0f / 2.0f) + (Jm * Jm * Jm) * (tj * tj * tj) * (8.0f / 2.7E1f) - Jm * tj * ((Jm * Jm) * (tj * tj) + Jm * V0 * 2.0f) * (1.0f / 3.0f) + (Jm * Jm) * V0 * tj, 2.0f) - powf((Jm * Jm) * (tj * tj) * (1.0f / 9.0f) - Jm * V0 * (2.0f / 3.0f), 3.0f)) + (Jm * Jm) * L * (1.0f / 2.0f) - (Jm * Jm * Jm) * (tj * tj * tj) * (8.0f / 2.7E1f) + Jm * tj * ((Jm * Jm) * (tj * tj) + Jm * V0 * 2.0f) * (1.0f / 3.0f) - (Jm * Jm) * V0 * tj, 1.0f / 3.0f));
+            Am = MIN(MIN(Am, MAX(Jm * (tj + safe_sqrt((V0 * -4.0f + Vm * 4.0f + Jm * (tj_sq)) / Jm)) * (-1.0f / 2.0f), Jm * (tj - safe_sqrt((V0 * -4.0f + Vm * 4.0f + Jm * (tj_sq)) / Jm)) * (-1.0f / 2.0f))), Jm * tj * (-2.0f / 3.0f) + ((Jm_sq) * (tj_sq) * (1.0f / 9.0f) - Jm * V0 * (2.0f / 3.0f)) * 1.0f / powf(safe_sqrt(powf(- (Jm_sq) * L * (1.0f / 2.0f) + (Jm_sq * Jm) * (tj_sq * tj) * (8.0f / 2.7E1f) - Jm * tj * ((Jm_sq) * (tj_sq) + Jm * V0 * 2.0f) * (1.0f / 3.0f) + (Jm_sq) * V0 * tj, 2.0f) - powf((Jm_sq) * (tj_sq) * (1.0f / 9.0f) - Jm * V0 * (2.0f / 3.0f), 3.0f)) + (Jm_sq) * L * (1.0f / 2.0f) - (Jm_sq * Jm) * (tj_sq * tj) * (8.0f / 2.7E1f) + Jm * tj * ((Jm_sq) * (tj_sq) + Jm * V0 * 2.0f) * (1.0f / 3.0f) - (Jm_sq) * V0 * tj, 1.0f / 3.0f) + powf(safe_sqrt(powf(- (Jm_sq) * L * (1.0f / 2.0f) + (Jm_sq * Jm) * (tj_sq * tj) * (8.0f / 2.7E1f) - Jm * tj * ((Jm_sq) * (tj_sq) + Jm * V0 * 2.0f) * (1.0f / 3.0f) + (Jm_sq) * V0 * tj, 2.0f) - powf((Jm_sq) * (tj_sq) * (1.0f / 9.0f) - Jm * V0 * (2.0f / 3.0f), 3.0f)) + (Jm_sq) * L * (1.0f / 2.0f) - (Jm_sq * Jm) * (tj_sq * tj) * (8.0f / 2.7E1f) + Jm * tj * ((Jm_sq) * (tj_sq) + Jm * V0 * 2.0f) * (1.0f / 3.0f) - (Jm_sq) * V0 * tj, 1.0f / 3.0f));
             t2_out = Am / Jm - tj;
             t4_out = 0.0f;
             t6_out = t2_out;
         } else {
             // solution = 7 - t6 t4 t2 = 1 1 1
             t2_out = Am / Jm - tj;
-            t4_out = MIN(-(V0 - Vm + Am * tj + (Am * Am) / Jm) / Am, MAX(((Am * Am) * (-3.0f / 2.0f) + safe_sqrt((Am * Am * Am * Am) * (1.0f / 4.0f) + (Jm * Jm) * (V0 * V0) + (Am * Am) * (Jm * Jm) * (tj * tj) * (1.0f / 4.0f) + Am * (Jm * Jm) * L * 2.0f - (Am * Am) * Jm * V0 + (Am * Am * Am) * Jm * tj * (1.0f / 2.0f) - Am * (Jm * Jm) * V0 * tj) - Jm * V0 - Am * Jm * tj * (3.0f / 2.0f)) / (Am * Jm), ((Am * Am) * (-3.0f / 2.0f) - safe_sqrt((Am * Am * Am * Am) * (1.0f / 4.0f) + (Jm * Jm) * (V0 * V0) + (Am * Am) * (Jm * Jm) * (tj * tj) * (1.0f / 4.0f) + Am * (Jm * Jm) * L * 2.0f - (Am * Am) * Jm * V0 + (Am * Am * Am) * Jm * tj * (1.0f / 2.0f) - Am * (Jm * Jm) * V0 * tj) - Jm * V0 - Am * Jm * tj * (3.0f / 2.0f)) / (Am * Jm)));
+            t4_out = MIN(-(V0 - Vm + Am * tj + (Am_sq) / Jm) / Am, MAX(((Am_sq) * (-3.0f / 2.0f) + safe_sqrt((Am_sq * Am_sq) * (1.0f / 4.0f) + (Jm_sq) * (V0 * V0) + (Am_sq) * (Jm_sq) * (tj_sq) * (1.0f / 4.0f) + Am * (Jm_sq) * L * 2.0f - (Am_sq) * Jm * V0 + (Am_sq * Am) * Jm * tj * (1.0f / 2.0f) - Am * (Jm_sq) * V0 * tj) - Jm * V0 - Am * Jm * tj * (3.0f / 2.0f)) / (Am * Jm), ((Am_sq) * (-3.0f / 2.0f) - safe_sqrt((Am_sq * Am_sq) * (1.0f / 4.0f) + (Jm_sq) * (V0 * V0) + (Am_sq) * (Jm_sq) * (tj_sq) * (1.0f / 4.0f) + Am * (Jm_sq) * L * 2.0f - (Am_sq) * Jm * V0 + (Am_sq * Am) * Jm * tj * (1.0f / 2.0f) - Am * (Jm_sq) * V0 * tj) - Jm * V0 - Am * Jm * tj * (3.0f / 2.0f)) / (Am * Jm)));
             t4_out = MAX(t4_out, 0.0);
             t6_out = t2_out;
         }
