@@ -789,8 +789,14 @@ void SCurve::calculate_path(float tj, float Jm, float V0, float Am, float Vm, fl
         const float Jm_sq = Jm * Jm;
         if ((0 < a1) || (L < 1.0f / (Jm_sq) * (Am_sq * Am + Am * Jm * (V0 * 2.0f + Am * tj * 2.0f)) + V0 * tj * 2.0f + Am * (tj_sq))) {
             // solution = 5 - t6 t4 t2 = 1 0 1
+            const float c1 = safe_sqrt((V0 * -4.0f + Vm * 4.0f + Jm * (tj_sq)) / Jm);
+            const float c2 = L * (1.0f / 2.0f);
+            const float c3 = (Jm_sq * Jm) * (tj_sq * tj) * (8.0f / 2.7E1f);
+            const float c4 = Jm * tj * ((Jm_sq) * (tj_sq) + Jm * V0 * 2.0f) * (1.0f / 3.0f);
+            const float c5 = (Jm_sq) * V0 * tj;
 
-            Am = MIN(MIN(Am, MAX(Jm * (tj + safe_sqrt((V0 * -4.0f + Vm * 4.0f + Jm * (tj_sq)) / Jm)) * (-1.0f / 2.0f), Jm * (tj - safe_sqrt((V0 * -4.0f + Vm * 4.0f + Jm * (tj_sq)) / Jm)) * (-1.0f / 2.0f))), Jm * tj * (-2.0f / 3.0f) + ((Jm_sq) * (tj_sq) * (1.0f / 9.0f) - Jm * V0 * (2.0f / 3.0f)) * 1.0f / powf(safe_sqrt(powf(- (Jm_sq) * L * (1.0f / 2.0f) + (Jm_sq * Jm) * (tj_sq * tj) * (8.0f / 2.7E1f) - Jm * tj * ((Jm_sq) * (tj_sq) + Jm * V0 * 2.0f) * (1.0f / 3.0f) + (Jm_sq) * V0 * tj, 2.0f) - powf((Jm_sq) * (tj_sq) * (1.0f / 9.0f) - Jm * V0 * (2.0f / 3.0f), 3.0f)) + (Jm_sq) * L * (1.0f / 2.0f) - (Jm_sq * Jm) * (tj_sq * tj) * (8.0f / 2.7E1f) + Jm * tj * ((Jm_sq) * (tj_sq) + Jm * V0 * 2.0f) * (1.0f / 3.0f) - (Jm_sq) * V0 * tj, 1.0f / 3.0f) + powf(safe_sqrt(powf(- (Jm_sq) * L * (1.0f / 2.0f) + (Jm_sq * Jm) * (tj_sq * tj) * (8.0f / 2.7E1f) - Jm * tj * ((Jm_sq) * (tj_sq) + Jm * V0 * 2.0f) * (1.0f / 3.0f) + (Jm_sq) * V0 * tj, 2.0f) - powf((Jm_sq) * (tj_sq) * (1.0f / 9.0f) - Jm * V0 * (2.0f / 3.0f), 3.0f)) + (Jm_sq) * L * (1.0f / 2.0f) - (Jm_sq * Jm) * (tj_sq * tj) * (8.0f / 2.7E1f) + Jm * tj * ((Jm_sq) * (tj_sq) + Jm * V0 * 2.0f) * (1.0f / 3.0f) - (Jm_sq) * V0 * tj, 1.0f / 3.0f));
+            const float b1 = powf(safe_sqrt(powf(- (Jm_sq) * c2 + c3 - c4 + c5, 2.0f) - powf((Jm_sq) * (tj_sq) * (1.0f / 9.0f) - Jm * V0 * (2.0f / 3.0f), 3.0f)) + (Jm_sq) * c2 - c3 + c4 - c5, 1.0f / 3.0f);
+            Am = MIN(MIN(Am, MAX(Jm * (tj + c1) * (-1.0f / 2.0f), Jm * (tj - c1) * (-1.0f / 2.0f))), Jm * tj * (-2.0f / 3.0f) + ((Jm_sq) * (tj_sq) * (1.0f / 9.0f) - Jm * V0 * (2.0f / 3.0f)) * 1.0f / b1 + b1);
             t2_out = Am / Jm - tj;
             t4_out = 0.0f;
             t6_out = t2_out;
