@@ -320,5 +320,4 @@ public:
     // Set to true if the terrain underneath is stable enough to be used as a height reference
     // this is not related to terrain following
     virtual void set_terrain_hgt_stable(bool stable) {}
-
 };

@@ -730,6 +730,9 @@ private:
 
     TriState terrainHgtStableState = TriState::UNKNOWN;
 
+    // EAS to TAS calculated on each loop
+    float _EAS2TAS{1};
+
     /*
      * private AOA and SSA-related state and methods
      */
