@@ -61,9 +61,12 @@ void ModeLoiter::update()
     calc_throttle(_desired_speed, true);
 }
 
-// get desired location
-bool ModeLoiter::get_desired_location(Location& destination) const
+// get target information for mavlink reporting: typemask, position, velocity, acceleration
+bool ModeLoiter::get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const
 {
-    destination = _destination;
+    type_mask = POSITION_TARGET_TYPEMASK_VX_IGNORE | POSITION_TARGET_TYPEMASK_VY_IGNORE | POSITION_TARGET_TYPEMASK_VZ_IGNORE |
+                POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
+                POSITION_TARGET_TYPEMASK_YAW_IGNORE| POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE; // ignore everything except position
+    target = _destination;
     return true;
 }

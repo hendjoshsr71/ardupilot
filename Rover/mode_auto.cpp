@@ -136,26 +136,28 @@ float ModeAuto::get_distance_to_destination() const
     return 0.0f;
 }
 
-// get desired location
-bool ModeAuto::get_desired_location(Location& destination) const
+bool ModeAuto::get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const
 {
     switch (_submode) {
     case Auto_WP:
         if (g2.wp_nav.is_destination_valid()) {
-            destination = g2.wp_nav.get_oa_destination();
+            type_mask = POSITION_TARGET_TYPEMASK_VX_IGNORE | POSITION_TARGET_TYPEMASK_VY_IGNORE | POSITION_TARGET_TYPEMASK_VZ_IGNORE |
+                        POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
+                        POSITION_TARGET_TYPEMASK_YAW_IGNORE| POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE; // ignore everything except position
+            target = g2.wp_nav.get_oa_destination();
             return true;
         }
         return false;
     case Auto_HeadingAndSpeed:
     case Auto_Stop:
-        // no desired location for this submode
+        // no desired info. for this submode
         return false;
     case Auto_RTL:
-        return rover.mode_rtl.get_desired_location(destination);
+        return rover.mode_rtl.get_target_info(type_mask, target, target_vel, target_accel);
     case Auto_Loiter:
-        return rover.mode_loiter.get_desired_location(destination);
+        return rover.mode_loiter.get_target_info(type_mask, target, target_vel, target_accel);
     case Auto_Guided:
-        return rover.mode_guided.get_desired_location(destination);\
+        return rover.mode_guided.get_target_info(type_mask, target, target_vel, target_accel);
     }
 
     // we should never reach here but just in case

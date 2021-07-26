@@ -194,13 +194,15 @@ bool ModeGuided::set_desired_speed(float speed)
     return false;
 }
 
-// get desired location
-bool ModeGuided::get_desired_location(Location& destination) const
+bool ModeGuided::get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const
 {
     switch (_guided_mode) {
     case Guided_WP:
         if (g2.wp_nav.is_destination_valid()) {
-            destination = g2.wp_nav.get_oa_destination();
+            type_mask = POSITION_TARGET_TYPEMASK_VX_IGNORE | POSITION_TARGET_TYPEMASK_VY_IGNORE | POSITION_TARGET_TYPEMASK_VZ_IGNORE |
+                        POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
+                        POSITION_TARGET_TYPEMASK_YAW_IGNORE| POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE; // ignore everything except position
+            target = g2.wp_nav.get_oa_destination();
             return true;
         }
         return false;
@@ -209,11 +211,10 @@ bool ModeGuided::get_desired_location(Location& destination) const
         // not supported in these submodes
         return false;
     case Guided_Loiter:
-        // get destination from loiter
-        return rover.mode_loiter.get_desired_location(destination);
+        return rover.mode_loiter.get_target_info(type_mask, target, target_vel, target_accel);
     case Guided_SteeringAndThrottle:
-        // no desired location in this submode
-        break;
+        // not supported in these submodes
+        return false;
     }
 
     // should never get here but just in case

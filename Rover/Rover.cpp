@@ -408,9 +408,9 @@ bool Rover::get_wp_distance_m(float &distance) const
     return true;
 }
 
-bool Rover::get_target_location(Location &loc) const
+bool Rover::get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const
 {
-    return control_mode->get_desired_location(loc);
+    return control_mode->get_target_info(type_mask, target, target_vel, target_accel);
 }
 
 // vehicle specific waypoint info helpers
