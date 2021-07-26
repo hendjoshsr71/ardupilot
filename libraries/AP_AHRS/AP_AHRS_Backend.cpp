@@ -198,6 +198,9 @@ void AP_AHRS::update_trig(void)
     calc_trig(get_rotation_body_to_ned(),
               _cos_roll, _cos_pitch, _cos_yaw,
               _sin_roll, _sin_pitch, _sin_yaw);
+
+    // update EAS2TAS cache
+    _EAS2TAS = AP::baro().get_EAS2TAS();
 }
 
 /*
@@ -317,7 +320,8 @@ void AP_AHRS::Log_Write_Home_And_Origin()
 
 // get apparent to true airspeed ratio
 float AP_AHRS_Backend::get_EAS2TAS(void) const {
-    return AP::baro().get_EAS2TAS();
+    // FIXME the rebase here is convoluted.....
+    return _EAS2TAS;
 }
 
 // return current vibration vector for primary IMU
