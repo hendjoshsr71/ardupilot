@@ -623,10 +623,10 @@ bool Copter::get_wp_distance_m(float &distance) const
     return true;
 }
 
-// get the location of the next target
-bool Copter::get_target_location(Location &loc) const
+// get target information for mavlink reporting: typemask, position, velocity, acceleration
+bool Copter::get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const
 {
-    return flightmode->get_wp(loc);
+    return flightmode->get_target_info(type_mask, target, target_vel, target_accel);
 }
 
 // vehicle specific waypoint info helpers

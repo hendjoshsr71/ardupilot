@@ -685,18 +685,32 @@ int32_t ModeAuto::wp_bearing() const
     }
 }
 
-bool ModeAuto::get_wp(Location& destination) const
+// get target information for mavlink reporting: typemask, position, velocity, acceleration
+bool ModeAuto::get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const
 {
     switch (_mode) {
     case SubMode::NAVGUIDED:
-        return copter.mode_guided.get_wp(destination);
+        return copter.mode_guided.get_target_info(type_mask, target, target_vel, target_accel);
     case SubMode::WP:
-        return wp_nav->get_oa_wp_destination(destination);
+        type_mask = POSITION_TARGET_TYPEMASK_VX_IGNORE | POSITION_TARGET_TYPEMASK_VY_IGNORE | POSITION_TARGET_TYPEMASK_VZ_IGNORE |
+                    POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
+                    POSITION_TARGET_TYPEMASK_YAW_IGNORE| POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE; // ignore everything except position
+        return wp_nav->get_oa_wp_destination(target);
     case SubMode::RTL:
-        return copter.mode_rtl.get_wp(destination);
-    default:
+        return copter.mode_rtl.get_target_info(type_mask, target, target_vel, target_accel);
+    
+    case SubMode::TAKEOFF:
+    case SubMode::LAND:
+    case SubMode::CIRCLE_MOVE_TO_EDGE:
+    case SubMode::CIRCLE:
+    case SubMode::LOITER:
+    case SubMode::LOITER_TO_ALT:
+    case SubMode::NAV_PAYLOAD_PLACE:
         return false;
     }
+
+    // should never reach here
+    return false;
 }
 
 /*******************************************************************************
