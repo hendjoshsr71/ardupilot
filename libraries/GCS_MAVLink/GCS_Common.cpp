@@ -4803,6 +4803,44 @@ void GCS_MAVLINK::send_set_position_target_global_int(uint8_t target_system, uin
             0,0);   // yaw, yaw_rate
 }
 
+void GCS_MAVLINK::send_position_target_local_ned() const
+{
+    uint16_t type_mask;
+    Location target;
+    Vector3f target_vel, target_accel;
+    if (!AP::vehicle()->get_target_local_info(type_mask, target, target_vel, target_accel)) {
+        return;
+    }
+
+    const bool pos_ignore = type_mask & (POSITION_TARGET_TYPEMASK_X_IGNORE | POSITION_TARGET_TYPEMASK_Y_IGNORE | POSITION_TARGET_TYPEMASK_Z_IGNORE);
+    Vector3f target_pos;
+    if (!pos_ignore) {
+        if(!target.get_vector_from_origin_NEU(target_pos)) {
+            return;
+        }
+    }
+
+    static constexpr uint16_t POSITION_TARGET_TYPEMASK_LAST_BYTE = 0xF000;
+    type_mask |= POSITION_TARGET_TYPEMASK_LAST_BYTE;
+
+    mavlink_msg_position_target_local_ned_send(
+        chan,
+        AP_HAL::millis(), // time boot ms
+        MAV_FRAME_LOCAL_NED, 
+        type_mask,
+        target_pos.x,       // x in metres
+        target_pos.y,       // y in metres
+        -target_pos.z,      // z in metres NED frame
+        target_vel.x,       // vx in m/s
+        target_vel.y,       // vy in m/s
+        -target_vel.z,      // vz in m/s NED frame
+        target_accel.x,     // afx in m/s/s
+        target_accel.y,     // afy in m/s/s
+        -target_accel.z,    // afz in m/s/s NED frame
+        0.0f,               // yaw
+        0.0f);              // yaw_rate
+}
+
 void GCS_MAVLINK::send_position_target_global_int()
 {
     uint16_t type_mask;
