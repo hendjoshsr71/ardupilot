@@ -413,6 +413,15 @@ bool Rover::get_target_info(uint16_t &type_mask, Location &target, Vector3f &tar
     return control_mode->get_target_info(type_mask, target, target_vel, target_accel);
 }
 
+bool Rover::get_target_local_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const
+{
+    // exit if vehicle is not in Guided mode
+    if (!control_mode->in_guided_mode()) {
+        return false;
+    }
+    return mode_guided.get_target_info(type_mask, target, target_vel, target_accel);
+}
+
 // vehicle specific waypoint info helpers
 bool Rover::get_wp_bearing_deg(float &bearing) const
 {
