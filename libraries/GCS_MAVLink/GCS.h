@@ -263,7 +263,7 @@ public:
     void send_home_position() const;
     void send_gps_global_origin() const;
     void send_position_target_global_int();
-    virtual void send_position_target_local_ned() { };
+    void send_position_target_local_ned() const;
     void send_servo_output_raw();
     void send_accelcal_vehicle_position(uint32_t position);
     void send_scaled_imu(uint8_t instance, void (*send_fn)(mavlink_channel_t chan, uint32_t time_ms, int16_t xacc, int16_t yacc, int16_t zacc, int16_t xgyro, int16_t ygyro, int16_t zgyro, int16_t xmag, int16_t ymag, int16_t zmag, int16_t temperature));
