@@ -1158,6 +1158,7 @@ public:
 #endif // ENABLE_SCRIPTING
 
     bool get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const override;
+    bool get_target_local_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const override;
 };
 
 extern Plane plane;
