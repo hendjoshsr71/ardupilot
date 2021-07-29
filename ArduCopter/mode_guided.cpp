@@ -289,7 +289,7 @@ bool ModeGuided::get_target_info(uint16_t &type_mask, Location &target, Vector3f
 {
     switch (guided_mode) {
     case ModeGuided::SubMode::Angle:
-        // we don't have a local target when in angle mode
+        // we don't have a target when in angle mode
         return false;
     case ModeGuided::SubMode::TakeOff:
     case ModeGuided::SubMode::WP:
