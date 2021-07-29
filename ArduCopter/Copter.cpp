@@ -688,6 +688,17 @@ bool Copter::get_target_info(uint16_t &type_mask, Location &target, Vector3f &ta
 {
     return flightmode->get_target_info(type_mask, target, target_vel, target_accel);
 }
+bool Copter::get_target_local_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const
+{
+#if MODE_GUIDED_ENABLED == ENABLED
+    if (!flightmode->in_guided_mode()) {
+        return false;
+    }
+    return mode_guided.get_target_info(type_mask, target, target_vel, target_accel);
+#else
+    return false;
+#endif
+}
 
 // vehicle specific waypoint info helpers
 bool Copter::get_wp_bearing_deg(float &bearing) const
