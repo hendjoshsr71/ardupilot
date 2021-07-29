@@ -362,6 +362,19 @@ bool Sub::get_target_info(uint16_t &type_mask, Location &target, Vector3f &targe
     return false;
 }
 
+bool Sub::get_target_local_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const
+{
+#if NAV_GUIDED == ENABLED
+        // exit if vehicle is not in Guided mode or Auto-Guided mode
+        if ((control_mode != GUIDED) && !(control_mode == AUTO && auto_mode == Auto_NavGuided)) {
+            return false;
+        }
+        return guided_get_target_info(type_mask, target, target_vel, target_accel);
+#else
+    return false;
+#endif
+}
+
 // vehicle specific waypoint info helpers
 bool Sub::get_wp_bearing_deg(float &bearing) const
 {
