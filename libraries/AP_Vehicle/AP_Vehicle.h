@@ -190,6 +190,7 @@ public:
     // get target location (also used by scripting)
     virtual bool get_target_location(Location& target_loc) { return false; }
     virtual bool get_target_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const { return false; }
+    virtual bool get_target_local_info(uint16_t &type_mask, Location &target, Vector3f &target_vel, Vector3f &target_accel) const { return false; }
 
     // set steering and throttle (-1 to +1) (for use by scripting with Rover)
     virtual bool set_steering_and_throttle(float steering, float throttle) { return false; }
