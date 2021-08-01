@@ -247,6 +247,9 @@ void ModeAuto::takeoff_start(const Location& dest_loc)
         return;
     }
 
+    // Set the current command altitude frame for target reporting consistency
+    command_altframe = dest.get_alt_frame();
+
     // initialise yaw
     auto_yaw.set_mode(AUTO_YAW_HOLD);
 
@@ -267,6 +270,8 @@ void ModeAuto::wp_start(const Location& dest_loc)
         return;
     }
 
+    // Set the current command altitude frame for target reporting consistency
+    command_altframe = dest_loc.get_alt_frame();
     _mode = SubMode::WP;
 
     // initialise yaw
@@ -691,7 +696,12 @@ bool ModeAuto::get_wp(Location& destination) const
     case SubMode::NAVGUIDED:
         return copter.mode_guided.get_wp(destination);
     case SubMode::WP:
-        return wp_nav->get_oa_wp_destination(destination);
+        // get the current destination & change altitude frame to the original command altframe
+        // only returns false if terrain data is unavailable
+        if (wp_nav->get_oa_wp_destination(destination) && destination.change_alt_frame(command_altframe)) {
+            return true;
+        }
+        return false;
     case SubMode::RTL:
         return copter.mode_rtl.get_wp(destination);
     default:
@@ -1136,7 +1146,7 @@ void ModeAuto::do_takeoff(const AP_Mission::Mission_Command& cmd)
     takeoff_start(cmd.content.location);
 }
 
-Location ModeAuto::loc_from_cmd(const AP_Mission::Mission_Command& cmd, const Location& default_loc) const
+Location ModeAuto::loc_from_cmd(const AP_Mission::Mission_Command& cmd, const Location& default_loc)
 {
     Location ret(cmd.content.location);
 
@@ -1157,6 +1167,9 @@ Location ModeAuto::loc_from_cmd(const AP_Mission::Mission_Command& cmd, const Lo
             ret.set_alt_cm(default_loc.alt, default_loc.get_alt_frame());
         }
     }
+
+    // Set the current command altitude frame for target reporting consistency
+    command_altframe = ret.get_alt_frame();
     return ret;
 }
 
@@ -1261,6 +1274,9 @@ void ModeAuto::do_land(const AP_Mission::Mission_Command& cmd)
 
         const Location target_loc = terrain_adjusted_location(cmd);
 
+        // Set the current command altitude frame for target reporting consistency
+        command_altframe = target_loc.get_alt_frame();
+
         wp_start(target_loc);
     } else {
         // set landing state
@@ -1301,6 +1317,9 @@ void ModeAuto::do_loiter_unlimited(const AP_Mission::Mission_Command& cmd)
                                   copter.current_loc.get_alt_frame());
         }
     }
+
+    // Set the current command altitude frame for target reporting consistency
+    command_altframe = target_loc.get_alt_frame();
 
     // start way point navigator and provide it the desired location
     wp_start(target_loc);
@@ -1568,6 +1587,9 @@ void ModeAuto::do_payload_place(const AP_Mission::Mission_Command& cmd)
         nav_payload_place.state = PayloadPlaceStateType_FlyToLocation;
 
         const Location target_loc = terrain_adjusted_location(cmd);
+
+        // Set the current command altitude frame for target reporting consistency
+        command_altframe = target_loc.get_alt_frame();
 
         wp_start(target_loc);
     } else {

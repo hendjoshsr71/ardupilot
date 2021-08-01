@@ -181,6 +181,8 @@ protected:
     static bool auto_takeoff_no_nav_active;
     static float auto_takeoff_no_nav_alt_cm;
 
+    Location::AltFrame command_altframe;
+
 public:
     // Navigation Yaw control
     class AutoYaw {
@@ -450,7 +452,7 @@ private:
     void loiter_run();
     void loiter_to_alt_run();
 
-    Location loc_from_cmd(const AP_Mission::Mission_Command& cmd, const Location& default_loc) const;
+    Location loc_from_cmd(const AP_Mission::Mission_Command& cmd, const Location& default_loc);
 
     void payload_place_start(const Vector2f& destination);
     void payload_place_run();
