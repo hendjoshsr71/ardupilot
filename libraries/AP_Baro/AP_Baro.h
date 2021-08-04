@@ -107,6 +107,22 @@ public:
     // returns which i2c bus is considered "the" external bus
     uint8_t external_bus() const { return _ext_bus; }
 
+    // Atmospheric Model Functions
+    static float geometric_alt_to_geopotential(float alt);
+    static float geopotential_alt_to_geometric(float alt);
+
+    float get_temperature_from_altitude(float alt) const;
+    float get_altitude_from_pressure(float pressure) const;
+
+    // EAS2TAS for SITL
+    static float get_EAS2TAS_for_alt_amsl(float alt_amsl);
+
+    // lookup expected pressure for a given altitude. Used for SITL backend
+    static void get_pressure_temperature_for_alt_amsl(float alt_amsl, float &pressure, float &temperature_K);
+
+    // get air density for SITL
+    static float get_air_density_for_alt_amsl(float alt_amsl);
+
     // get altitude difference in meters relative given a base
     // pressure in Pascal
     float get_altitude_difference(float base_pressure, float pressure) const;
@@ -114,14 +130,8 @@ public:
     // get scale factor required to convert equivalent to true
     // airspeed. This should only be used to update the AHRS value
     // once per loop. Please use AP::ahrs().get_EAS2TAS()
-    float get_EAS2TAS(void);
+    float get_EAS2TAS(void) const;
 
-    // EAS2TAS for SITL
-    static float get_EAS2TAS_for_alt_amsl(float alt_amsl);
-
-    // get air densityfor SITL
-    static float get_air_density_for_alt_amsl(float alt_amsl);
-    
     // get air density / sea level density - decreases as altitude climbs
     float get_air_density_ratio(void);
 
@@ -199,9 +209,6 @@ public:
 #if HAL_EXTERNAL_AHRS_ENABLED
     void handle_external(const AP_ExternalAHRS::baro_data_message_t &pkt);
 #endif
-    
-    // lookup expected pressure for a given altitude. Used for SITL backend
-    static void get_pressure_temperature_for_alt_amsl(float alt_amsl, float &pressure, float &temperature_K);
 
 private:
     // singleton
@@ -305,12 +312,14 @@ private:
     // Logging function
     void Write_Baro(void);
     void Write_Baro_instance(uint64_t time_us, uint8_t baro_instance);
-    
-    // two different atomspheric models
-    float get_altitude_difference_function(float base_pressure, float pressure) const;
-    float get_altitude_difference_table(float base_pressure, float pressure) const;
-    float get_EAS2TAS_table(float pressure);
-    float get_EAS2TAS_function(float altitude, float pressure);
+
+    // atmosphere model functions
+    float get_altitude_difference_extended(float base_pressure, float pressure) const;
+    float get_EAS2TAS_extended(float pressure) const;
+    static float get_temperature_by_altitude_layer(float alt, int8_t idx);
+
+    float get_altitude_difference_simple(float base_pressure, float pressure) const;
+    float get_EAS2TAS_simple(float altitude, float pressure) const;
 };
 
 namespace AP {
