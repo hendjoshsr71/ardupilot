@@ -322,7 +322,7 @@ bool ModeGuided::set_destination(const Location& dest_loc, bool use_yaw, float y
     // set position target and zero velocity and acceleration
     Vector3f pos_target_f;
     bool terrain_alt;
-    if (!wp_nav->get_vector_NEU(dest_loc, pos_target_f, terrain_alt)) {
+    if (!wp_nav->get_vector_NED(dest_loc, pos_target_f, terrain_alt)) {
         return false;
     }
 

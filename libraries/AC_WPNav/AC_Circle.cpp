@@ -378,7 +378,7 @@ bool AC_Circle::get_terrain_offset(float& offset)
 
 void AC_Circle::check_param_change()
 {
-    if (!is_equal(_last_radius_param, _radius_parm.get() * 0.01)) {
+    if (!is_equal(_last_radius_param, _radius_parm.get() * 0.01f)) {
         _radius = _radius_parm * 0.01;
         _last_radius_param = _radius_parm * 0.01;
     }
