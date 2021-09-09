@@ -19,7 +19,7 @@ bool ModeSmartRTL::init(bool ignore_checks)
         Vector3p stopping_point;
         pos_control->get_stopping_point_xy_cm(stopping_point.xy());
         pos_control->get_stopping_point_z_cm(stopping_point.z);
-        wp_nav->set_wp_destination(stopping_point.tofloat());
+        wp_nav->set_wp_destination(stopping_point.tofloat().neu_to_ned() * 0.01f); // convert cm to m
 
         // initialise yaw to obey user parameter
         auto_yaw.set_mode_to_default(true);
@@ -93,6 +93,7 @@ void ModeSmartRTL::path_follow_run()
     // if we are close to current target point, switch the next point to be our target.
     if (wp_nav->reached_wp_destination()) {
         Vector3f dest_NED;
+
         // this pop_point can fail if the IO task currently has the
         // path semaphore.
         if (g2.smart_rtl.pop_point(dest_NED)) {
@@ -101,21 +102,21 @@ void ModeSmartRTL::path_follow_run()
                 // this is the very last point, add 2m to the target alt and move to pre-land state
                 dest_NED.z -= 2.0f;
                 smart_rtl_state = SubMode::PRELAND_POSITION;
-                wp_nav->set_wp_destination_NED(dest_NED);
+                wp_nav->set_wp_destination(dest_NED);
             } else {
                 // peek at the next point.  this can fail if the IO task currently has the path semaphore
                 Vector3f next_dest_NED;
                 if (g2.smart_rtl.peek_point(next_dest_NED)) {
-                    wp_nav->set_wp_destination_NED(dest_NED);
+                    wp_nav->set_wp_destination(dest_NED);
                     if (g2.smart_rtl.get_num_points() == 1) {
                         // this is the very last point, add 2m to the target alt
                         next_dest_NED.z -= 2.0f;
                     }
-                    wp_nav->set_wp_destination_next_NED(next_dest_NED);
+                    wp_nav->set_wp_destination_next(next_dest_NED);
                 } else {
                     // this can only happen if peek failed to take the semaphore
                     // send next point anyway which will cause the vehicle to slow at the next point
-                    wp_nav->set_wp_destination_NED(dest_NED);
+                    wp_nav->set_wp_destination(dest_NED);
                     INTERNAL_ERROR(AP_InternalError::error_t::flow_of_control);
                 }
             }

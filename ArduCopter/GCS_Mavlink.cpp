@@ -137,8 +137,8 @@ void GCS_MAVLINK_Copter::send_position_target_local_ned()
     case ModeGuided::SubMode::PosVelAccel:
         type_mask = POSITION_TARGET_TYPEMASK_YAW_IGNORE| POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE; // ignore everything except position, velocity & acceleration
         target_pos = copter.mode_guided.get_target_pos().tofloat() * 0.01; // convert to metres
-        target_vel = copter.mode_guided.get_target_vel() * 0.01f; // convert to metres/s
-        target_accel = copter.mode_guided.get_target_accel() * 0.01f; // convert to metres/s/s
+        target_vel = copter.mode_guided.get_target_vel() * 0.01f; // convert to metres/s        // FIX me these should be stored in guided as NED
+        target_accel = copter.mode_guided.get_target_accel() * 0.01f; // convert to metres/s/s // FIX me these should be stored in guided as NED
         break;
     case ModeGuided::SubMode::VelAccel:
         type_mask = POSITION_TARGET_TYPEMASK_X_IGNORE | POSITION_TARGET_TYPEMASK_Y_IGNORE | POSITION_TARGET_TYPEMASK_Z_IGNORE |
@@ -161,13 +161,13 @@ void GCS_MAVLINK_Copter::send_position_target_local_ned()
         type_mask,
         target_pos.x,   // x in metres
         target_pos.y,   // y in metres
-        -target_pos.z,  // z in metres NED frame
+        -target_pos.z,  // z in metres NED frame // FIX me these should be stored in guided as NED
         target_vel.x,   // vx in m/s
         target_vel.y,   // vy in m/s
-        -target_vel.z,  // vz in m/s NED frame
+        -target_vel.z,  // vz in m/s NED frame // FIX me these should be stored in guided as NED
         target_accel.x, // afx in m/s/s
         target_accel.y, // afy in m/s/s
-        -target_accel.z,// afz in m/s/s NED frame
+        -target_accel.z,// afz in m/s/s NED frame // FIX me these should be stored in guided as NED
         0.0f, // yaw
         0.0f); // yaw_rate
 #endif
