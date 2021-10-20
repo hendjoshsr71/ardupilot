@@ -13,8 +13,8 @@ local button_state = 0
 local MODE_MANUAL = 0
 local MODE_AUTO = 10
 
-local LANDING_AMSL = -1
-local RUNWAY_LENGTH = 1781.0
+local LANDING_AMSL = 430.0
+local RUNWAY_LENGTH = 1.0
 local CHANGE_MARGIN = 100.0
 
 local GLIDE_SLOPE = 6.0
@@ -130,7 +130,7 @@ function is_candidate(cnum)
    m = mission:get_item(cnum)
    m2 = mission:get_item(cnum+1)
    m3 = mission:get_item(cnum+2)
-   if m:command() == NAV_WAYPOINT and m2:command() == NAV_WAYPOINT and (m3:command() == DO_JUMP or m3:command() == NAV_WAYPOINT) then
+   if m:command() == NAV_WAYPOINT and m2:command() == NAV_WAYPOINT and (m3:command() == DO_JUMP or m3:command() == NAV_WAYPOINT or m3:command() == NAV_LAND) then
       return true
    end
    return false
@@ -264,7 +264,11 @@ function distance_to_land_nopos(cnum)
       local loc1 = get_location(i)
       local loc2 = get_location(i2)
 
-      distance = distance + loc1:get_distance(loc2)
+      local d1 = loc1:get_distance(loc2)
+
+      distance = distance + d1
+
+      -- gcs:send_text(0, string.format("WP%u->WP%u d=%.0f dist=%.0f", i, i2, d1, distance))
 
       -- account for height lost in turns
       local bearing = wrap_180(math.deg(loc1:get_bearing(loc2)))
@@ -414,8 +418,8 @@ function fix_WP_heights()
          local dist = distance_to_land_nopos(i)
          local current_alt = m:z()
          local new_alt = LANDING_AMSL + dist / GLIDE_SLOPE
-         if math.abs(current_alt - new_alt) > 2 or m:frame() ~= 0 then
-            gcs:send_text(0, string.format("Fixing WP[%u] alt %.1f->%.1f", i, current_alt, new_alt))
+         if math.abs(current_alt - new_alt) > -1 or m:frame() ~= 0 then
+            gcs:send_text(0, string.format("Fixing WP[%u] d=%.0f alt %.1f->%.1f", i, dist, current_alt, new_alt))
             m:z(new_alt)
             m:frame(0)
             mission:set_item(i, m)
