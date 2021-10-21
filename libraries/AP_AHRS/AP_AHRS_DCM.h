@@ -125,6 +125,9 @@ public:
 
     void send_ekf_status_report(mavlink_channel_t chan) const override;
 
+    // initialise position and speed for when we have no GPS lock
+    void init_posvel(float speed, const Location &loc);
+
 private:
 
     // settable parameters
@@ -278,4 +281,7 @@ private:
     // pre-calculated trig cache:
     float _sin_yaw;
     float _cos_yaw;
+
+    bool _dead_reckon_baro;
+    float _dead_reckon_basealt;
 };

@@ -1054,6 +1054,8 @@ bool AP_AHRS_DCM::get_location(struct Location &loc) const
     if (_gps_use == GPSUse::EnableWithHeight &&
         gps.status() >= AP_GPS::GPS_OK_FIX_3D) {
         loc.alt = gps.location().alt;
+    } else if (_gps_use == AHRS_GPSUse::Enable_3D && _dead_reckon_baro) {
+        loc.alt = (baro().get_altitude() + _dead_reckon_basealt) * 100;
     } else {
         loc.alt = baro.get_altitude() * 100 + AP::ahrs().get_home().alt;
     }
@@ -1276,4 +1278,21 @@ bool AP_AHRS_DCM::get_relative_position_D_origin(float &posD) const
 
 void AP_AHRS_DCM::send_ekf_status_report(mavlink_channel_t chan) const
 {
+}
+
+/*
+  init speed and position for initial dead-reckoning support
+ */
+void AP_AHRS_DCM::init_posvel(float speed, const Location &loc)
+{
+    _last_velocity.z = 0;
+    _last_velocity.x = cosf(yaw) * speed;
+    _last_velocity.y = sinf(yaw) * speed;
+    _last_lat = loc.lat;
+    _last_lng = loc.lng;
+    _position_offset_east = _position_offset_north = 0;
+    _have_position = true;
+    _dead_reckon_baro = true;
+    _dead_reckon_basealt = loc.alt*0.01;
+    AP::baro().update_calibration();
 }
