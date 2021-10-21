@@ -1035,6 +1035,8 @@ bool AP_AHRS_DCM::get_position(struct Location &loc) const
     loc.lng = _last_lng;
     if (_gps_use == AHRS_GPSUse::Enable_3D && _gps.status() >= AP_GPS::GPS_OK_FIX_3D) {
         loc.alt = _gps.location().alt;
+    } else if (_gps_use == AHRS_GPSUse::Enable_3D && _dead_reckon_baro) {
+        loc.alt = (AP::baro().get_altitude() + _dead_reckon_basealt) * 100;
     } else {
         loc.alt = AP::baro().get_altitude() * 100 + _home.alt;
     }
@@ -1152,3 +1154,19 @@ bool AP_AHRS_DCM::get_velocity_NED(Vector3f &vec) const
     return true;
 }
 
+/*
+  init speed and position for initial dead-reckoning support
+ */
+void AP_AHRS_DCM::init_posvel(float speed, const Location &loc)
+{
+    _last_velocity.z = 0;
+    _last_velocity.x = cosf(yaw) * speed;
+    _last_velocity.y = sinf(yaw) * speed;
+    _last_lat = loc.lat;
+    _last_lng = loc.lng;
+    _position_offset_east = _position_offset_north = 0;
+    _have_position = true;
+    _dead_reckon_baro = true;
+    _dead_reckon_basealt = loc.alt*0.01;
+    AP::baro().update_calibration();
+}
