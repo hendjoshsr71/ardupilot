@@ -174,7 +174,7 @@ PTCH2SRV_RLL            0.5000
 PTCH2SRV_RMAX_DN       40
 PTCH2SRV_RMAX_UP       40
 PTCH2SRV_SRMAX         68
-PTCH2SRV_TCONST         0.7000
+PTCH2SRV_TCONST         1.0
 RC1_MAX              1992
 RC1_MIN               977
 RC1_TRIM             1484
@@ -208,7 +208,7 @@ RLL2SRV_IMAX         4000
 RLL2SRV_P               0
 RLL2SRV_RMAX           40
 RLL2SRV_SRMAX          68
-RLL2SRV_TCONST          1
+RLL2SRV_TCONST          1.2
 RNGFND1_ADDR            0
 RNGFND1_FUNCTION        0
 RNGFND1_GNDCLEAR       10
