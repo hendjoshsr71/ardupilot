@@ -516,6 +516,7 @@ private:
         // have we started an emergency landing?
         bool started_landing;
 
+        bool emergency_land;
         float land_alt_amsl = -1;
     } auto_state;
 

@@ -840,15 +840,13 @@ bool Plane::in_auto_land(void)
         return false;
     }
 
-    bool emergency_land = false;
-
     const float rangefinder_last_change = fabsf(rangefinder_state.prev_distance - rangefinder_state.last_distance);
     if (g.rangefinder_landing && rangefinder_state.in_range &&
          rangefinder_state.height_estimate < landing.get_preflare_alt() &&
         smoothed_airspeed >= aparm.airspeed_min &&
         rangefinder_last_change > 0 &&
         rangefinder_last_change < 10) {
-        emergency_land = true;
+        auto_state.emergency_land = true;
     }
 
     // also trigger emergency landing by GPS alt above NAV_LAND
@@ -866,13 +864,13 @@ bool Plane::in_auto_land(void)
     if (!is_equal(auto_state.land_alt_amsl,-1.0f) &&
         gps.status() >= AP_GPS::GPS_OK_FIX_3D &&
         gps.location().alt*0.01 < auto_state.land_alt_amsl + (landing.get_preflare_alt()-gps_error_margin)) {
-        emergency_land = true;
+        auto_state.emergency_land = true;
     }
 
 
     // check if we have dropped below preflare height while flying, if
     // so then start landing immediately
-    if (auto_state.started_landing || emergency_land) {
+    if (auto_state.started_landing || auto_state.emergency_land) {
         if (!auto_state.started_landing) {
             gcs().send_text(MAV_SEVERITY_NOTICE, "Emergency Land: %.1fm", rangefinder_state.height_estimate);
             auto_state.started_landing = true;

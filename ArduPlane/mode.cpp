@@ -86,6 +86,9 @@ bool Mode::enter()
     quadplane.mode_enter();
 #endif
 
+    plane.auto_state.emergency_land = false;
+    plane.auto_state.land_alt_amsl = -1;
+
     bool enter_result = _enter();
 
     if (enter_result) {
