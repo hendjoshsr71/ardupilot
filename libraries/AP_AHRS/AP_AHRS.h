@@ -135,7 +135,8 @@ public:
     // get apparent to true airspeed ratio
     float get_EAS2TAS(void) const {
         // FIXME: make this is a method on the active backend
-        return dcm.get_EAS2TAS();
+        // return dcm.get_EAS2TAS();
+        return _EAS2TAS;
     }
 
     // return an airspeed estimate if available. return true
