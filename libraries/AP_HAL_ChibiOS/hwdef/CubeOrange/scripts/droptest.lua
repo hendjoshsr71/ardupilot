@@ -369,8 +369,8 @@ end
 
 function release_trigger()
    gcs:send_text(0, string.format("release trigger"))
-   arming:arm_force()
    vehicle:set_mode(MODE_AUTO)
+   arming:arm_force()
    if mission:num_commands() > 2 then
       mission:set_current_cmd(2) -- ?
    end
