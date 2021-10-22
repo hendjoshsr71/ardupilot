@@ -382,6 +382,7 @@ function set_standby()
    if mode ~= MODE_MANUAL then
       gcs:send_text(0, string.format("forcing standby MANUAL"))
       vehicle:set_mode(MODE_MANUAL)
+      arming:disarm()
       mission:set_current_cmd(1)
       -- maybe LOITER mode if no GPS lock?
    end
