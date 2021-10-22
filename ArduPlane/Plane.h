@@ -518,6 +518,9 @@ private:
 
         bool emergency_land;
         float land_alt_amsl = -1;
+
+        uint32_t started_3D_fix_ms;
+        uint32_t arming_time_ms;
     } auto_state;
 
 #if AP_SCRIPTING_ENABLED

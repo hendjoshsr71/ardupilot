@@ -276,6 +276,10 @@ bool AP_Arming_Plane::arm(const AP_Arming::Method method, const bool do_arming_c
 
     gcs().send_text(MAV_SEVERITY_INFO, "Throttle armed");
 
+    plane.auto_state.arming_time_ms = AP_HAL::millis();
+    plane.auto_state.emergency_land = false;
+    plane.auto_state.land_alt_amsl = -1;
+
     if (plane.gps.status() < AP_GPS::GPS_OK_FIX_3D) {
         AP_Mission::Mission_Command cmd;
         uint16_t idx;

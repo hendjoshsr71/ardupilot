@@ -393,7 +393,14 @@ void Plane::airspeed_ratio_update(void)
  */
 void Plane::update_GPS_50Hz(void)
 {
+    const auto old_status = gps.status();
     gps.update();
+
+    const auto status = gps.status();
+    if (old_status < AP_GPS::GPS_OK_FIX_3D && status >= AP_GPS::GPS_OK_FIX_3D) {
+        // remember when we got a 3D fix
+        auto_state.started_3D_fix_ms = AP_HAL::millis();
+    }
 
     // get position from AHRS
     have_position = ahrs.get_location(current_loc);
@@ -840,6 +847,12 @@ bool Plane::in_auto_land(void)
         return false;
     }
 
+    if (!hal.util->get_soft_armed() ||
+        (AP_HAL::millis() - auto_state.arming_time_ms < 20000)) {
+        // don't do emergency landing when not armed for at least 20s
+        return false;
+    }
+
     const float rangefinder_last_change = fabsf(rangefinder_state.prev_distance - rangefinder_state.last_distance);
     if (g.rangefinder_landing && rangefinder_state.in_range &&
          rangefinder_state.height_estimate < landing.get_preflare_alt() &&
@@ -863,6 +876,7 @@ bool Plane::in_auto_land(void)
     const float gps_error_margin = 20;
     if (!is_equal(auto_state.land_alt_amsl,-1.0f) &&
         gps.status() >= AP_GPS::GPS_OK_FIX_3D &&
+        AP_HAL::millis() - auto_state.started_3D_fix_ms > 10000 &&
         gps.location().alt*0.01 < auto_state.land_alt_amsl + (landing.get_preflare_alt()-gps_error_margin)) {
         auto_state.emergency_land = true;
     }

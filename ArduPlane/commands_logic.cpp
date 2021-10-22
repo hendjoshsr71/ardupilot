@@ -259,7 +259,8 @@ bool Plane::verify_command(const AP_Mission::Mission_Command& cmd)        // Ret
 
             // to cope with lidar failure we also check GPS height
             if (!is_equal(auto_state.land_alt_amsl,-1.0f) &&
-                gps.status() >= AP_GPS::GPS_OK_FIX_3D) {
+                gps.status() >= AP_GPS::GPS_OK_FIX_3D &&
+                AP_HAL::millis() - auto_state.started_3D_fix_ms > 10000) {
                 const float gps_margin = 15.0;
                 float gps_alt = (gps.location().alt*0.01 - auto_state.land_alt_amsl) + gps_margin;
                 height = MIN(gps_alt, height);
