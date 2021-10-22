@@ -852,21 +852,20 @@ bool Plane::in_auto_land(void)
     }
 
     // also trigger emergency landing by GPS alt above NAV_LAND
-    static float land_alt_amsl = -1;
-    if (is_equal(land_alt_amsl,-1.0f)) {
+    if (is_equal(auto_state.land_alt_amsl,-1.0f)) {
         AP_Mission::Mission_Command cmd;
         uint16_t idx;
         int32_t alt_amsl_cm;
         if (mission.find_command(MAV_CMD_NAV_LAND, 0, idx, cmd) &&
             cmd.content.location.get_alt_cm(Location::AltFrame::ABSOLUTE, alt_amsl_cm)) {
-            land_alt_amsl = alt_amsl_cm * 0.01;
+            auto_state.land_alt_amsl = alt_amsl_cm * 0.01;
         }
     }
 
     const float gps_error_margin = 20;
-    if (!is_equal(land_alt_amsl,-1.0f) &&
+    if (!is_equal(auto_state.land_alt_amsl,-1.0f) &&
         gps.status() >= AP_GPS::GPS_OK_FIX_3D &&
-        gps.location().alt*0.01 < land_alt_amsl + (landing.get_preflare_alt()-gps_error_margin)) {
+        gps.location().alt*0.01 < auto_state.land_alt_amsl + (landing.get_preflare_alt()-gps_error_margin)) {
         emergency_land = true;
     }
 

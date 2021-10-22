@@ -256,6 +256,14 @@ bool Plane::verify_command(const AP_Mission::Mission_Command& cmd)        // Ret
             // correction as otherwise we will flare early on rising
             // ground
             height -= auto_state.terrain_correction;
+
+            // to cope with lidar failure we also check GPS height
+            if (!is_equal(auto_state.land_alt_amsl,-1.0f) &&
+                gps.status() >= AP_GPS::GPS_OK_FIX_3D) {
+                const float gps_margin = 15.0;
+                float gps_alt = (gps.location().alt*0.01 - auto_state.land_alt_amsl) + gps_margin;
+                height = MIN(gps_alt, height);
+            }
             return landing.verify_land(prev_WP_loc, next_WP_loc, current_loc,
                                        height, auto_state.sink_rate, auto_state.wp_proportion, auto_state.last_flying_ms, arming.is_armed(), is_flying(),
                                        g.rangefinder_landing && rangefinder_state.in_range);
