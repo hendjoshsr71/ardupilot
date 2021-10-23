@@ -343,7 +343,23 @@ function mission_update()
    local current_wp_loc = get_location(cnum)
    local current_wp_dist = loc:get_distance(current_wp_loc)
    if current_wp_dist < 1500 then
-      -- don't change when within 1.5km of current wp
+      -- when within 1.5km of current wp consider moving to next WP
+      if mission:get_item(cnum+1):command() == NAV_WAYPOINT then
+         -- check if we should skip the current WP and move to the next WP
+         local loc1 = get_position()
+         local loc2 = get_location(cnum)
+         local loc3 = get_location(cnum+1)
+         local dist = loc1:get_distance(loc2)
+         local dist_change = loc2:get_distance(loc3)
+         local target_bearing = math.deg(loc1:get_bearing(loc2))
+         local target_bearing2 = math.deg(loc1:get_bearing(loc3))
+         local ang_change = math.abs(target_bearing - target_bearing2)
+         if ang_change < 10 and dist < 1000 and dist_change < 1000 then
+            gcs:send_text(0, string.format("Skip NEW WP %u ang=%.0f dc=%.0f", cnum+1, ang_change, dist_change))
+            mission:set_current_cmd(cnum+1)
+            return true
+         end
+      end
       return false
    end
 
