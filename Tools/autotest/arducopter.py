@@ -2924,7 +2924,8 @@ class AutoTestCopter(AutoTest):
 
         minimum_duration = 5
 
-        self.takeoff(500, timeout=60)
+        # FIXME AND LOWER back to 60 seconds once atmosphere model handles local temperature
+        self.takeoff(500, timeout=70)
         self.change_mode('AUTO')
 
         start_speed_ms = self.get_parameter('WPNAV_SPEED_DN') / 100.0
