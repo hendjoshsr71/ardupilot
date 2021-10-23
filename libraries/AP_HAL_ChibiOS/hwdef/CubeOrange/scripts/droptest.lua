@@ -340,6 +340,13 @@ function mission_update()
                                   cnum, feet(current_distance), feet(current_alt), current_slope,
                                   feet(-current_err)))
 
+   local current_wp_loc = get_location(cnum)
+   local current_wp_dist = loc:get_distance(current_wp_loc)
+   if current_wp_dist < 1500 then
+      -- don't change when within 1.5km of current wp
+      return false
+   end
+
    if not is_change_candidate(cnum) then
       -- only change if on a candidate now
       return false
