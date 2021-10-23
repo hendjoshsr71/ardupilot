@@ -288,4 +288,5 @@ THR_FS_VALUE          890
 THR_MAX                 1
 TRIM_ARSPD_CM        6300
 WP_LOITER_RAD         300
-WP_RADIUS             250
+WP_RADIUS             600
+
