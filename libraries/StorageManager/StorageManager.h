@@ -109,4 +109,8 @@ public:
 private:
     const StorageManager::StorageType type;
     uint16_t total_size;
+
+    // Variables for dynamically created RAM storage for mission item loading from SDCard
+    uint16_t _extra_mission_storage_size;
+    uint8_t *_extra_mission_storage;
 };

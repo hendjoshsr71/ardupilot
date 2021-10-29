@@ -54,6 +54,11 @@
 #define AP_MISSION_MAX_WP_HISTORY           7       // The maximum number of previous wp commands that will be stored from the active missions history
 #define LAST_WP_PASSED (AP_MISSION_MAX_WP_HISTORY-2)
 
+#define AP_MISSION_SD_CARD_VERSION          0x71AA  // version number stored in first four bytes of the SD Card file. Increment this by one when SD Card format is changed
+#define AP_MISSION_SD_CARD_VERSION_NUM_SIZE 4       // version number size in bytes
+#define AP_MISSION_SD_CARD_COMMAND_SIZE     15      // size in bytes of all mission commands
+#define AP_MISSION_SD_CARD_STORAGE_SIZE_MAX 64      // Maximum number of kB for SD Card Mission Storage
+
 /// @class    AP_Mission
 /// @brief    Object managing Mission
 class AP_Mission
@@ -599,10 +604,14 @@ public:
     bool get_item(uint16_t index, mavlink_mission_item_int_t& result) const ;
     bool set_item(uint16_t index, mavlink_mission_item_int_t& source) ;
 
+    uint16_t get_sd_mission_storage_size(void) const { return _mission_storage_size; }; // return the storage space used in the SD card for extra mission command storage AKA to get 1000s of extra waypoints
+
 private:
     static AP_Mission *_singleton;
 
-    static StorageAccess _storage;
+    // static StorageAccess _storage;
+    StorageAccess* _storage;                 // Pointer to dynamically allocate StorageAccess for mission items to be loaded to RAM from SDcard
+    uint32_t              _mission_storage_size; // Only set this at initialization used so that a user cannot change the mission_storage_size after boot
 
     static bool stored_in_location(uint16_t id);
 
@@ -665,9 +674,9 @@ private:
     /// increment_jump_times_run - increments the recorded number of times the jump command has been run
     void increment_jump_times_run(Mission_Command& cmd, bool send_gcs_msg = true);
 
-    /// check_eeprom_version - checks version of missions stored in eeprom matches this library
+    /// check_storage_versions - checks version of missions stored in eeprom or the sd_card matches this library
     /// command list will be cleared if they do not match
-    void check_eeprom_version();
+    void check_storage_versions();
 
     // check if command is a landing type command.  Asside the obvious, MAV_CMD_DO_PARACHUTE is considered a type of landing
     bool is_landing_type_cmd(uint16_t id) const;
@@ -696,6 +705,8 @@ private:
     AP_Int16                _cmd_total;  // total number of commands in the mission
     AP_Int16                _options;    // bitmask options for missions, currently for mission clearing on reboot but can be expanded as required
     AP_Int8                 _restart;   // controls mission starting point when entering Auto mode (either restart from beginning of mission or resume from last command run)
+// #ifdef
+    AP_Int32 _sd_mission_storage_size;  // sets storage space used in the SD card for extra mission command storage AKA to get 1000s of extra waypoints
 
     // internal variables
     bool                    _force_resume;  // when set true it forces mission to resume irrespective of MIS_RESTART param.

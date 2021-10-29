@@ -153,6 +153,21 @@ StorageAccess::StorageAccess(StorageManager::StorageType _type) :
             total_size += area.length;
         }
     }
+
+    // If extra MIS_STOR_SIZE is set return total_size with addition of the mission_storage_size
+    // and allocate RAM for that storage size
+    if (_type == StorageManager::StorageType::StorageMission) {
+        _extra_mission_storage_size = AP::mission()->get_sd_mission_storage_size();     // extra mission storage size in kB
+        if (_extra_mission_storage_size > 0) {
+            total_size += _extra_mission_storage_size;
+            _extra_mission_storage = new uint8_t[_extra_mission_storage_size * 1024];   // Each kB of memory provides storage for 68 WPs
+
+            if (_extra_mission_storage == nullptr) {
+                // set pre_arm failure unable to allocate storage for Mission Commands from SD card
+                
+            }
+        }
+    }
 }
 
 /*
@@ -191,6 +206,19 @@ bool StorageAccess::read_block(void *data, uint16_t addr, size_t n) const
         // continue writing at the beginning of next valid area
         addr = 0;
     }
+
+    // For dynamically created blocks to be created for items loaded from SDcard
+    if (n > 0 &&
+        type == StorageManager::StorageType::StorageMission &&
+        _extra_mission_storage != nullptr) {
+
+        // What if someone sets a large storage size but only uses a little bit????
+        // does it stop reading at end of file and not transfer those bytes???
+         // Copy memory from SD card ext_storage to the RAM block
+        memcpy(data, (void *)_extra_mission_storage[addr] , n);
+
+    }
+
     return (n == 0);
 }
 
@@ -231,6 +259,18 @@ bool StorageAccess::write_block(uint16_t addr, const void *data, size_t n) const
         // continue writing at the beginning of next valid area
         addr = 0;
     }
+
+    if (n > 0 &&
+        type == StorageManager::StorageType::StorageMission &&
+        _extra_mission_storage != nullptr) {
+
+        size_t n2 = MIN(n, _extra_mission_storage_size);
+        memcpy((void *)_extra_mission_storage[addr], data, n2);
+        n -= n2;
+
+        // mark_dirty(addr, n2);
+    }
+
     return (n == 0);
 }
 

@@ -33,13 +33,24 @@ const AP_Param::GroupInfo AP_Mission::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("OPTIONS",  2, AP_Mission, _options, AP_MISSION_OPTIONS_DEFAULT),
 
+    // FIXME
+// #if HAL_SD_MISSION_STORAGE
+    // @Param: MIS_STOR_SZ
+    // @DisplayName: Mission Command Storage Size
+    // @Description: SD Card Mission Command Storage Size
+    // @Range: 0 64  // FIXME Initially only support using 2^16 KB of storage
+    // @Units: kB
+    // @User: Advanced
+    AP_GROUPINFO("STOR_SIZE", 3, AP_Mission, _sd_mission_storage_size, 0),
+// #endif
+
     AP_GROUPEND
 };
 
 extern const AP_HAL::HAL& hal;
 
 // storage object
-StorageAccess AP_Mission::_storage(StorageManager::StorageMission);
+// StorageAccess AP_Mission::_storage(StorageManager::StorageMission);
 
 HAL_Semaphore AP_Mission::_rsem;
 
@@ -50,9 +61,23 @@ HAL_Semaphore AP_Mission::_rsem;
 /// init - initialises this library including checks the version in eeprom matches this library
 void AP_Mission::init()
 {
-    // check_eeprom_version - checks version of missions stored in eeprom matches this library
+    // Create the StorageAccess object at init to allow time to have SDcard
+    // available if additional mission commands are to be loaded from the SDCard
+    _storage = new StorageAccess((StorageManager::StorageMission));
+
+    // Could add checks to ensure the param isn't too big???
+    if(_sd_mission_storage_size > 0 &&
+        _sd_mission_storage_size < AP_MISSION_SD_CARD_STORAGE_SIZE_MAX) {
+
+        _mission_storage_size = (unsigned)_sd_mission_storage_size;
+
+        // Load Dynamic Mission Items if MISS_STOR_SIZE is nonzero
+    } 
+    // GIVE GCS_ERROR of not within limits?
+
+    // check_storage_versions - checks version of missions stored in eeprom or sd_card matches this library
     // command list will be cleared if they do not match
-    check_eeprom_version();
+    check_storage_versions();
 
     // If Mission Clear bit is set then it should clear the mission, otherwise retain the mission.
     if (AP_MISSION_MASK_MISSION_CLEAR & _options) {
@@ -689,19 +714,32 @@ bool AP_Mission::read_cmd_from_storage(uint16_t index, Mission_Command& cmd) con
     // Find out proper location in memory by using the start_byte position + the index
     // we can load a command, we don't process it yet
     // read WP position
-    const uint16_t pos_in_storage = 4 + (index * AP_MISSION_EEPROM_COMMAND_SIZE);
+    // const uint16_t pos_in_storage = 4 + (index * AP_MISSION_EEPROM_COMMAND_SIZE);
+
+    // calculate where in storage the command should be read from depending upon storage location
+    uint16_t eeprom_pos_in_storage = 4 + (index * AP_MISSION_EEPROM_COMMAND_SIZE);
+    uint16_t sd_card_pos_in_storage = 0;
+
+    const uint16_t eeprom_storage_size = _storage->size() - _mission_storage_size;
+    if (eeprom_pos_in_storage > eeprom_storage_size) {
+        eeprom_pos_in_storage = eeprom_storage_size;
+        sd_card_pos_in_storage = AP_MISSION_SD_CARD_VERSION_NUM_SIZE + (index * AP_MISSION_SD_CARD_COMMAND_SIZE);
+    }
+
+    const uint16_t pos_in_storage = eeprom_pos_in_storage + sd_card_pos_in_storage;
+
 
     PackedContent packed_content {};
 
-    const uint8_t b1 = _storage.read_byte(pos_in_storage);
+    const uint8_t b1 = _storage->read_byte(pos_in_storage);
     if (b1 == 0) {
-        cmd.id = _storage.read_uint16(pos_in_storage+1);
-        cmd.p1 = _storage.read_uint16(pos_in_storage+3);
-        _storage.read_block(packed_content.bytes, pos_in_storage+5, 10);
+        cmd.id = _storage->read_uint16(pos_in_storage+1);
+        cmd.p1 = _storage->read_uint16(pos_in_storage+3);
+        _storage->read_block(packed_content.bytes, pos_in_storage+5, 10);
     } else {
         cmd.id = b1;
-        cmd.p1 = _storage.read_uint16(pos_in_storage+1);
-        _storage.read_block(packed_content.bytes, pos_in_storage+3, 12);
+        cmd.p1 = _storage->read_uint16(pos_in_storage+1);
+        _storage->read_block(packed_content.bytes, pos_in_storage+3, 12);
     }
 
     if (stored_in_location(cmd.id)) {
@@ -794,18 +832,27 @@ bool AP_Mission::write_cmd_to_storage(uint16_t index, const Mission_Command& cmd
     }
 
     // calculate where in storage the command should be placed
-    uint16_t pos_in_storage = 4 + (index * AP_MISSION_EEPROM_COMMAND_SIZE);
+    uint16_t eeprom_pos_in_storage = 4 + (index * AP_MISSION_EEPROM_COMMAND_SIZE);
+    uint16_t sd_card_pos_in_storage = 0;
+
+    const uint16_t eeprom_storage_size = _storage->size() - _mission_storage_size;
+    if (eeprom_pos_in_storage > eeprom_storage_size) {
+        eeprom_pos_in_storage = eeprom_storage_size;
+        sd_card_pos_in_storage = AP_MISSION_SD_CARD_VERSION_NUM_SIZE + (index * AP_MISSION_SD_CARD_COMMAND_SIZE);
+    }
+
+    const uint16_t pos_in_storage = eeprom_pos_in_storage + sd_card_pos_in_storage;
 
     if (cmd.id < 256) {
-        _storage.write_byte(pos_in_storage, cmd.id);
-        _storage.write_uint16(pos_in_storage+1, cmd.p1);
-        _storage.write_block(pos_in_storage+3, packed.bytes, 12);
+        _storage->write_byte(pos_in_storage, cmd.id);
+        _storage->write_uint16(pos_in_storage+1, cmd.p1);
+        _storage->write_block(pos_in_storage+3, packed.bytes, 12);
     } else {
         // if the command ID is above 256 we store a 0 followed by the 16 bit command ID
-        _storage.write_byte(pos_in_storage, 0);
-        _storage.write_uint16(pos_in_storage+1, cmd.id);
-        _storage.write_uint16(pos_in_storage+3, cmd.p1);
-        _storage.write_block(pos_in_storage+5, packed.bytes, 10);
+        _storage->write_byte(pos_in_storage, 0);
+        _storage->write_uint16(pos_in_storage+1, cmd.id);
+        _storage->write_uint16(pos_in_storage+3, cmd.p1);
+        _storage->write_block(pos_in_storage+5, packed.bytes, 10);
     }
 
     // remember when the mission last changed
@@ -1969,16 +2016,30 @@ void AP_Mission::increment_jump_times_run(Mission_Command& cmd, bool send_gcs_ms
     return;
 }
 
-// check_eeprom_version - checks version of missions stored in eeprom matches this library
+// check_storage_versions - checks version of missions stored in eeprom or the sd_card matches this library
 // command list will be cleared if they do not match
-void AP_Mission::check_eeprom_version()
+void AP_Mission::check_storage_versions()
 {
-    uint32_t eeprom_version = _storage.read_uint32(0);
+    // check eeprom_version - checks version of missions stored in eeprom matches this library
+    uint32_t eeprom_version = _storage->read_uint32(0);
 
     // if eeprom version does not match, clear the command list and update the eeprom version
     if (eeprom_version != AP_MISSION_EEPROM_VERSION) {
         if (clear()) {
-            _storage.write_uint32(0, AP_MISSION_EEPROM_VERSION);
+            _storage->write_uint32(0, AP_MISSION_EEPROM_VERSION);
+        }
+    }
+
+    // check sd_card_version - checks version of missions stored in the sd_card matches this library
+    if (_mission_storage_size > 0) {
+        const uint16_t sd_card_version_addr = _storage->size() - _mission_storage_size;
+        const uint32_t sd_card_version = _storage->read_uint32(sd_card_version_addr);
+
+        // if sd_card version does not match, clear the command list and update the sd_card version
+        if (sd_card_version != AP_MISSION_SD_CARD_VERSION) {
+            if (clear()) {
+                _storage->write_uint32(sd_card_version_addr, AP_MISSION_SD_CARD_VERSION);
+            }
         }
     }
 }
@@ -1988,8 +2049,16 @@ void AP_Mission::check_eeprom_version()
  */
 uint16_t AP_Mission::num_commands_max(void) const
 {
-    // -4 to remove space for eeprom version number
-    return (_storage.size() - 4) / AP_MISSION_EEPROM_COMMAND_SIZE;
+     // -4 to remove space for eeprom version number
+    const uint16_t eeprom_storage_size = _storage->size() - 4 - _mission_storage_size;
+
+    // -8 to remove space for SD card version number
+    uint16_t sd_card_storage_size = 0;
+    if (_mission_storage_size > 0) {
+        sd_card_storage_size = _mission_storage_size - AP_MISSION_SD_CARD_VERSION_NUM_SIZE;
+    }
+
+    return (eeprom_storage_size / AP_MISSION_EEPROM_COMMAND_SIZE) + (sd_card_storage_size / AP_MISSION_SD_CARD_COMMAND_SIZE) ;
 }
 
 // find the nearest landing sequence starting point (DO_LAND_START) and
