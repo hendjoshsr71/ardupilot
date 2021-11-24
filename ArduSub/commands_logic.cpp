@@ -300,7 +300,7 @@ void Sub::do_loiter_unlimited(const AP_Mission::Mission_Command& cmd)
         // To-Do: make this simpler
         Vector3f temp_pos;
         wp_nav.get_wp_stopping_point_xy(temp_pos.xy());
-        const Location temp_loc(temp_pos, Location::AltFrame::ABOVE_ORIGIN);
+        const Location temp_loc(temp_pos * 100.0, Location::AltFrame::ABOVE_ORIGIN); // convert cm to meters
         target_loc.lat = temp_loc.lat;
         target_loc.lng = temp_loc.lng;
     }
@@ -569,7 +569,7 @@ void Sub::do_wait_delay(const AP_Mission::Mission_Command& cmd)
 
 void Sub::do_within_distance(const AP_Mission::Mission_Command& cmd)
 {
-    condition_value  = cmd.content.distance.meters * 100;
+    condition_value  = cmd.content.distance.meters;
 }
 
 void Sub::do_yaw(const AP_Mission::Mission_Command& cmd)
@@ -651,7 +651,7 @@ bool Sub::do_guided(const AP_Mission::Mission_Command& cmd)
 void Sub::do_change_speed(const AP_Mission::Mission_Command& cmd)
 {
     if (cmd.content.speed.target_ms > 0) {
-        wp_nav.set_speed_xy(cmd.content.speed.target_ms * 100.0f);
+        wp_nav.set_speed_xy(cmd.content.speed.target_ms);
     }
 }
 

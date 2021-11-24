@@ -1107,8 +1107,8 @@ float QuadPlane::landing_descent_rate_cms(float height_above_ground)
         // when in final use descent rate for final even if alt has climbed again
         height_above_ground = MIN(height_above_ground, land_final_alt);
     }
-    const float max_climb_speed = wp_nav->get_default_speed_up();
-    float ret = linear_interpolate(land_speed_cms, wp_nav->get_default_speed_down(),
+    const float max_climb_speed = wp_nav->get_default_speed_up() * 100.0; // convert m to cm
+    float ret = linear_interpolate(land_speed_cms, wp_nav->get_default_speed_down() * 100.0,  // convert m to cm
                                    height_above_ground,
                                    land_final_alt, land_final_alt+6);
 
@@ -1255,7 +1255,7 @@ float QuadPlane::assist_climb_rate_cms(void) const
         climb_rate = plane.g.flybywire_climb_rate * (plane.nav_pitch_cd/(float)plane.aparm.pitch_limit_max_cd);
         climb_rate *= plane.get_throttle_input();
     }
-    climb_rate = constrain_float(climb_rate, -wp_nav->get_default_speed_down(), wp_nav->get_default_speed_up());
+    climb_rate = constrain_float(climb_rate, -wp_nav->get_default_speed_down() * 100.0, wp_nav->get_default_speed_up() * 100.0); // convert m to cm
 
     // bring in the demanded climb rate over 2 seconds
     const uint32_t ramp_up_time_ms = 2000;
@@ -2006,7 +2006,7 @@ void QuadPlane::update_land_positioning(void)
     float pitch_in = plane.channel_pitch->get_control_in() * scale;
 
     // limit correction speed to accel with stopping time constant of 0.5s
-    const float speed_max_cms = wp_nav->get_wp_acceleration() * 0.5;
+    const float speed_max_cms = wp_nav->get_wp_acceleration() * 100.0 * 0.5; // convert m to cm
     const float dt = plane.scheduler.get_loop_period_s();
 
     poscontrol.target_vel_cms = Vector3f(-pitch_in, roll_in, 0) * speed_max_cms;
@@ -2026,8 +2026,8 @@ void QuadPlane::update_land_positioning(void)
 void QuadPlane::run_xy_controller(void)
 {
     if (!pos_control->is_active_xy()) {
-        pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy(), wp_nav->get_wp_acceleration());
-        pos_control->set_correction_speed_accel_xy(wp_nav->get_default_speed_xy(), wp_nav->get_wp_acceleration());
+        pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy() * 100.0, wp_nav->get_wp_acceleration() * 100.0); // convert m to cm
+        pos_control->set_correction_speed_accel_xy(wp_nav->get_default_speed_xy() * 100.0, wp_nav->get_wp_acceleration() * 100.0); // convert m to cm
         pos_control->init_xy_controller();
     }
     pos_control->update_xy_controller();
@@ -2088,10 +2088,10 @@ void QuadPlane::PosControlState::set_state(enum position_control_state s)
         } else if (s == QPOS_POSITION2) {
             // POSITION2 changes target speed, so we need to change it
             // back to normal
-            qp.pos_control->set_max_speed_accel_xy(qp.wp_nav->get_default_speed_xy(),
-                                                   qp.wp_nav->get_wp_acceleration());
-            qp.pos_control->set_correction_speed_accel_xy(qp.wp_nav->get_default_speed_xy(),
-                                                   qp.wp_nav->get_wp_acceleration());
+            qp.pos_control->set_max_speed_accel_xy(qp.wp_nav->get_default_speed_xy() * 100.0,
+                                                   qp.wp_nav->get_wp_acceleration() * 100.0); // convert m to cm
+            qp.pos_control->set_correction_speed_accel_xy(qp.wp_nav->get_default_speed_xy() * 100.0,
+                                                   qp.wp_nav->get_wp_acceleration() * 100.0); // convert m to cm
         } else if (s == QPOS_AIRBRAKE) {
             // start with zero integrator on vertical throttle
             qp.pos_control->get_accel_z_pid().set_integrator(0);
@@ -2383,8 +2383,8 @@ void QuadPlane::vtol_position_controller(void)
         const Vector2f diff_wp = plane.current_loc.get_distance_NE(loc);
         const float scaled_wp_speed = get_scaled_wp_speed(degrees(diff_wp.angle()));
 
-        pos_control->set_max_speed_accel_xy(scaled_wp_speed*100, wp_nav->get_wp_acceleration());
-        pos_control->set_correction_speed_accel_xy(scaled_wp_speed*100, wp_nav->get_wp_acceleration());
+        pos_control->set_max_speed_accel_xy(scaled_wp_speed * 100, wp_nav->get_wp_acceleration() * 100.0); // convert m to cm
+        pos_control->set_correction_speed_accel_xy(scaled_wp_speed * 100, wp_nav->get_wp_acceleration() * 100.0);  // convert m to cm
 
         run_xy_controller();
 
@@ -2541,7 +2541,7 @@ void QuadPlane::vtol_position_controller(void)
 float QuadPlane::get_scaled_wp_speed(float target_bearing_deg) const
 {
     const float yaw_difference = fabsf(wrap_180(degrees(plane.ahrs.yaw) - target_bearing_deg));
-    const float wp_speed = wp_nav->get_default_speed_xy() * 0.01;
+    const float wp_speed = wp_nav->get_default_speed_xy();
     if (yaw_difference > 20) {
         // this gives a factor of 2x reduction in max speed when
         // off by 90 degrees, and 3x when off by 180 degrees
@@ -2576,7 +2576,7 @@ void QuadPlane::setup_target_position(void)
     if (!loc.same_latlon_as(last_auto_target) ||
         plane.next_WP_loc.alt != last_auto_target.alt ||
         now - last_loiter_ms > 500) {
-        wp_nav->set_wp_destination(poscontrol.target_cm.tofloat());
+        wp_nav->set_wp_destination(poscontrol.target_cm.tofloat().neu_to_ned() * 0.01f); // convert cm to m
         last_auto_target = loc;
     }
     last_loiter_ms = now;
@@ -2614,7 +2614,7 @@ void QuadPlane::takeoff_controller(void)
                                                                   plane.nav_pitch_cd,
                                                                   get_pilot_input_yaw_rate_cds() + get_weathervane_yaw_rate_cds());
 
-    float vel_z = wp_nav->get_default_speed_up();
+    float vel_z = wp_nav->get_default_speed_up() * 100.0;   // convert m to cm
     if (guided_takeoff) {
         // for guided takeoff we aim for a specific height with zero
         // velocity at that height
@@ -3128,7 +3128,7 @@ float QuadPlane::forward_throttle_pct()
     // add in a component from our current pitch demand. This tends to
     // move us to zero pitch. Assume that LIM_PITCH would give us the
     // WP nav speed.
-    fwd_vel_error -= (wp_nav->get_default_speed_xy() * 0.01f) * plane.nav_pitch_cd / (float)plane.aparm.pitch_limit_max_cd;
+    fwd_vel_error -= wp_nav->get_default_speed_xy() * plane.nav_pitch_cd / (float)plane.aparm.pitch_limit_max_cd;
 
     if (should_relax() && vel_ned.length() < 1) {
         // we may be landed

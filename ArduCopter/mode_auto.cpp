@@ -215,7 +215,6 @@ bool ModeAuto::loiter_start()
 
     // initialise waypoint controller target to stopping point
     wp_nav->set_wp_destination(stopping_point);
-
     // hold yaw at current heading
     auto_yaw.set_mode(AUTO_YAW_HOLD);
 
@@ -349,21 +348,20 @@ void ModeAuto::circle_movetoedge_start(const Location &circle_center, float radi
 
     // set circle radius
     if (!is_zero(radius_m)) {
-        copter.circle_nav->set_radius(radius_m * 100.0f);
+        copter.circle_nav->set_radius(radius_m);
     }
 
     // check our distance from edge of circle
-    Vector3f circle_edge_neu;
-    copter.circle_nav->get_closest_point_on_circle(circle_edge_neu);
-    float dist_to_edge = (inertial_nav.get_position() - circle_edge_neu).length();
+    Vector3f circle_edge_ned;
+    copter.circle_nav->get_closest_point_on_circle(circle_edge_ned);
+    float dist_to_edge = ((inertial_nav.get_position().neu_to_ned() * 0.01) - circle_edge_ned).length();
 
     // if more than 3m then fly to edge
     if (dist_to_edge > 300.0f) {
         // set the state to move to the edge of the circle
         _mode = SubMode::CIRCLE_MOVE_TO_EDGE;
 
-        // convert circle_edge_neu to Location
-        Location circle_edge(circle_edge_neu, Location::AltFrame::ABOVE_ORIGIN);
+        Location circle_edge(circle_edge_ned, Location::AltFrame::ABOVE_ORIGIN);
 
         // convert altitude to same as command
         circle_edge.set_alt_cm(circle_center.alt, circle_center.get_alt_frame());
@@ -376,7 +374,7 @@ void ModeAuto::circle_movetoedge_start(const Location &circle_center, float radi
 
         // if we are outside the circle, point at the edge, otherwise hold yaw
         const Vector3p &circle_center_neu = copter.circle_nav->get_center();
-        const Vector3f &curr_pos = inertial_nav.get_position();
+        const Vector3f &curr_pos = inertial_nav.get_position();     // z not used here
         float dist_to_center = norm(circle_center_neu.x - curr_pos.x, circle_center_neu.y - curr_pos.y);
         // initialise yaw
         // To-Do: reset the yaw only when the previous navigation command is not a WP.  this would allow removing the special check for ROI
@@ -691,11 +689,11 @@ uint32_t ModeAuto::wp_distance() const
 {
     switch (_mode) {
     case SubMode::CIRCLE:
-        return copter.circle_nav->get_distance_to_target();
+        return copter.circle_nav->get_distance_to_target() * 100.0; // convert meters to cm
     case SubMode::WP:
     case SubMode::CIRCLE_MOVE_TO_EDGE:
     default:
-        return wp_nav->get_wp_distance_to_destination();
+        return wp_nav->get_wp_distance_to_destination() * 100.0; // convert meters to cm
     }
 }
 
@@ -1314,7 +1312,7 @@ void ModeAuto::do_loiter_unlimited(const AP_Mission::Mission_Command& cmd)
         // To-Do: make this simpler
         Vector3f temp_pos;
         copter.wp_nav->get_wp_stopping_point_xy(temp_pos.xy());
-        const Location temp_loc(temp_pos, Location::AltFrame::ABOVE_ORIGIN);
+        const Location temp_loc(temp_pos * 100.0, Location::AltFrame::ABOVE_ORIGIN); // convert meters -> cm
         target_loc.lat = temp_loc.lat;
         target_loc.lng = temp_loc.lng;
     }
@@ -1389,7 +1387,7 @@ void ModeAuto::do_loiter_to_alt(const AP_Mission::Mission_Command& cmd)
     loiter_to_alt.alt_error_cm = 0;
 
     // set vertical speed and acceleration limits
-    pos_control->set_max_speed_accel_z(wp_nav->get_default_speed_down(), wp_nav->get_default_speed_up(), wp_nav->get_accel_z());
+    pos_control->set_max_speed_accel_z(wp_nav->get_default_speed_down() * 100.0, wp_nav->get_default_speed_up() * 100.0, wp_nav->get_accel_z() * 100.0);  // convert m to cm
 }
 
 // do_spline_wp - initiate move to next waypoint
@@ -1523,11 +1521,11 @@ void ModeAuto::do_change_speed(const AP_Mission::Mission_Command& cmd)
 {
     if (cmd.content.speed.target_ms > 0) {
         if (cmd.content.speed.speed_type == 2)  {
-            copter.wp_nav->set_speed_up(cmd.content.speed.target_ms * 100.0f);
+            copter.wp_nav->set_speed_up(cmd.content.speed.target_ms);
         } else if (cmd.content.speed.speed_type == 3)  {
-            copter.wp_nav->set_speed_down(cmd.content.speed.target_ms * 100.0f);
+            copter.wp_nav->set_speed_down(cmd.content.speed.target_ms);
         } else {
-            copter.wp_nav->set_speed_xy(cmd.content.speed.target_ms * 100.0f);
+            copter.wp_nav->set_speed_xy(cmd.content.speed.target_ms);
         }
     }
 }
@@ -1648,7 +1646,7 @@ bool ModeAuto::verify_land()
             // check if we've reached the location
             if (copter.wp_nav->reached_wp_destination()) {
                 // get destination so we can use it for loiter target
-                const Vector2f& dest = copter.wp_nav->get_wp_destination().xy();
+                const Vector2f& dest = copter.wp_nav->get_wp_destination().xy() * 100.0; // convert m to cm
 
                 // initialise landing controller
                 land_start(dest);
@@ -1821,7 +1819,7 @@ bool ModeAuto::verify_payload_place()
         }
         FALLTHROUGH;
     case PayloadPlaceStateType_Ascending_Start: {
-        Location target_loc(inertial_nav.get_position(), Location::AltFrame::ABOVE_ORIGIN);
+        Location target_loc(inertial_nav.get_position().neu_to_ned(), Location::AltFrame::ABOVE_ORIGIN);
         target_loc.alt = nav_payload_place.descend_start_altitude;
         wp_start(target_loc);
         nav_payload_place.state = PayloadPlaceStateType_Ascending;

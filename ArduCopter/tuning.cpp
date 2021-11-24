@@ -101,7 +101,7 @@ void Copter::tuning()
         break;
 
     case TUNING_WP_SPEED:
-        wp_nav->set_speed_xy(tuning_value);
+        wp_nav->set_speed_xy(tuning_value * 0.01); // convert cm to m
         break;
 
 #if MODE_ACRO_ENABLED == ENABLED || MODE_SPORT_ENABLED == ENABLED

@@ -210,12 +210,12 @@ void ModeGuided::wp_control_run()
 void ModeGuided::pva_control_start()
 {
     // initialise horizontal speed, acceleration
-    pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy(), wp_nav->get_wp_acceleration());
-    pos_control->set_correction_speed_accel_xy(wp_nav->get_default_speed_xy(), wp_nav->get_wp_acceleration());
+    pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy() * 100.0, wp_nav->get_wp_acceleration() * 100.0);
+    pos_control->set_correction_speed_accel_xy(wp_nav->get_default_speed_xy() * 100.0, wp_nav->get_wp_acceleration() * 100.0);
 
     // initialize vertical speeds and acceleration
-    pos_control->set_max_speed_accel_z(wp_nav->get_default_speed_down(), wp_nav->get_default_speed_up(), wp_nav->get_accel_z());
-    pos_control->set_correction_speed_accel_z(wp_nav->get_default_speed_down(), wp_nav->get_default_speed_up(), wp_nav->get_accel_z());
+    pos_control->set_max_speed_accel_z(wp_nav->get_default_speed_down() * 100.0, wp_nav->get_default_speed_up() * 100.0, wp_nav->get_accel_z() * 100.0);
+    pos_control->set_correction_speed_accel_z(wp_nav->get_default_speed_down() * 100.0, wp_nav->get_default_speed_up() * 100.0, wp_nav->get_accel_z() * 100.0);
 
     // initialise velocity controller
     pos_control->init_z_controller();
@@ -280,8 +280,8 @@ void ModeGuided::angle_control_start()
     guided_mode = SubMode::Angle;
 
     // set vertical speed and acceleration limits
-    pos_control->set_max_speed_accel_z(wp_nav->get_default_speed_down(), wp_nav->get_default_speed_up(), wp_nav->get_accel_z());
-    pos_control->set_correction_speed_accel_z(wp_nav->get_default_speed_down(), wp_nav->get_default_speed_up(), wp_nav->get_accel_z());
+    pos_control->set_max_speed_accel_z(wp_nav->get_default_speed_down() * 100.0, wp_nav->get_default_speed_up() * 100.0, wp_nav->get_accel_z() * 100.0);        // convert m to cm
+    pos_control->set_correction_speed_accel_z(wp_nav->get_default_speed_down() * 100.0, wp_nav->get_default_speed_up() * 100.0, wp_nav->get_accel_z() * 100.0); // convert m to cm
 
     // initialise the vertical position controller
     if (!pos_control->is_active_z()) {
@@ -308,7 +308,7 @@ bool ModeGuided::set_destination(const Vector3f& destination, bool use_yaw, floa
 {
 #if AC_FENCE == ENABLED
     // reject destination if outside the fence
-    const Location dest_loc(destination, terrain_alt ? Location::AltFrame::ABOVE_TERRAIN : Location::AltFrame::ABOVE_ORIGIN);
+    const Location dest_loc(destination.neu_to_ned(), terrain_alt ? Location::AltFrame::ABOVE_TERRAIN : Location::AltFrame::ABOVE_ORIGIN); // Location constructor uses NED
     if (!copter.fence.check_destination_within_fence(dest_loc)) {
         AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::DEST_OUTSIDE_FENCE);
         // failure is propagated to GCS with NAK
@@ -353,7 +353,7 @@ bool ModeGuided::set_destination(const Vector3f& destination, bool use_yaw, floa
         // convert origin to alt-above-terrain if necessary
         if (!guided_pos_terrain_alt) {
             // new destination is alt-above-terrain, previous destination was alt-above-ekf-origin
-            pos_control->set_pos_offset_z_cm(origin_terr_offset);
+            pos_control->set_pos_offset_z_cm(origin_terr_offset * 100.0); // convert m to cm
         }
     } else {
         pos_control->set_pos_offset_z_cm(0.0);
@@ -442,7 +442,7 @@ bool ModeGuided::set_destination(const Location& dest_loc, bool use_yaw, float y
     // set position target and zero velocity and acceleration
     Vector3f pos_target_f;
     bool terrain_alt;
-    if (!wp_nav->get_vector_NEU(dest_loc, pos_target_f, terrain_alt)) {
+    if (!wp_nav->get_vector_NED(dest_loc, pos_target_f, terrain_alt)) {
         return false;
     }
 
@@ -458,13 +458,13 @@ bool ModeGuided::set_destination(const Location& dest_loc, bool use_yaw, float y
         // convert origin to alt-above-terrain if necessary
         if (!guided_pos_terrain_alt) {
             // new destination is alt-above-terrain, previous destination was alt-above-ekf-origin
-            pos_control->set_pos_offset_z_cm(origin_terr_offset);
+            pos_control->set_pos_offset_z_cm(origin_terr_offset * 100.0); // convert m to cm
         }
     } else {
         pos_control->set_pos_offset_z_cm(0.0);
     }
 
-    guided_pos_target_cm = pos_target_f.topostype();
+    guided_pos_target_cm = pos_target_f.topostype().neu_to_ned() * 100.0; // convert m to cm
     guided_pos_terrain_alt = terrain_alt;
     guided_vel_target_cms.zero();
     guided_accel_target_cmss.zero();
@@ -543,7 +543,7 @@ bool ModeGuided::set_destination_posvelaccel(const Vector3f& destination, const 
 {
 #if AC_FENCE == ENABLED
     // reject destination if outside the fence
-    const Location dest_loc(destination, Location::AltFrame::ABOVE_ORIGIN);
+    const Location dest_loc(destination.neu_to_ned(), Location::AltFrame::ABOVE_ORIGIN); // Location uses NED
     if (!copter.fence.check_destination_within_fence(dest_loc)) {
         AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::DEST_OUTSIDE_FENCE);
         // failure is propagated to GCS with NAK
@@ -690,7 +690,7 @@ void ModeGuided::pos_control_run()
     if (guided_pos_terrain_alt) {
         pos_offset_z_buffer = MIN(copter.wp_nav->get_terrain_margin() * 100.0, 0.5 * fabsf(guided_pos_target_cm.z));
     }
-    pos_control->input_pos_xyz(guided_pos_target_cm, terr_offset, pos_offset_z_buffer);
+    pos_control->input_pos_xyz(guided_pos_target_cm, terr_offset * 100.0, pos_offset_z_buffer); // convert m to cm
 
     // run position controllers
     pos_control->update_xy_controller();
@@ -952,7 +952,7 @@ void ModeGuided::angle_control_run()
     float climb_rate_cms = 0.0f;
     if (!guided_angle_state.use_thrust) {
         // constrain climb rate
-        climb_rate_cms = constrain_float(guided_angle_state.climb_rate_cms, -wp_nav->get_default_speed_down(), wp_nav->get_default_speed_up());
+        climb_rate_cms = constrain_float(guided_angle_state.climb_rate_cms, -wp_nav->get_default_speed_down() * 100.0, wp_nav->get_default_speed_up() * 100.0); // convert m to cm
 
         // get avoidance adjusted climb rate
         climb_rate_cms = get_avoidance_adjusted_climbrate(climb_rate_cms);

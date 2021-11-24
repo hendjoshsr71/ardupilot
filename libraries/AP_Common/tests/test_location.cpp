@@ -257,7 +257,7 @@ TEST(Location, Tests)
 
     Location test_origin = test_home;
     test_origin.offset(2, 2);
-    const Vector3f test_vecto{200, 200, 10};
+    const Vector3f test_vecto{200, 200, -10};
     const Location test_location4{test_vecto, Location::AltFrame::ABOVE_ORIGIN};
     EXPECT_EQ(10, test_location4.alt);
     EXPECT_EQ(0, test_location4.relative_alt);

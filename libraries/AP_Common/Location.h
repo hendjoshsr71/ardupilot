@@ -30,8 +30,8 @@ public:
     /// constructors
     Location();
     Location(int32_t latitude, int32_t longitude, int32_t alt_in_cm, AltFrame frame);
-    Location(const Vector3f &ekf_offset_neu, AltFrame frame);
-    Location(const Vector3d &ekf_offset_neu, AltFrame frame);
+    Location(const Vector3f &ekf_offset_ned, AltFrame frame);
+    Location(const Vector3d &ekf_offset_ned, AltFrame frame);
 
     // set altitude
     void set_alt_cm(int32_t alt_cm, AltFrame frame);
@@ -55,6 +55,7 @@ public:
     // x, y and z are in centimetres
     bool get_vector_xy_from_origin_NE(Vector2f &vec_ne) const WARN_IF_UNUSED;
     bool get_vector_from_origin_NEU(Vector3f &vec_neu) const WARN_IF_UNUSED;
+    bool get_vector_from_origin_NED(Vector3f &vec_ned) const WARN_IF_UNUSED;
 
     // return distance in meters between two locations
     ftype get_distance(const struct Location &loc2) const;

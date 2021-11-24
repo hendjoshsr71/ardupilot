@@ -33,35 +33,37 @@ Location::Location(int32_t latitude, int32_t longitude, int32_t alt_in_cm, AltFr
     set_alt_cm(alt_in_cm, frame);
 }
 
-Location::Location(const Vector3f &ekf_offset_neu, AltFrame frame)
+// Create a Location object using a vector from the EKF origin frame NED in cm
+Location::Location(const Vector3f &ekf_offset_ned, AltFrame frame)
 {
     zero();
 
     // store alt and alt frame
-    set_alt_cm(ekf_offset_neu.z, frame);
+    set_alt_cm(-ekf_offset_ned.z, frame); //Convert NED input to NEU for internal storage
 
     // calculate lat, lon
     Location ekf_origin;
     if (AP::ahrs().get_origin(ekf_origin)) {
         lat = ekf_origin.lat;
         lng = ekf_origin.lng;
-        offset(ekf_offset_neu.x * 0.01, ekf_offset_neu.y * 0.01);
+        offset(ekf_offset_ned.x * 0.01, ekf_offset_ned.y * 0.01);
     }
 }
 
-Location::Location(const Vector3d &ekf_offset_neu, AltFrame frame)
+// Create a Location object using a vector from the EKF origin frame NED in cm
+Location::Location(const Vector3d &ekf_offset_ned, AltFrame frame)
 {
     zero();
 
     // store alt and alt frame
-    set_alt_cm(ekf_offset_neu.z, frame);
+    set_alt_cm(-ekf_offset_ned.z, frame); //Convert NED input to NEU for internal storage
 
     // calculate lat, lon
     Location ekf_origin;
     if (AP::ahrs().get_origin(ekf_origin)) {
         lat = ekf_origin.lat;
         lng = ekf_origin.lng;
-        offset(ekf_offset_neu.x * 0.01, ekf_offset_neu.y * 0.01);
+        offset(ekf_offset_ned.x * 0.01, ekf_offset_ned.y * 0.01);
     }
 }
 
@@ -233,6 +235,17 @@ bool Location::get_vector_from_origin_NEU(Vector3f &vec_neu) const
     }
     vec_neu.z = alt_above_origin_cm;
 
+    return true;
+}
+
+// Vector from origin in NED (meters)
+bool Location::get_vector_from_origin_NED(Vector3f &vec_ned) const
+{
+    if (!get_vector_from_origin_NEU(vec_ned)) {
+        return false;
+    }
+    vec_ned *= 0.01f;
+    vec_ned.z = -vec_ned.z;
     return true;
 }
 
