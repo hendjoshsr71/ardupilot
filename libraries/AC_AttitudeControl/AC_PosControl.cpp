@@ -493,7 +493,7 @@ void AC_PosControl::init_xy()
 
     _pos_target.xy() = _inav.get_position_xy().topostype() * 100.0;
 
-    const Vector2f &curr_vel = _inav.get_velocity_xy_cms();
+    const Vector2f &curr_vel = _inav.get_velocity_xy() * 100.0;
     _vel_desired.xy() = curr_vel;
     _vel_target.xy() = curr_vel;
 
@@ -569,7 +569,7 @@ void AC_PosControl::stop_vel_xy_stabilisation()
 {
     _pos_target.xy() =  _inav.get_position_xy().topostype() * 100.0;
 
-    const Vector2f &curr_vel = _inav.get_velocity_xy_cms();
+    const Vector2f &curr_vel = _inav.get_velocity_xy() * 100.0;
     _vel_desired.xy() = curr_vel;
     // with zero position error _vel_target = _vel_desired
     _vel_target.xy() = curr_vel;
@@ -624,7 +624,7 @@ void AC_PosControl::update_xy_controller()
     if (_flags.vehicle_horiz_vel_override) {
         _flags.vehicle_horiz_vel_override = false;
     } else {
-        _vehicle_horiz_vel = _inav.get_velocity_xy_cms();
+        _vehicle_horiz_vel = _inav.get_velocity_xy() * 100.0;
     }
     Vector2f accel_target = _pid_vel_xy.update_all(Vector2f{_vel_target.x, _vel_target.y}, _vehicle_horiz_vel, Vector2f(_limit_vector.x, _limit_vector.y));
     // acceleration to correct for velocity error and scale PID output to compensate for optical flow measurement induced EKF noise
@@ -1066,7 +1066,7 @@ void AC_PosControl::get_stopping_point_xy_cm(Vector2p &stopping_point) const
     stopping_point = _inav.get_position_xy().topostype() * 100.0;
     float kP = _p_pos_xy.kP();
 
-    Vector2f curr_vel = _inav.get_velocity_xy_cms();
+    Vector2f curr_vel = _inav.get_velocity_xy() * 100.0;
 
     // calculate current velocity
     float vel_total = curr_vel.length();
@@ -1147,7 +1147,7 @@ void AC_PosControl::write_log()
     if (is_active_xy()) {
         float accel_x, accel_y;
         lean_angles_to_accel_xy(accel_x, accel_y);
-        const Vector2f curr_vel = _inav.get_velocity_xy_cms() * 100.0; // convert m to cm
+        const Vector2f curr_vel = _inav.get_velocity_xy() * 100.0; // convert m to cm
         AP::logger().Write_PSCN(get_pos_target_cm().x, _inav.get_position_ned().x * 100.0,
                                 get_vel_desired_cms().x, get_vel_target_cms().x, curr_vel.x,
                                 _accel_desired.x, get_accel_target_cmss().x, accel_x);
@@ -1251,7 +1251,7 @@ void AC_PosControl::handle_ekf_xy_reset()
     if (reset_ms != _ekf_xy_reset_ms) {
 
         _pos_target.xy() = ((_inav.get_position_xy() * 100.0) + _p_pos_xy.get_error()).topostype();
-        _vel_target.xy() = _inav.get_velocity_xy_cms() + _pid_vel_xy.get_error();
+        _vel_target.xy() = (_inav.get_velocity_xy() * 100.0) + _pid_vel_xy.get_error();
 
         _ekf_xy_reset_ms = reset_ms;
     }

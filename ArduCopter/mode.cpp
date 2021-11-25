@@ -650,7 +650,7 @@ void Mode::land_run_horizontal_control()
             target_pos = inertial_nav.get_position_xy() * 100.0;
         }
         if (!copter.precland.get_target_velocity_relative_cms(target_vel_rel)) {
-            target_vel_rel = -inertial_nav.get_velocity_xy_cms();
+            target_vel_rel = -inertial_nav.get_velocity_xy() * 100.0;
         }
         pos_control->set_pos_target_xy_cm(target_pos.x, target_pos.y);
         pos_control->override_vehicle_velocity_xy(-target_vel_rel);
