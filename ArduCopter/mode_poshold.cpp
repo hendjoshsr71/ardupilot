@@ -21,7 +21,7 @@
 
 // definitions that are independent of main loop rate
 #define POSHOLD_STICK_RELEASE_SMOOTH_ANGLE      1800    // max angle required (in centi-degrees) after which the smooth stick release effect is applied
-#define POSHOLD_WIND_COMP_ESTIMATE_SPEED_MAX    10      // wind compensation estimates will only run when velocity is at or below this speed in cm/s
+#define POSHOLD_WIND_COMP_ESTIMATE_SPEED_MAX    0.10    // wind compensation estimates will only run when velocity is at or below this speed in m/s
 #define POSHOLD_WIND_COMP_LEAN_PCT_MAX          0.6666f // wind compensation no more than 2/3rds of angle max to ensure pilot can always override
 
 // poshold_init - initialise PosHold controller
@@ -569,7 +569,7 @@ void ModePosHold::update_wind_comp_estimate()
     }
 
     // check horizontal velocity is low
-    if (inertial_nav.get_speed_xy_cms() > POSHOLD_WIND_COMP_ESTIMATE_SPEED_MAX) {
+    if (inertial_nav.get_speed_xy() > POSHOLD_WIND_COMP_ESTIMATE_SPEED_MAX) {
         return;
     }
 
