@@ -204,7 +204,7 @@ void ModeThrow::run()
     if ((stage != prev_stage) || (now - last_log_ms) > 100) {
         prev_stage = stage;
         last_log_ms = now;
-        const float velocity = inertial_nav.get_velocity_neu_cms().length();
+        const float velocity = inertial_nav.get_velocity_ned().length() * 100.0; // convert m to cm
         const float velocity_z = inertial_nav.get_velocity_z_up_cms();
         const float accel = copter.ins.get_accel().length();
         const float ef_accel_z = ahrs.get_accel_ef().z;
@@ -254,8 +254,8 @@ bool ModeThrow::throw_detected()
         return false;
     }
 
-    // Check for high speed (>500 cm/s)
-    bool high_speed = inertial_nav.get_velocity_neu_cms().length_squared() > (THROW_HIGH_SPEED * THROW_HIGH_SPEED);
+    // Check for high speed (>5 m/s)
+    bool high_speed = inertial_nav.get_velocity_ned().length_squared() > (THROW_HIGH_SPEED * THROW_HIGH_SPEED);
 
     // check for upwards or downwards trajectory (airdrop) of 50cm/s
     bool changing_height;

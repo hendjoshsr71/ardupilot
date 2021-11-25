@@ -525,7 +525,7 @@
 #endif
 
 #ifndef YAW_LOOK_AHEAD_MIN_SPEED
- # define YAW_LOOK_AHEAD_MIN_SPEED  100             // minimum ground speed in cm/s required before copter is aimed at ground course
+ # define YAW_LOOK_AHEAD_MIN_SPEED  1.0      // minimum ground speed in m/s required before copter is aimed at ground course
 #endif
 
 // Super Simple mode
@@ -594,7 +594,7 @@
 // Throw mode configuration
 //
 #ifndef THROW_HIGH_SPEED
-# define THROW_HIGH_SPEED       500.0f  // vehicle much reach this total 3D speed in cm/s (or be free falling)
+# define THROW_HIGH_SPEED       5.00    // vehicle much reach this total 3D speed in m/s (or be free falling)
 #endif
 #ifndef THROW_VERTICAL_SPEED
 # define THROW_VERTICAL_SPEED   50.0f   // motors start when vehicle reaches this total 3D speed in cm/s

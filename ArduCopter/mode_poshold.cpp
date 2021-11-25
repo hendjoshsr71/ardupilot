@@ -69,7 +69,7 @@ void ModePosHold::run()
 {
     float controller_to_pilot_roll_mix; // mix of controller and pilot controls.  0 = fully last controller controls, 1 = fully pilot controls
     float controller_to_pilot_pitch_mix;    // mix of controller and pilot controls.  0 = fully last controller controls, 1 = fully pilot controls
-    const Vector3f& vel = inertial_nav.get_velocity_neu_cms();
+    const Vector3f vel = inertial_nav.get_velocity_ned().neu_to_ned() * 100.0; // LOST REFERENCE HERE, convert m to cm
 
     // set vertical speed and acceleration limits
     pos_control->set_max_speed_accel_z(-get_pilot_speed_dn(), g.pilot_speed_up, g.pilot_accel_z);

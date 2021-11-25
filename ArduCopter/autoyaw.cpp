@@ -10,7 +10,7 @@ float Mode::AutoYaw::roi_yaw() const
 
 float Mode::AutoYaw::look_ahead_yaw()
 {
-    const Vector3f& vel = copter.inertial_nav.get_velocity_neu_cms();
+    const Vector3f& vel = copter.inertial_nav.get_velocity_ned();
     const float speed_sq = vel.xy().length_squared();
     // Commanded Yaw to automatically look ahead.
     if (copter.position_ok() && (speed_sq > (YAW_LOOK_AHEAD_MIN_SPEED * YAW_LOOK_AHEAD_MIN_SPEED))) {

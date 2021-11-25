@@ -163,7 +163,7 @@
 #endif
 
 #ifndef YAW_LOOK_AHEAD_MIN_SPEED
-# define YAW_LOOK_AHEAD_MIN_SPEED  100             // minimum ground speed in cm/s required before vehicle is aimed at ground course
+# define YAW_LOOK_AHEAD_MIN_SPEED  1           // minimum ground speed in m/s required before vehicle is aimed at ground course
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
