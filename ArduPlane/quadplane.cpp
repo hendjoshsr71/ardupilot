@@ -2968,7 +2968,7 @@ bool QuadPlane::verify_vtol_land(void)
         if (poscontrol.pilot_correction_done) {
             reached_position = !poscontrol.pilot_correction_active;
         } else {
-            const float dist = (inertial_nav.get_position_neu_cm().topostype() - poscontrol.target_cm).xy().length() * 0.01;
+            const float dist = (inertial_nav.get_position_xy().topostype() - (poscontrol.target_cm.xy() * 0.01)).length(); // CHECK HERE TWICE
             reached_position = dist < descend_dist_threshold;
         }
         if (reached_position &&

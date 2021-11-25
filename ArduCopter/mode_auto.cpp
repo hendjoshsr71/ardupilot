@@ -355,7 +355,7 @@ void ModeAuto::circle_movetoedge_start(const Location &circle_center, float radi
     // check our distance from edge of circle
     Vector3f circle_edge_neu;
     copter.circle_nav->get_closest_point_on_circle(circle_edge_neu);
-    float dist_to_edge = (inertial_nav.get_position_neu_cm() - circle_edge_neu).length();
+    float dist_to_edge = ((inertial_nav.get_position_ned().neu_to_ned() * 100.0) - circle_edge_neu).length(); // convert m to cm
 
     // if more than 3m then fly to edge
     if (dist_to_edge > 300.0f) {
@@ -1819,7 +1819,7 @@ bool ModeAuto::verify_payload_place()
         }
         FALLTHROUGH;
     case PayloadPlaceStateType_Ascending_Start: {
-        Location target_loc(inertial_nav.get_position_neu_cm(), Location::AltFrame::ABOVE_ORIGIN);
+        Location target_loc(inertial_nav.get_position_ned().neu_to_ned() * 100.0, Location::AltFrame::ABOVE_ORIGIN); // convert m to cm
         target_loc.alt = nav_payload_place.descend_start_altitude;
         wp_start(target_loc);
         nav_payload_place.state = PayloadPlaceStateType_Ascending;

@@ -1064,7 +1064,7 @@ void ModeGuided::limit_init_time_and_pos()
     guided_limit.start_time = AP_HAL::millis();
 
     // initialise start position from current position
-    guided_limit.start_pos = inertial_nav.get_position_neu_cm();
+    guided_limit.start_pos = inertial_nav.get_position_ned().neu_to_ned() * 100.0; // convert m to cm
 }
 
 // limit_check - returns true if guided mode has breached a limit
@@ -1077,21 +1077,21 @@ bool ModeGuided::limit_check()
     }
 
     // get current location
-    const Vector3f& curr_pos = inertial_nav.get_position_neu_cm();
+    const float curr_pos_down = -inertial_nav.get_position_z_down() * 100.0; // convert m to cm
 
     // check if we have gone below min alt
-    if (!is_zero(guided_limit.alt_min_cm) && (curr_pos.z < guided_limit.alt_min_cm)) {
+    if (!is_zero(guided_limit.alt_min_cm) && (curr_pos_down < guided_limit.alt_min_cm)) { // FIX HERE and remove curr_pos
         return true;
     }
 
     // check if we have gone above max alt
-    if (!is_zero(guided_limit.alt_max_cm) && (curr_pos.z > guided_limit.alt_max_cm)) {
+    if (!is_zero(guided_limit.alt_max_cm) && (curr_pos_down > guided_limit.alt_max_cm)) {  // FIX HERE and remove curr_pos
         return true;
     }
 
     // check if we have gone beyond horizontal limit
     if (guided_limit.horiz_max_cm > 0.0f) {
-        const float horiz_move = get_horizontal_distance_cm(guided_limit.start_pos.xy(), curr_pos.xy());
+        const float horiz_move = get_horizontal_distance_cm(guided_limit.start_pos.xy(), inertial_nav.get_position_xy() * 100.0);
         if (horiz_move > guided_limit.horiz_max_cm) {
             return true;
         }

@@ -114,7 +114,7 @@ void AC_Circle::set_center(const Location& center)
             set_center(Vector3f(center_xy.x, center_xy.y, terr_alt_cm), true);
         } else {
             // failed to convert location so set to current position and log error
-            set_center(_inav.get_position_neu_cm(), false);
+            set_center(_inav.get_position_ned().neu_to_ned() * 100.0, false); // convert m to cm
             AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::FAILED_CIRCLE_INIT);
         }
     } else {
@@ -122,7 +122,7 @@ void AC_Circle::set_center(const Location& center)
         Vector3f circle_center_neu;
         if (!center.get_vector_from_origin_NEU(circle_center_neu)) {
             // default to current position and log error
-            circle_center_neu = _inav.get_position_neu_cm();
+            circle_center_neu = _inav.get_position_ned().neu_to_ned() * 100.0; // convert m to cm
             AP::logger().Write_Error(LogErrorSubsystem::NAVIGATION, LogErrorCode::FAILED_CIRCLE_INIT);
         }
         set_center(circle_center_neu, false);
@@ -313,7 +313,7 @@ void AC_Circle::init_start_angle(bool use_heading)
         _angle = wrap_PI(_ahrs.yaw-M_PI);
     } else {
         // if we are exactly at the center of the circle, init angle to directly behind vehicle (so vehicle will backup but not change heading)
-        const Vector3f &curr_pos = _inav.get_position_neu_cm();
+        const Vector2f curr_pos = _inav.get_position_xy() * 100.0; // FIX THIS REFERENCE LOSS, convert m to cm
         if (is_equal(curr_pos.x,float(_center.x)) && is_equal(curr_pos.y,float(_center.y))) {
             _angle = wrap_PI(_ahrs.yaw-M_PI);
         } else {

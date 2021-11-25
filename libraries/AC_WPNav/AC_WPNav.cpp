@@ -458,7 +458,7 @@ bool AC_WPNav::advance_wp_target_along_track(float dt)
     _pos_control.update_pos_offset_z(terr_offset);
 
     // get current position and adjust altitude to origin and destination's frame (i.e. _frame)
-    const Vector3f &curr_pos = _inav.get_position_neu_cm() - Vector3f{0, 0, terr_offset};
+    const Vector3f &curr_pos = (_inav.get_position_ned().neu_to_ned() * 100.0) - Vector3f{0, 0, terr_offset};
 
     // Use _track_scalar_dt to slow down S-Curve time to prevent target moving too far in front of aircraft
     Vector3f curr_target_vel = _pos_control.get_vel_desired_cms();

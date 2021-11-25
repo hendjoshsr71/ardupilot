@@ -609,7 +609,7 @@ void AC_PosControl::update_xy_controller()
 
     // Position Controller
 
-    const Vector3f &curr_pos = _inav.get_position_neu_cm();
+    const Vector3f curr_pos = _inav.get_position_ned().neu_to_ned() * 100.0; // THIS REFERENCE LOSS IS BAD, convert m to cm
     Vector2f vel_target = _p_pos_xy.update_all(_pos_target.x, _pos_target.y, curr_pos);
 
     // add velocity feed-forward scaled to compensate for optical flow measurement induced EKF noise
@@ -1132,7 +1132,7 @@ void AC_PosControl::standby_xyz_reset()
     _pid_accel_z.set_integrator(0.0f);
 
     // Set the target position to the current pos.
-    _pos_target = _inav.get_position_neu_cm().topostype();
+    _pos_target = _inav.get_position_ned().neu_to_ned().topostype() * 100.0; // convert m to cm
 
     // Set _pid_vel_xy integrator and derivative to zero.
     _pid_vel_xy.reset_filter();
@@ -1147,10 +1147,10 @@ void AC_PosControl::write_log()
     if (is_active_xy()) {
         float accel_x, accel_y;
         lean_angles_to_accel_xy(accel_x, accel_y);
-        AP::logger().Write_PSCN(get_pos_target_cm().x, _inav.get_position_neu_cm().x,
+        AP::logger().Write_PSCN(get_pos_target_cm().x, _inav.get_position_ned().x * 100.0,
                                 get_vel_desired_cms().x, get_vel_target_cms().x, _inav.get_velocity_neu_cms().x,
                                 _accel_desired.x, get_accel_target_cmss().x, accel_x);
-        AP::logger().Write_PSCE(get_pos_target_cm().y, _inav.get_position_neu_cm().y,
+        AP::logger().Write_PSCE(get_pos_target_cm().y, _inav.get_position_ned().y * 100.0,
                                 get_vel_desired_cms().y, get_vel_target_cms().y, _inav.get_velocity_neu_cms().y,
                                 _accel_desired.y, get_accel_target_cmss().y, accel_y);
     }
