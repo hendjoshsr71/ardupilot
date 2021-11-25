@@ -131,7 +131,7 @@ float Sub::get_surface_tracking_climb_rate(int16_t target_rate, float current_al
     static uint32_t last_call_ms = 0;
     float distance_error;
     float velocity_correction;
-    float current_alt = inertial_nav.get_position_z_up_cm();
+    float current_alt = inertial_nav.get_position_z_down() * 100.0;
 
     uint32_t now = AP_HAL::millis();
 

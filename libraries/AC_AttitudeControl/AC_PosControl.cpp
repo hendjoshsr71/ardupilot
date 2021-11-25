@@ -399,7 +399,7 @@ float AC_PosControl::pos_offset_z_scaler(float pos_offset_z, float pos_offset_z_
     if (is_zero(pos_offset_z_buffer)) {
         return 1.0;
     }
-    float pos_offset_error_z = _inav.get_position_z_up_cm() - (_pos_target.z - _pos_offset_z + pos_offset_z);
+    float pos_offset_error_z = (_inav.get_position_z_down() * 100.0) - (_pos_target.z - _pos_offset_z + pos_offset_z);
     return constrain_float((1.0 - (fabsf(pos_offset_error_z) - 0.5 * pos_offset_z_buffer) / (0.5 * pos_offset_z_buffer)), 0.01, 1.0);
 }
 
@@ -752,7 +752,7 @@ void AC_PosControl::relax_z_controller(float throttle_setting)
 ///     This function is private and contains all the shared z axis initialisation functions
 void AC_PosControl::init_z()
 {
-    _pos_target.z = _inav.get_position_z_up_cm();
+    _pos_target.z = _inav.get_position_z_down() * 100.0; // convert m to cm
 
     const float &curr_vel_z = _inav.get_velocity_z_up_cms();
     _vel_desired.z = curr_vel_z;
@@ -946,7 +946,7 @@ void AC_PosControl::update_z_controller()
     // calculate the target velocity correction
     float pos_target_zf = _pos_target.z;
 
-    _vel_target.z = _p_pos_z.update_all(pos_target_zf, _inav.get_position_z_up_cm());
+    _vel_target.z = _p_pos_z.update_all(pos_target_zf, _inav.get_position_z_down() * 100.0);
     _vel_target.z *= AP::ahrs().getControlScaleZ();
 
     _pos_target.z = pos_target_zf;
@@ -1088,7 +1088,7 @@ void AC_PosControl::get_stopping_point_xy_cm(Vector2p &stopping_point) const
 /// get_stopping_point_z_cm - calculates stopping point in NEU cm based on current position, velocity, vehicle acceleration
 void AC_PosControl::get_stopping_point_z_cm(postype_t &stopping_point) const
 {
-    const float curr_pos_z = _inav.get_position_z_up_cm();
+    const float curr_pos_z = _inav.get_position_z_down() * 100.0; // convert m to cm 
 
     // avoid divide by zero by using current position if kP is very low or acceleration is zero
     if (!is_positive(_p_pos_z.kP()) || !is_positive(_accel_max_z_cmss)) {
@@ -1156,7 +1156,7 @@ void AC_PosControl::write_log()
     }
 
     if (is_active_z()) {
-        AP::logger().Write_PSCD(-get_pos_target_cm().z, -_inav.get_position_z_up_cm(),
+        AP::logger().Write_PSCD(-get_pos_target_cm().z, _inav.get_position_z_down() * 100.0,
                                 -get_vel_desired_cms().z, -get_vel_target_cms().z, -_inav.get_velocity_z_up_cms(),
                                 -_accel_desired.z, -get_accel_target_cmss().z, -get_z_accel_cmss());
     }
@@ -1271,7 +1271,7 @@ void AC_PosControl::handle_ekf_z_reset()
     uint32_t reset_ms = _ahrs.getLastPosDownReset(alt_shift);
     if (reset_ms != 0 && reset_ms != _ekf_z_reset_ms) {
 
-        _pos_target.z = _inav.get_position_z_up_cm() + _p_pos_z.get_error();
+        _pos_target.z = (_inav.get_position_z_down() * 100.0) + _p_pos_z.get_error();
         _vel_target.z = _inav.get_velocity_z_up_cms() + _pid_vel_z.get_error();
 
         _ekf_z_reset_ms = reset_ms;

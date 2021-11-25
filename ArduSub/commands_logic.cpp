@@ -513,7 +513,7 @@ bool Sub::verify_circle(const AP_Mission::Mission_Command& cmd)
 
             // set target altitude if not provided
             if (is_zero(circle_center.z)) {
-                circle_center.z = inertial_nav.get_position_z_up_cm();
+                circle_center.z = inertial_nav.get_position_z_down() * 100.0; // conver m to cm
             }
 
             // set lat/lon position if not provided

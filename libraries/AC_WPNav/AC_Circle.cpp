@@ -352,7 +352,7 @@ bool AC_Circle::get_terrain_offset(float& offset_cm)
         return false;
     case AC_Circle::TerrainSource::TERRAIN_FROM_RANGEFINDER:
         if (_rangefinder_healthy) {
-            offset_cm = _inav.get_position_z_up_cm() - _rangefinder_alt_cm;
+            offset_cm = (_inav.get_position_z_down() * 100.0) - _rangefinder_alt_cm;
             return true;
         }
         return false;
@@ -361,7 +361,7 @@ bool AC_Circle::get_terrain_offset(float& offset_cm)
         float terr_alt = 0.0f;
         AP_Terrain *terrain = AP_Terrain::get_singleton();
         if (terrain != nullptr && terrain->height_above_terrain(terr_alt, true)) {
-            offset_cm = _inav.get_position_z_up_cm() - (terr_alt * 100.0);
+            offset_cm = (_inav.get_position_z_down() - terr_alt) * 100.0;
             return true;
         }
 #endif

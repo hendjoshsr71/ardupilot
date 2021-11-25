@@ -614,7 +614,7 @@ bool AC_WPNav::get_terrain_offset(float& offset_cm)
         return false;
     case AC_WPNav::TerrainSource::TERRAIN_FROM_RANGEFINDER:
         if (_rangefinder_healthy) {
-            offset_cm = _inav.get_position_z_up_cm() - _rangefinder_alt_cm;
+            offset_cm = (_inav.get_position_z_down() * 100.0) - _rangefinder_alt_cm; // convert m to cm
             return true;
         }
         return false;
@@ -624,7 +624,7 @@ bool AC_WPNav::get_terrain_offset(float& offset_cm)
         AP_Terrain *terrain = AP::terrain();
         if (terrain != nullptr &&
             terrain->height_above_terrain(terr_alt, true)) {
-            offset_cm = _inav.get_position_z_up_cm() - (terr_alt * 100.0);
+            offset_cm = (_inav.get_position_z_down() - terr_alt) * 100.0; // convert m to cm
             return true;
         }
 #endif

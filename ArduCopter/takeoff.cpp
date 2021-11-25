@@ -3,7 +3,7 @@
 Mode::_TakeOff Mode::takeoff;
 
 bool Mode::auto_takeoff_no_nav_active = false;
-float Mode::auto_takeoff_no_nav_alt_cm = 0;
+float Mode::auto_takeoff_no_nav_alt = 0;
 
 // This file contains the high-level takeoff logic for Loiter, PosHold, AltHold, Sport modes.
 //   The take-off can be initiated from a GCS NAV_TAKEOFF command which includes a takeoff altitude
@@ -133,7 +133,7 @@ void Mode::auto_takeoff_run()
     // check if we are not navigating because of low altitude
     if (auto_takeoff_no_nav_active) {
         // check if vehicle has reached no_nav_alt threshold
-        if (inertial_nav.get_position_z_up_cm() >= auto_takeoff_no_nav_alt_cm) {
+        if (inertial_nav.get_position_z_down() >= auto_takeoff_no_nav_alt) {
             auto_takeoff_no_nav_active = false;
             wp_nav->shift_wp_origin_and_destination_to_stopping_point_xy();
         } else {
@@ -173,7 +173,7 @@ void Mode::auto_takeoff_set_start_alt(void)
 {
     if ((g2.wp_navalt_min > 0) && (is_disarmed_or_landed() || !motors->get_interlock())) {
         // we are not flying, climb with no navigation to current alt-above-ekf-origin + wp_navalt_min
-        auto_takeoff_no_nav_alt_cm = inertial_nav.get_position_z_up_cm() + g2.wp_navalt_min * 100;
+        auto_takeoff_no_nav_alt = inertial_nav.get_position_z_down() + g2.wp_navalt_min;
         auto_takeoff_no_nav_active = true;
     } else {
         auto_takeoff_no_nav_active = false;

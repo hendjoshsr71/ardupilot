@@ -203,7 +203,7 @@ protected:
 
     // altitude above-ekf-origin below which auto takeoff does not control horizontal position
     static bool auto_takeoff_no_nav_active;
-    static float auto_takeoff_no_nav_alt_cm;
+    static float auto_takeoff_no_nav_alt;
 
 public:
     // Navigation Yaw control
