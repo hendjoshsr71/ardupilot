@@ -597,7 +597,7 @@
 # define THROW_HIGH_SPEED       5.00    // vehicle much reach this total 3D speed in m/s (or be free falling)
 #endif
 #ifndef THROW_VERTICAL_SPEED
-# define THROW_VERTICAL_SPEED   50.0f   // motors start when vehicle reaches this total 3D speed in cm/s
+# define THROW_VERTICAL_SPEED   0.50    // motors start when vehicle reaches this total 3D speed in m/s
 #endif
 
 //////////////////////////////////////////////////////////////////////////////

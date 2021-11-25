@@ -1151,7 +1151,7 @@ float QuadPlane::get_pilot_input_yaw_rate_cds(void) const
     bool manual_air_mode = plane.control_mode->is_vtol_man_throttle() && air_mode_active();
     if (!manual_air_mode &&
         !is_positive(plane.get_throttle_input()) && !plane.control_mode->does_auto_throttle() &&
-        plane.arming.get_rudder_arming_type() != AP_Arming::RudderArming::IS_DISABLED && !(inertial_nav.get_velocity_z_up_cms() < -0.5 * get_pilot_velocity_z_max_dn())) {
+        plane.arming.get_rudder_arming_type() != AP_Arming::RudderArming::IS_DISABLED && !((inertial_nav.get_velocity_z_down() * 100.0) < 0.5 * get_pilot_velocity_z_max_dn())) {
         // the user may be trying to disarm
         return 0;
     }
@@ -1192,7 +1192,7 @@ float QuadPlane::get_desired_yaw_rate_cds(void)
         yaw_cds += desired_auto_yaw_rate_cds();
     }
     bool manual_air_mode = plane.control_mode->is_vtol_man_throttle() && air_mode_active();
-    if (!is_positive(plane.get_throttle_input()) && !plane.control_mode->does_auto_throttle() && !manual_air_mode && !(inertial_nav.get_velocity_z_up_cms() < -0.5 * get_pilot_velocity_z_max_dn())) {
+    if (!is_positive(plane.get_throttle_input()) && !plane.control_mode->does_auto_throttle() && !manual_air_mode && !((inertial_nav.get_velocity_z_down() * 100.0) < 0.5 * get_pilot_velocity_z_max_dn())) {
         // the user may be trying to disarm
         return 0;
     }
@@ -1735,7 +1735,7 @@ void QuadPlane::update_throttle_suppression(void)
     }
 
     // if our vertical velocity is greater than 1m/s then allow motors to run
-    if (fabsf(inertial_nav.get_velocity_z_up_cms()) > 100) {
+    if (fabsf(inertial_nav.get_velocity_z_down()) > 1.0) {
         return;
     }
 
@@ -1790,7 +1790,7 @@ void QuadPlane::update_throttle_hover()
 
     float aspeed;
     // calc average throttle if we are in a level hover and low airspeed
-    if (throttle > 0.0f && fabsf(inertial_nav.get_velocity_z_up_cms()) < 60 &&
+    if (throttle > 0.0f && fabsf(inertial_nav.get_velocity_z_down()) < 0.60 &&
         labs(ahrs_view->roll_sensor) < 500 && labs(ahrs_view->pitch_sensor) < 500 &&
         ahrs.airspeed_estimate(aspeed) && aspeed < plane.aparm.airspeed_min*0.3) {
         // Can we set the time constant automatically
@@ -2763,7 +2763,7 @@ bool QuadPlane::do_vtol_takeoff(const AP_Mission::Mission_Command& cmd)
     const float d_total = (plane.next_WP_loc.alt - plane.current_loc.alt) * 0.01f;
     const float accel_m_s_s = MAX(10, pilot_accel_z) * 0.01f;
     const float vel_max = MAX(10, pilot_velocity_z_max_up) * 0.01f;
-    const float vel_z = inertial_nav.get_velocity_z_up_cms() * 0.01f;
+    const float vel_z = inertial_nav.get_velocity_z_down();
     const float t_accel = (vel_max - vel_z) / accel_m_s_s;
     const float d_accel = vel_z * t_accel + 0.5f * accel_m_s_s * sq(t_accel);
     const float d_remaining = d_total - d_accel;
@@ -3034,7 +3034,7 @@ void QuadPlane::Log_Write_QControl_Tuning()
         inav_alt            : inertial_nav.get_position_z_down(),
         baro_alt            : int32_t(plane.barometer.get_altitude() * 100),
         target_climb_rate   : target_climb_rate_cms,
-        climb_rate          : int16_t(inertial_nav.get_velocity_z_up_cms()),
+        climb_rate          : int16_t(inertial_nav.get_velocity_z_down() * 100.0),
         throttle_mix        : attitude_control->get_throttle_mix(),
         speed_scaler        : tailsitter.log_spd_scaler,
         transition_state    : transition->get_log_transision_state(),

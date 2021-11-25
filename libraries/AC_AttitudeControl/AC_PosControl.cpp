@@ -754,7 +754,7 @@ void AC_PosControl::init_z()
 {
     _pos_target.z = _inav.get_position_z_down() * 100.0; // convert m to cm
 
-    const float &curr_vel_z = _inav.get_velocity_z_up_cms();
+    const float &curr_vel_z = -_inav.get_velocity_z_down() * 100.0; // convert m to cm
     _vel_desired.z = curr_vel_z;
     // with zero position error _vel_target = _vel_desired
     _vel_target.z = curr_vel_z;
@@ -1096,7 +1096,7 @@ void AC_PosControl::get_stopping_point_z_cm(postype_t &stopping_point) const
         return;
     }
 
-    stopping_point = curr_pos_z + constrain_float(stopping_distance(_inav.get_velocity_z_up_cms(), _p_pos_z.kP(), _accel_max_z_cmss), - POSCONTROL_STOPPING_DIST_DOWN_MAX, POSCONTROL_STOPPING_DIST_UP_MAX);
+    stopping_point = curr_pos_z + constrain_float(stopping_distance(-_inav.get_velocity_z_down() * 100.0, _p_pos_z.kP(), _accel_max_z_cmss), - POSCONTROL_STOPPING_DIST_DOWN_MAX, POSCONTROL_STOPPING_DIST_UP_MAX);
 }
 
 /// get_bearing_to_target_cd - get bearing to target position in centi-degrees
@@ -1272,8 +1272,8 @@ void AC_PosControl::handle_ekf_z_reset()
     uint32_t reset_ms = _ahrs.getLastPosDownReset(alt_shift);
     if (reset_ms != 0 && reset_ms != _ekf_z_reset_ms) {
 
-        _pos_target.z = (_inav.get_position_z_down() * 100.0) + _p_pos_z.get_error();
-        _vel_target.z = _inav.get_velocity_z_up_cms() + _pid_vel_z.get_error();
+        _pos_target.z = (-_inav.get_position_z_down() * 100.0) + _p_pos_z.get_error(); // forgot a negative here
+        _vel_target.z = (-_inav.get_velocity_z_down() * 100.0) + _pid_vel_z.get_error();
 
         _ekf_z_reset_ms = reset_ms;
     }
