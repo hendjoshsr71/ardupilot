@@ -299,6 +299,10 @@ public:
         return perpendicular;
     }
 
+    Vector3<T> neu_to_ned(void) const{
+        return Vector3<T>{this->x, this->y, -this->z};
+    }
+
     // Shortest distance between point(p) to a point contained in the line segment defined by w1,w2
     static T closest_distance_between_line_and_point(const Vector3<T> &w1, const Vector3<T> &w2, const Vector3<T> &p);
 
