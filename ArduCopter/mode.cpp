@@ -569,7 +569,7 @@ void Mode::land_run_vertical_control(bool pause_descent)
             Vector2f target_pos;
             float target_error_cm = 0.0f;
             if (copter.precland.get_target_position_cm(target_pos)) {
-                const Vector2f current_pos = inertial_nav.get_position_xy_cm();
+                const Vector2f current_pos = inertial_nav.get_position_xy() * 100.0;
                 // target is this many cm away from the vehicle
                 target_error_cm = (target_pos - current_pos).length();
             }
@@ -647,7 +647,7 @@ void Mode::land_run_horizontal_control()
     if (doing_precision_landing) {
         Vector2f target_pos, target_vel_rel;
         if (!copter.precland.get_target_position_cm(target_pos)) {
-            target_pos = inertial_nav.get_position_xy_cm();
+            target_pos = inertial_nav.get_position_xy() * 100.0;
         }
         if (!copter.precland.get_target_velocity_relative_cms(target_vel_rel)) {
             target_vel_rel = -inertial_nav.get_velocity_xy_cms();

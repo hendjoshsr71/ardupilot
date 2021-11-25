@@ -491,7 +491,7 @@ void AC_PosControl::init_xy()
     _yaw_target = att_target_euler_cd.z; // todo: this should be thrust vector heading, not yaw.
     _yaw_rate_target = 0.0f;
 
-    _pos_target.xy() = _inav.get_position_xy_cm().topostype();
+    _pos_target.xy() = _inav.get_position_xy().topostype() * 100.0;
 
     const Vector2f &curr_vel = _inav.get_velocity_xy_cms();
     _vel_desired.xy() = curr_vel;
@@ -561,13 +561,13 @@ void AC_PosControl::input_pos_vel_accel_xy(Vector2p& pos, Vector2f& vel, const V
 /// stop_pos_xy_stabilisation - sets the target to the current position to remove any position corrections from the system
 void AC_PosControl::stop_pos_xy_stabilisation()
 {
-    _pos_target.xy() = _inav.get_position_xy_cm().topostype();
+    _pos_target.xy() = _inav.get_position_xy().topostype() * 100.0;
 }
 
 /// stop_vel_xy_stabilisation - sets the target to the current position and velocity to the current velocity to remove any position and velocity corrections from the system
 void AC_PosControl::stop_vel_xy_stabilisation()
 {
-    _pos_target.xy() =  _inav.get_position_xy_cm().topostype();
+    _pos_target.xy() =  _inav.get_position_xy().topostype() * 100.0;
 
     const Vector2f &curr_vel = _inav.get_velocity_xy_cms();
     _vel_desired.xy() = curr_vel;
@@ -1063,7 +1063,7 @@ Vector3f AC_PosControl::get_thrust_vector() const
 ///    function does not change the z axis
 void AC_PosControl::get_stopping_point_xy_cm(Vector2p &stopping_point) const
 {
-    stopping_point = _inav.get_position_xy_cm().topostype();
+    stopping_point = _inav.get_position_xy().topostype() * 100.0;
     float kP = _p_pos_xy.kP();
 
     Vector2f curr_vel = _inav.get_velocity_xy_cms();
@@ -1102,7 +1102,7 @@ void AC_PosControl::get_stopping_point_z_cm(postype_t &stopping_point) const
 /// get_bearing_to_target_cd - get bearing to target position in centi-degrees
 int32_t AC_PosControl::get_bearing_to_target_cd() const
 {
-    return get_bearing_cd(_inav.get_position_xy_cm(), _pos_target.tofloat().xy());
+    return get_bearing_cd(_inav.get_position_xy() * 100.0, _pos_target.tofloat().xy());
 }
 
 
@@ -1165,7 +1165,7 @@ void AC_PosControl::write_log()
 /// crosstrack_error - returns horizontal error to the closest point to the current track
 float AC_PosControl::crosstrack_error() const
 {
-    const Vector2f pos_error = _inav.get_position_xy_cm() - (_pos_target.xy()).tofloat();
+    const Vector2f pos_error = (_inav.get_position_xy() * 100.0) - (_pos_target.xy()).tofloat();
     if (is_zero(_vel_desired.xy().length_squared())) {
         // crosstrack is the horizontal distance to target when stationary
         return pos_error.length();
@@ -1249,7 +1249,7 @@ void AC_PosControl::handle_ekf_xy_reset()
     uint32_t reset_ms = _ahrs.getLastPosNorthEastReset(pos_shift);
     if (reset_ms != _ekf_xy_reset_ms) {
 
-        _pos_target.xy() = (_inav.get_position_xy_cm() + _p_pos_xy.get_error()).topostype();
+        _pos_target.xy() = ((_inav.get_position_xy() * 100.0) + _p_pos_xy.get_error()).topostype();
         _vel_target.xy() = _inav.get_velocity_xy_cms() + _pid_vel_xy.get_error();
 
         _ekf_xy_reset_ms = reset_ms;

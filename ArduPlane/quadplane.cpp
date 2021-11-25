@@ -2327,7 +2327,7 @@ void QuadPlane::vtol_position_controller(void)
 
         // reset position controller xy target to current position
         // because we only want velocity control (no position control)
-        const Vector2f& curr_pos = inertial_nav.get_position_xy_cm();
+        const Vector2f curr_pos = inertial_nav.get_position_xy() * 100.0; // reference loss here
         pos_control->set_pos_target_xy_cm(curr_pos.x, curr_pos.y);
         pos_control->set_accel_desired_xy_cmss(Vector2f());
 

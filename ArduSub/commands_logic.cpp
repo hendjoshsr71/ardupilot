@@ -518,7 +518,7 @@ bool Sub::verify_circle(const AP_Mission::Mission_Command& cmd)
 
             // set lat/lon position if not provided
             if (cmd.content.location.lat == 0 && cmd.content.location.lng == 0) {
-                circle_center.xy() = inertial_nav.get_position_xy_cm();
+                circle_center.xy() = inertial_nav.get_position_xy() * 100.0; // reference loss here
             }
 
             // start circling
