@@ -17,9 +17,9 @@ void Sub::read_inertia()
         return;
     }
 
-    current_loc.alt = inertial_nav.get_altitude();
+    current_loc.alt = inertial_nav.get_position_z_down() * 100.0; // convert m to cm
 
     // get velocity, altitude is always absolute frame, referenced from
     // water's surface
-    climb_rate = inertial_nav.get_velocity_z();
+    climb_rate = -inertial_nav.get_velocity_z_down() * 100.0; // convert m to cm
 }

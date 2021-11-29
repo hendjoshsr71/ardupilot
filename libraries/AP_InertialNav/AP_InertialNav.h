@@ -27,48 +27,58 @@ public:
     nav_filter_status get_filter_status() const;
 
     /**
-     * get_position - returns the current position relative to the home location in cm.
-     *
-     * the home location was set with AP_InertialNav::set_home_position(int32_t, int32_t)
+     * get_position_ned - returns the current position relative to the EKF origin, frame NED in meters.
+     * 
+     * @return
+     */
+    const Vector3f&    get_position_ned() const;
+
+    /**
+     * get_position_xy - returns the current x-y position relative to the EKF origin, frame NED in meter.
      *
      * @return
      */
-    const Vector3f&    get_position() const;
+    const Vector2f&    get_position_xy() const;
 
     /**
-     * get_velocity - returns the current velocity in cm/s
+     * get_position_z_down - returns the current z position relative to the EKF origin, frame NED in meters.
+     * @return
+     */
+    float              get_position_z_down() const;
+
+    /**
+     * get_velocity_ned - returns the current velocity relative to the EKF origin, frame NED in m/s.
      *
      * @return velocity vector:
-     *      		.x : latitude  velocity in cm/s
-     * 				.y : longitude velocity in cm/s
-     * 				.z : vertical  velocity in cm/s
+     *      		.x : x-axis velocity in m/s, North
+     * 				.y : y-axis velocity in m/s, East
+     * 				.z : z-axis velocity in m/s, Down
      */
-    const Vector3f&    get_velocity() const;
+    const Vector3f&    get_velocity_ned() const;
 
     /**
-     * get_speed_xy - returns the current horizontal speed in cm/s
+     * get_velocity_xy - returns the current x-y velocity relative to the EKF origin, frame NED in m/s.
      *
-     * @returns the current horizontal speed in cm/s
+     * @return
+     */
+    const Vector2f& get_velocity_xy() const;
+
+    /**
+     * get_speed_xy - returns the current horizontal speed relative to the EKF origin in m/s
+     *
+     * @returns the current horizontal speed relative to the EKF origin in m/s
      */
     float        get_speed_xy() const;
 
     /**
-     * get_altitude - get latest altitude estimate in cm
-     * @return
-     */
-    float       get_altitude() const;
-
-    /**
-     * get_velocity_z - returns the current climbrate.
+     * get_velocity_z_down - returns the current z-axis velocity relative to the EKF origin, frame NED in m/s.
      *
-     * @see get_velocity().z
-     *
-     * @return climbrate in cm/s
+     * @return z-axis velocity, frame NED, in m/s
      */
-    float       get_velocity_z() const;
+    float       get_velocity_z_down() const;
 
 private:
-    Vector3f _relpos_cm;   // NEU
-    Vector3f _velocity_cm; // NEU
+    Vector3f _relpos;   // NED in meters
+    Vector3f _velocity; // NED in meters
     AP_AHRS &_ahrs_ekf;
 };

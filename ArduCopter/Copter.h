@@ -249,7 +249,7 @@ private:
         bool enabled:1;
         bool alt_healthy:1; // true if we can trust the altitude from the rangefinder
         int16_t alt_cm;     // tilt compensated altitude (in cm) from rangefinder
-        float inertial_alt_cm; // inertial alt at time of last rangefinder sample
+        float inertial_alt; // inertial alt at time of last rangefinder sample (in meters)
         uint32_t last_healthy_ms;
         LowPassFilterFloat alt_cm_filt; // altitude filter
         int16_t alt_cm_glitch_protected;    // last glitch protected altitude
@@ -567,7 +567,7 @@ private:
         bool takeoff_expected;
         bool touchdown_expected;
         uint32_t takeoff_time_ms;
-        float takeoff_alt_cm;
+        float takeoff_alt;
     } gndeffect_state;
 
     bool standby_active;

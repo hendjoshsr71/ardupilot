@@ -21,7 +21,7 @@
 
 // definitions that are independent of main loop rate
 #define POSHOLD_STICK_RELEASE_SMOOTH_ANGLE      1800    // max angle required (in centi-degrees) after which the smooth stick release effect is applied
-#define POSHOLD_WIND_COMP_ESTIMATE_SPEED_MAX    10      // wind compensation estimates will only run when velocity is at or below this speed in cm/s
+#define POSHOLD_WIND_COMP_ESTIMATE_SPEED_MAX    0.10    // wind compensation estimates will only run when velocity is at or below this speed in m/s
 #define POSHOLD_WIND_COMP_LEAN_PCT_MAX          0.6666f // wind compensation no more than 2/3rds of angle max to ensure pilot can always override
 
 // poshold_init - initialise PosHold controller
@@ -69,7 +69,7 @@ void ModePosHold::run()
 {
     float controller_to_pilot_roll_mix; // mix of controller and pilot controls.  0 = fully last controller controls, 1 = fully pilot controls
     float controller_to_pilot_pitch_mix;    // mix of controller and pilot controls.  0 = fully last controller controls, 1 = fully pilot controls
-    const Vector3f& vel = inertial_nav.get_velocity();
+    const Vector3f vel = inertial_nav.get_velocity_ned().neu_to_ned() * 100.0; // LOST REFERENCE HERE, convert m to cm
 
     // set vertical speed and acceleration limits
     pos_control->set_max_speed_accel_z(-get_pilot_speed_dn(), g.pilot_speed_up, g.pilot_accel_z);
@@ -378,7 +378,7 @@ void ModePosHold::run()
         pitch_mode = RPMode::BRAKE_TO_LOITER;
         brake.to_loiter_timer = POSHOLD_BRAKE_TO_LOITER_TIMER;
         // init loiter controller
-        loiter_nav->init_target(inertial_nav.get_position().xy());
+        loiter_nav->init_target(inertial_nav.get_position_xy() * 100.0); // reference loss here
         // set delay to start of wind compensation estimate updates
         wind_comp_start_timer = POSHOLD_WIND_COMP_START_TIMER;
     }

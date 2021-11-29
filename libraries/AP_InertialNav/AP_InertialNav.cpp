@@ -3,9 +3,7 @@
 #include "AP_InertialNav.h"
 
 /*
-  A wrapper around the AP_InertialNav class which uses the NavEKF
-  filter if available, and falls back to the AP_InertialNav filter
-  when EKF is not available
+  A wrapper around the AP_AHRS class
  */
 
 /**
@@ -13,20 +11,19 @@
 */
 void AP_InertialNav::update(bool high_vibes)
 {
-    // get the NE position relative to the local earth frame origin
+    // get the NE position relative to the local NED earth frame EKF origin in meters
     Vector2f posNE;
     if (_ahrs_ekf.get_relative_position_NE_origin(posNE)) {
-        _relpos_cm.x = posNE.x * 100; // convert from m to cm
-        _relpos_cm.y = posNE.y * 100; // convert from m to cm
+        _relpos.xy() = posNE;
     }
 
-    // get the D position relative to the local earth frame origin
+    // get the D position relative to the local NED earth frame EKF origin in meters
     float posD;
     if (_ahrs_ekf.get_relative_position_D_origin(posD)) {
-        _relpos_cm.z = - posD * 100; // convert from m in NED to cm in NEU
+        _relpos.z = posD;
     }
 
-    // get the velocity relative to the local earth frame
+    // get the velocity relative to the local NED earth frame EKF origin in meters
     Vector3f velNED;
     if (_ahrs_ekf.get_velocity_NED(velNED)) {
         // during high vibration events use vertical position change
@@ -36,8 +33,7 @@ void AP_InertialNav::update(bool high_vibes)
                 velNED.z = rate_z;
             }
         }
-        _velocity_cm = velNED * 100; // convert to cm/s
-        _velocity_cm.z = -_velocity_cm.z; // convert from NED to NEU
+        _velocity = velNED;
     }
 }
 
@@ -52,55 +48,73 @@ nav_filter_status AP_InertialNav::get_filter_status() const
 }
 
 /**
- * get_position - returns the current position relative to the home location in cm.
+ * get_position_ned - returns the current position relative to the EKF origin, frame NED in meters.
+ * 
+ * @return
+ */
+const Vector3f &AP_InertialNav::get_position_ned(void) const
+{
+    return _relpos;
+}
+
+/**
+ * get_position_xy - returns the current x-y position relative to the EKF origin, frame NED in meter.
  *
  * @return
  */
-const Vector3f &AP_InertialNav::get_position(void) const 
+const Vector2f &AP_InertialNav::get_position_xy() const
 {
-    return _relpos_cm;
+    return _relpos.xy();
 }
 
 /**
- * get_velocity - returns the current velocity in cm/s
+ * get_position_z_down - returns the current z position relative to the EKF origin, frame NED in meters.
+ * @return
+ */
+float AP_InertialNav::get_position_z_down() const
+{
+    return _relpos.z;
+}
+
+/**
+ * get_velocity_ned - returns the current velocity relative to the EKF origin, frame NED in m/s.
  *
  * @return velocity vector:
- *      		.x : latitude  velocity in cm/s
- * 				.y : longitude velocity in cm/s
- * 				.z : vertical  velocity in cm/s
+ *      		.x : x-axis velocity in m/s, North
+ * 				.y : y-axis velocity in m/s, East
+ * 				.z : z-axis velocity in m/s, Down
  */
-const Vector3f &AP_InertialNav::get_velocity() const
+const Vector3f &AP_InertialNav::get_velocity_ned() const
 {
-    return _velocity_cm;
+    return _velocity;
 }
 
 /**
- * get_speed_xy - returns the current horizontal speed in cm/s
+ * get_velocity_xy - returns the current x-y velocity relative to the EKF origin, frame NED in m/s.
  *
- * @returns the current horizontal speed in cm/s
+ * @return
+ */
+const Vector2f &AP_InertialNav::get_velocity_xy() const
+{
+    return _velocity.xy();
+}
+
+/**
+ * get_speed_xy - returns the current horizontal speed relative to the EKF origin in m/s
+ *
+ * @returns the current horizontal speed relative to the EKF origin in m/s
  */
 float AP_InertialNav::get_speed_xy() const
 {
-    return _velocity_cm.xy().length();
+    return _velocity.xy().length();
 }
 
 /**
- * get_altitude - get latest altitude estimate in cm
- * @return
- */
-float AP_InertialNav::get_altitude() const
-{
-    return _relpos_cm.z;
-}
-
-/**
- * get_velocity_z - returns the current climbrate.
+ * get_velocity_z_down_cms - returns the current z-axis velocity relative to the EKF origin, frame NED in m/s.
  *
- * @see get_velocity().z
- *
- * @return climbrate in cm/s
+ * @return z-axis velocity, frame NED, in m/s
  */
-float AP_InertialNav::get_velocity_z() const
+float AP_InertialNav::get_velocity_z_down() const
 {
-    return _velocity_cm.z;
+    return _velocity.z;
 }

@@ -5,7 +5,7 @@
 #if FRAME_CONFIG == HELI_FRAME
 
 #ifndef HELI_DYNAMIC_FLIGHT_SPEED_MIN
- #define HELI_DYNAMIC_FLIGHT_SPEED_MIN      250     // we are in "dynamic flight" when the speed is over 2.5m/s for 2 seconds
+ #define HELI_DYNAMIC_FLIGHT_SPEED_MIN      2.5     // we are in "dynamic flight" when the speed is over 2.5m/s for 2 seconds
 #endif
 
 // counter to control dynamic flight profile
@@ -35,8 +35,8 @@ void Copter::check_dynamic_flight(void)
     // with GPS lock use inertial nav to determine if we are moving
     if (position_ok()) {
         // get horizontal speed
-        const float speed = inertial_nav.get_speed_xy();
-        moving = (speed >= HELI_DYNAMIC_FLIGHT_SPEED_MIN);
+        const float speed_ms = inertial_nav.get_speed_xy();
+        moving = (speed_ms >= HELI_DYNAMIC_FLIGHT_SPEED_MIN);
     }else{
         // with no GPS lock base it on throttle and forward lean angle
         moving = (motors->get_throttle() > 0.8f || ahrs.pitch_sensor < -1500);

@@ -10,8 +10,8 @@
 bool ModeBrake::init(bool ignore_checks)
 {
     // initialise pos controller speed and acceleration
-    pos_control->set_max_speed_accel_xy(inertial_nav.get_velocity().length(), BRAKE_MODE_DECEL_RATE);
-    pos_control->set_correction_speed_accel_xy(inertial_nav.get_velocity().length(), BRAKE_MODE_DECEL_RATE);
+    pos_control->set_max_speed_accel_xy(inertial_nav.get_velocity_ned().length() * 100.0, BRAKE_MODE_DECEL_RATE);           // ERROR HERE?? why not speed_xy()
+    pos_control->set_correction_speed_accel_xy(inertial_nav.get_velocity_ned().length() * 100.0, BRAKE_MODE_DECEL_RATE);    // ERROR HERE?? why not speed_xy()
 
     // initialise position controller
     pos_control->init_xy_controller();

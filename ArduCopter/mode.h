@@ -203,7 +203,7 @@ protected:
 
     // altitude above-ekf-origin below which auto takeoff does not control horizontal position
     static bool auto_takeoff_no_nav_active;
-    static float auto_takeoff_no_nav_alt_cm;
+    static float auto_takeoff_no_nav_alt;
 
 public:
     // Navigation Yaw control
@@ -1524,7 +1524,7 @@ private:
     uint32_t last_log_ms;
     bool nextmode_attempted;
     uint32_t free_fall_start_ms;    // system time free fall was detected
-    float free_fall_start_velz;     // vertical velocity when free fall was detected
+    float free_fall_start_velz;     // vertical velocity when free fall was detected in m/s
 };
 
 #if MODE_TURTLE_ENABLED == ENABLED
