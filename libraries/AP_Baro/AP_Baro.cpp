@@ -400,7 +400,7 @@ float AP_Baro::get_sealevel_pressure(float pressure) const
     const float standard_day_temp = 15 + C_TO_KELVIN; //15 degrees Celsius converted to Kelvin
     float p0_sealevel;
 
-    p0_sealevel = 8651154799255761061417125412864.0f*pressure*powF((769231.0f-(5000.0f*_field_elevation)/standard_day_temp),-5.255993146184937f);
+    p0_sealevel = 8.651154799255761e30f*pressure*powF((769231.0f-(5000.0f*_field_elevation)/standard_day_temp),-5.255993146184937f);
 
     return p0_sealevel;
 }
