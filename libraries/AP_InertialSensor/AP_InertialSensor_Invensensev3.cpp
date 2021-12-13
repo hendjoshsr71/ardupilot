@@ -3,10 +3,12 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
+   
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -165,7 +167,7 @@ void AP_InertialSensor_Invensensev3::start()
         break;
     case Invensensev3_Type::ICM40605:
         devtype = DEVTYPE_INS_ICM40605;
-        fifo_config1 = 0x0f;
+        fifo_config1 = 0x0F;
         temp_sensitivity = 1.0 * 128 / 115.49;
         break;
     case Invensensev3_Type::ICM40609:
@@ -396,8 +398,6 @@ bool AP_InertialSensor_Invensensev3::hardware_init(void)
     case Invensensev3_Type::ICM42688:
     case Invensensev3_Type::IIM42652:
     case Invensensev3_Type::ICM42605:
-        _clip_limit = 15.5f * GRAVITY_MSS;
-        break;
     case Invensensev3_Type::ICM40605:
         _clip_limit = 15.5f * GRAVITY_MSS;
         break;
