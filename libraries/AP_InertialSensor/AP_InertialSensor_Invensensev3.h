@@ -51,6 +51,7 @@ private:
 
     void set_filter_and_scaling(void);
     void fifo_reset();
+    
    /* Read samples from FIFO */
     void read_fifo();
 
