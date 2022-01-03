@@ -494,7 +494,6 @@ void AP_TECS::_update_height_demand(void)
     // configured sink rate and adjust the demanded height to
     // be kinematically consistent with the height rate.
     if (_landing.is_flaring()) {
-        _integSEB_state = 0;
         if (_flare_counter == 0) {
             _hgt_rate_dem = _climb_rate;
             _land_hgt_dem = _hgt_dem_adj;
@@ -535,6 +534,12 @@ void AP_TECS::_update_height_demand(void)
     }
     _hgt_dem_adj_last = _hgt_dem_adj;
     _hgt_dem_adj = new_hgt_dem;
+
+    if (_landing.is_flaring()) {
+        // when flaring don't run the height tracking, only do the
+        // sink rate control
+        _hgt_dem_adj = _height;
+    }
 }
 
 void AP_TECS::_detect_underspeed(void)
@@ -1069,6 +1074,10 @@ void AP_TECS::update_pitch_throttle(int32_t hgt_dem_cm,
 
         // and allow zero throttle
         _THRminf = 0;
+
+        // and set target height to current height
+        _hgt_dem_adj = _height;
+
     } else if (_landing.is_on_approach() && (-_climb_rate) > _land_sink) {
         // constrain the pitch in landing as we get close to the flare
         // point. Use a simple linear limit from 15 meters after the
