@@ -1423,7 +1423,7 @@ class AutoTestPlane(AutoTest):
                                       0) # flags
         self.delay_sim_time(1)
 
-        return_radius = 100
+        return_radius = 90
         return_alt = 80
         self.set_parameters({
             "RTL_RADIUS": return_radius,

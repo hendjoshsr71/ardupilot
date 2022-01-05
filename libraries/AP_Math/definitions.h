@@ -79,15 +79,15 @@ static const double WGS84_E = (sqrt(2 * WGS84_F - WGS84_F * WGS84_F));
 
 #define KM_PER_HOUR_TO_M_PER_SEC 0.27777778f
 
-// Gas Constant is from Aerodynamics for Engineering Students, Third Edition, E.L.Houghton and N.B.Carruthers
-#define ISA_GAS_CONSTANT 287.26f
-#define ISA_LAPSE_RATE 0.0065f
+// Gas Constant is from https://en.wikipedia.org/wiki/Gas_constant which is computed from the universal gas constant and molecular weight of air
+#define ISA_GAS_CONSTANT 287.05800  // (J⋅K−1⋅mol−1)
+#define ISA_LAPSE_RATE 0.0065       // Troposphere temperature gradient rate (K/m'), note this assumes geopotential altitude (m')
 
 // Standard Sea Level values
 // Ref: https://en.wikipedia.org/wiki/Standard_sea_level
-#define SSL_AIR_DENSITY         1.225f // kg/m^3
-#define SSL_AIR_PRESSURE 101325.01576f // Pascal
-#define SSL_AIR_TEMPERATURE    288.15f // K
+#define SSL_AIR_DENSITY        1.2250 // kg/m^3
+#define SSL_AIR_PRESSURE       101325 // Pascal
+#define SSL_AIR_TEMPERATURE    288.15 // K
 
 #define INCH_OF_H2O_TO_PASCAL 248.84f
 
