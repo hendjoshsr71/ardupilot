@@ -54,7 +54,7 @@ public:
 private:
     void handle_battery_info(const BattInfoCb &cb);
     void handle_battery_info_aux(const BattInfoAuxCb &cb);
-
+    static const struct AP_Param::GroupInfo var_info[];
     void update_interim_state(const float voltage, const float current, const float temperature_K, const uint8_t soc);
 
     static bool match_battery_id(uint8_t instance, uint8_t battery_id) {
@@ -94,7 +94,7 @@ private:
     bool _has_battery_info_aux;
     uint8_t _instance;                  // instance of this battery monitor
     uavcan::Node<0> *_node;             // UAVCAN node id
-
+    AP_Float _curr_adjust;
     // MPPT variables
     struct {
         bool is_detected;               // true if this UAVCAN device is a Packet Digital MPPT
