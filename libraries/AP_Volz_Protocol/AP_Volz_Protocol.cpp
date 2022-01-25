@@ -201,25 +201,12 @@ void AP_Volz_Protocol::update_volz_bitmask(uint32_t new_bitmask)
 // Compute the originally coded protocol EXTENDED_POSITION
 uint16_t AP_Volz_Protocol::extended_position_compute_cmd_to_tx(uint16_t pwm)
 {
-    uint16_t value;
-
-    // check if current channel PWM is within range
-    if (pwm < VOLZ_PWM_POSITION_MIN) {
-        value = 0;
-    } else {
-        value = pwm - VOLZ_PWM_POSITION_MIN;
-    }
+    pwm = constrain_int16(pwm, VOLZ_PWM_POSITION_MIN, VOLZ_PWM_POSITION_MAX);
 
     // scale the PWM value to Volz value
-    value = value * VOLZ_SCALE_VALUE / (VOLZ_PWM_POSITION_MAX - VOLZ_PWM_POSITION_MIN);
-    value = value + VOLZ_EXTENDED_POSITION_MIN;
-
-    // make sure value stays in range
-    if (value > VOLZ_EXTENDED_POSITION_MAX) {
-        value = VOLZ_EXTENDED_POSITION_MAX;
-    }
-
-    return value;
+    const float pwm_to_hex_intercept = VOLZ_EXTENDED_POSITION_MIN - VOLZ_SCALE_VALUE * VOLZ_PWM_POSITION_MIN;
+ 
+    return pwm * VOLZ_SCALE_VALUE + pwm_to_hex_intercept;
 }
 
 

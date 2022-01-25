@@ -39,7 +39,7 @@
 
 //#include <GCS_MAVLink/GCS.h>
 
-#define VOLZ_SCALE_VALUE                    (uint16_t)(VOLZ_EXTENDED_POSITION_MAX - VOLZ_EXTENDED_POSITION_MIN)	// Extended Position Data Format defines 100 as 0x0F80, which results in 1920 steps for +100 deg and 1920 steps for -100 degs meaning if you take movement a scaled between -1 ... 1 and multiply by 1920 you get the travel from center
+#define VOLZ_SCALE_VALUE                    float(VOLZ_EXTENDED_POSITION_MAX - VOLZ_EXTENDED_POSITION_MIN) / float(VOLZ_PWM_POSITION_MAX - VOLZ_PWM_POSITION_MIN)	// Extended Position Data Format defines 100 as 0x0F80, which results in 1920 steps for +100 deg and 1920 steps for -100 degs meaning if you take movement a scaled between -1 ... 1 and multiply by 1920 you get the travel from center
 #define VOLZ_DATA_FRAME_SIZE                6
 
 #define VOLZ_PWM_POSITION_MIN               1000
