@@ -460,7 +460,7 @@ void AP_TECS::_update_speed_demand(void)
     _TAS_dem_adj = constrain_float(_TAS_dem_adj, _TASmin, _TASmax);
 }
 
-void AP_TECS::_update_height_demand(void)
+void AP_TECS::_update_height_demand(float hgt_afe)
 {
     // Apply 2 point moving average to demanded height
     _hgt_dem = 0.5f * (_hgt_dem + _hgt_dem_in_old);
@@ -495,28 +495,30 @@ void AP_TECS::_update_height_demand(void)
     // be kinematically consistent with the height rate.
     if (_landing.is_flaring()) {
         if (_flare_counter == 0) {
+            // starting the flare
             _hgt_rate_dem = _climb_rate;
             _land_hgt_dem = _hgt_dem_adj;
+
+            flare.sink_rate_start = - _climb_rate;
+            flare.height_flare_start = hgt_afe;
+            flare.target_height = hgt_afe;
         }
 
-        // adjust the flare sink rate to increase/decrease as your travel further beyond the land wp
-        float land_sink_rate_adj = _land_sink + _land_sink_rate_change*_distance_beyond_land_wp;
-
-        // bring it in over 1/3 of the TECS control time constant to prevent overshoot
-        // we use 1/3 as it would be the slowest a pitch loop could be tuned to work with TECS
-        if (_flare_counter < 10) {
-            const float flare_tconst = 0.33f * timeConstant();
-            const float alpha_coef = 0.1f / flare_tconst;
-            _hgt_rate_dem = _hgt_rate_dem * (1.0f - alpha_coef) - land_sink_rate_adj * alpha_coef;
-            _flare_counter++;
-        } else {
-            _hgt_rate_dem = - land_sink_rate_adj;
-        }
-        _land_hgt_dem += 0.1f * _hgt_rate_dem;
+        // linear interpolation of sink rate as we approach the ground
+        const float end_height = 10;
+        _hgt_rate_dem = linear_interpolate(-_land_sink, -flare.sink_rate_start,
+                                           hgt_afe,
+                                           end_height, flare.height_flare_start);
+        flare.target_height += _DT * _hgt_rate_dem;
+        _land_hgt_dem = flare.target_height;
         _hgt_dem_adj = _land_hgt_dem;
+
+        _flare_counter++;
     } else {
         _hgt_rate_dem = (_hgt_dem_adj - _hgt_dem_adj_last) / 0.1f;
         _flare_counter = 0;
+
+        memset(&flare, 0, sizeof(flare));
     }
 
     // for landing approach we will predict ahead by the time constant
@@ -1161,7 +1163,7 @@ void AP_TECS::update_pitch_throttle(int32_t hgt_dem_cm,
     _update_speed_demand();
 
     // Calculate the height demand
-    _update_height_demand();
+    _update_height_demand(hgt_afe);
 
     // Detect underspeed condition
     _detect_underspeed();
