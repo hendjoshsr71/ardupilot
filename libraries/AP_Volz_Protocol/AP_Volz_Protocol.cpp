@@ -11,6 +11,9 @@
 
 #include "AP_Volz_Protocol.h"
 #if NUM_SERVO_CHANNELS
+
+#include <GCS_MAVLink/GCS.h>
+
 extern const AP_HAL::HAL& hal;
 
 const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
@@ -383,8 +386,14 @@ void AP_Volz_Protocol::update()
     // The volz_time_frame is updated inside of the update_volz_bitmask()
     // this limits the maximum update rate based upon: _update_rate, # of channels, safety factor, & average transmission time
     const uint32_t now = AP_HAL::micros();
-    if (now - last_volz_update_time < delay_time_us ||
-        port->txspace() < VOLZ_DATA_FRAME_SIZE) {
+    if (now - last_volz_update_time < delay_time_us) {
+        return;
+    }
+
+    // REMOVE OR RETURN TO ABOVE
+    // Prepare to Remove this txspace check we already have timing checks...
+    if (port->txspace() < VOLZ_DATA_FRAME_SIZE) {
+        GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port%i: out of space \n", AP::serialmanager().find_portnum(AP_SerialManager::SerialProtocol_Volz, 0));
         return;
     }
 
