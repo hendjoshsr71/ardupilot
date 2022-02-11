@@ -73,6 +73,12 @@ const AP_Param::GroupInfo AP_Vehicle::var_info[] = {
     AP_SUBGROUPINFO(airspeed, "ARSPD", 10, AP_Vehicle, AP_Airspeed),
 #endif
 
+#if AP_TEMPERATURE_SENSOR_ENABLED
+    // @Group: TEMP
+    // @Path: ../AP_TemperatureSensor/AP_TemperatureSensor.cpp
+    AP_SUBGROUPINFO(temperature_sensor, "TEMP", 11, AP_Vehicle, AP_TemperatureSensor),
+#endif
+
     AP_GROUPEND
 };
 
@@ -204,6 +210,10 @@ void AP_Vehicle::setup()
     efi.init();
 #endif
 
+#if AP_TEMPERATURE_SENSOR_ENABLED
+    temperature_sensor.init();
+#endif
+
     gcs().send_text(MAV_SEVERITY_INFO, "ArduPilot Ready");
 }
 
@@ -297,9 +307,15 @@ const AP_Scheduler::Task AP_Vehicle::scheduler_tasks[] = {
     SCHED_TASK(publish_osd_info, 1, 10, 240),
 #endif
     SCHED_TASK(accel_cal_update,      10,    100, 245),
+
+#if AP_TEMPERATURE_SENSOR_ENABLED
+    SCHED_TASK_CLASS(AP_TemperatureSensor, &vehicle.temperature_sensor, update,        5, 50, 247),
+#endif
+
 #if HAL_EFI_ENABLED
     SCHED_TASK_CLASS(AP_EFI,       &vehicle.efi,            update,                   10, 200, 250),
 #endif
+
 };
 
 void AP_Vehicle::get_common_scheduler_tasks(const AP_Scheduler::Task*& tasks, uint8_t& num_tasks)
