@@ -79,7 +79,7 @@ struct i2c_device_at_address {
     { 1, 0x39, ignored }, // NCP5623C
     { 1, 0x40, ignored }, // KellerLD
     { 1, 0x76, ms5525 },  // MS5525: ARSPD_TYPE = 4
-    { 1, 0x77, tsys01 },
+    { 1, 0x77, tsys01 },  // TSYS01: TEMPx_TYPE = 1, TEMP_I2C_ADDR = 119
     { 1, 0x0B, rotoye },  // Rotoye: BATTx_MONITOR 19
     { 2, 0x0B, maxell },  // Maxell: BATTx_MONITOR 16
     { 2, 0x28, airspeed_dlvr }, // ARSPD_TYPE = 7 5inch H2O sensor
