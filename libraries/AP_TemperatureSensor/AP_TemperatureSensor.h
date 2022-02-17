@@ -34,11 +34,13 @@
 // declare backend class
 class AP_TemperatureSensor_Backend;
 class AP_TemperatureSensor_TSYS01;
+class AP_TemperatureSensor_Analog;
 
 class AP_TemperatureSensor
 {
     friend class AP_TemperatureSensor_Backend;
     friend class AP_TemperatureSensor_TSYS01;
+    friend class AP_TemperatureSensor_Analog;
 
 public:
 
@@ -46,6 +48,7 @@ public:
     enum class Type {
         NONE                       = 0,
         TSYS01                     = 1,
+        ANALOG                     = 2,
     };
 
     // Constructor

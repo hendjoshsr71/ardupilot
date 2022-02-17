@@ -14,4 +14,7 @@ public:
     AP_Int8  _i2c_bus;          // I2C bus number
     AP_Int8  _i2c_address;      // I2C address
     AP_Int32 _dev_id;           // Device ID
+    AP_Int8  _analog_pin;            // Analog pin temperature value found on
+    AP_Float _analog_pin_range_low;  // Temperature value for lowest pin voltage
+    AP_Float _analog_pin_range_high; // Temperature value for highest pin voltage
 };

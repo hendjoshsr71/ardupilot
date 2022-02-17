@@ -17,6 +17,7 @@
 
 #if AP_TEMPERATURE_SENSOR_ENABLED
 #include "AP_TemperatureSensor_TSYS01.h"
+#include "AP_TemperatureSensor_Analog.h"
 
 #include <AP_Logger/AP_Logger.h>
 #include <AP_Vehicle/AP_Vehicle_Type.h>
@@ -36,22 +37,22 @@ const AP_Param::GroupInfo AP_TemperatureSensor::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("_LOG", 1, AP_TemperatureSensor, _log_flag, 0),
 
-    // SKIP Index 2-9 to be for parameters that apply to every sensor
+    // SKIP Index 2-14 to be for parameters that apply to every sensor
 
     // @Group: 1_
     // @Path: AP_TemperatureSensor_Params.cpp
-    AP_SUBGROUPINFO(_params[0], "1_", 10, AP_TemperatureSensor, AP_TemperatureSensor_Params),
+    AP_SUBGROUPINFO(_params[0], "1_", 15, AP_TemperatureSensor, AP_TemperatureSensor_Params),
 
 #if AP_TEMPERATURE_SENSOR_MAX_INSTANCES > 1
     // @Group: 2_
     // @Path: AP_TemperatureSensor_Params.cpp
-    AP_SUBGROUPINFO(_params[1], "2_", 11, AP_TemperatureSensor, AP_TemperatureSensor_Params),
+    AP_SUBGROUPINFO(_params[1], "2_", 16, AP_TemperatureSensor, AP_TemperatureSensor_Params),
 #endif
 
 #if AP_TEMPERATURE_SENSOR_MAX_INSTANCES > 2
     // @Group: 3_
     // @Path: AP_TemperatureSensor_Params.cpp
-    AP_SUBGROUPINFO(_params[2], "3_", 12, AP_TemperatureSensor, AP_TemperatureSensor_Params),
+    AP_SUBGROUPINFO(_params[2], "3_", 17, AP_TemperatureSensor, AP_TemperatureSensor_Params),
 #endif
 
     AP_GROUPEND
@@ -89,6 +90,11 @@ void AP_TemperatureSensor::init()
 #if AP_TEMPERATURE_SENSOR_TSYS01_ENABLE
             case Type::TSYS01:
                 drivers[instance] = new AP_TemperatureSensor_TSYS01(*this, _state[instance], _params[instance]);
+                break;
+#endif
+#if AP_TEMPERATURE_SENSOR_ANALOG_ENABLE
+            case Type::ANALOG:
+                drivers[instance] = new AP_TemperatureSensor_Analog(*this, _state[instance], _params[instance]);
                 break;
 #endif
             case Type::NONE:
