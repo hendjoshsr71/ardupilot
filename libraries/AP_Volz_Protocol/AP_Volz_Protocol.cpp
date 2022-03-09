@@ -10,6 +10,8 @@
 #include <SRV_Channel/SRV_Channel.h>
 
 #include "AP_Volz_Protocol.h"
+#if NUM_SERVO_CHANNELS
+
 #include <GCS_MAVLink/GCS.h>
 
 extern const AP_HAL::HAL& hal;
@@ -597,3 +599,5 @@ void AP_Volz_Protocol::update_protocol_registers(uint8_t protocol_in)
         break;
     }
 }
+
+#endif //NUM_SERVO_CHANNELS
