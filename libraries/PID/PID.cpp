@@ -36,10 +36,8 @@ const AP_Param::GroupInfo PID::var_info[] = {
 
 float PID::get_pid(float error, float scaler)
 {
-    uint32_t tnow = AP_HAL::millis();
+    const uint32_t tnow = AP_HAL::millis();
     uint32_t dt = tnow - _last_t;
-    float output            = 0;
-    float delta_time;
 
     if (_last_t == 0 || dt > 1000) {
         dt = 0;
@@ -52,15 +50,14 @@ float PID::get_pid(float error, float scaler)
     }
     _last_t = tnow;
 
-    delta_time = (float)dt * 0.001f;
-
     // Compute proportional component
     _pid_info.P = error * _kp;
-    output += _pid_info.P;
+    float output = _pid_info.P;
 
     // Compute derivative component if time has elapsed
     if ((fabsf(_kd) > 0) && (dt > 0)) {
         float derivative;
+        const float delta_time = (float)dt * 0.001f;
 
 		if (isnan(_last_derivative)) {
 			// we've just done a reset, suppress the first derivative
