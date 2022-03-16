@@ -41,8 +41,17 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("RATE",  3, AP_Volz_Protocol, _update_rate, 100),
 
+    // @Param: CHDLY
+    // @DisplayName: Volz Channel Delay (ms)
+    // @Description: Sets the delay to place in between channel commands [Ch1][z Delay (ms)][Ch2][z (ms)]...
+    // @Units: ms
+    // @Increment: 1
+    // @Range: 0.1 5
+    // @User: Standard
+    AP_GROUPINFO("CHDLY",  4, AP_Volz_Protocol, _channel_delay, 1),
+
     // Leave room for additional general parameters here
-    // SKIP index 4 -10
+    // SKIP index 5 -10
 
     // Due to the Param name 16-char length limit there are only 5 chars for servo number plus descriptor
     // SERVO_VOLZ_1MIN <---> SERVO_VOLZ_16MIN
@@ -385,8 +394,20 @@ void AP_Volz_Protocol::update()
 
     // The volz_time_frame is updated inside of the update_volz_bitmask()
     // this limits the maximum update rate based upon: _update_rate, # of channels, safety factor, & average transmission time
+    
+    // 
+    
+    // FIX: If the channels have been updated completely we wait
+    // If channels_update_complete false we continue and send the command for the next channel
     const uint32_t now = AP_HAL::micros();
-    if (now - last_volz_update_time < delay_time_us) {
+    if (now - last_volz_update_time < delay_time_us && channels_update_complete) {
+        return;
+    }
+    // Only reset this once we ready to send the next set of channel updates
+    channels_update_complete = false;
+
+    // We delay between sending each separate channel _channel_delay (ms)
+    if (now - last_channel_update_time < (_channel_delay * 1000.0)) {
         return;
     }
 
@@ -397,19 +418,40 @@ void AP_Volz_Protocol::update()
         return;
     }
 
-    last_volz_update_time = now;
+    last_channel_update_time = now;
     delay_time_us = 0;
 
     // loop for all servo channels
-    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
+    // for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
+        
         // check if current channel is needed for Volz protocol
-        if ((last_used_bitmask & (1U<<i)) == 0) {
-            continue;
+
+        // NOTE THIS MUST BE FIXED IT ASSUMES ALL SERVOS ARE USED IN CONSECUTIVE ORDER and there are not gaps
+        // IE if using three servos you must use this bit mask 0b0000000000000111
+        // For UAVOS servos we need to do the following [Ch1][z Delay (ms)][Ch2][z (ms)][Ch3][z (ms)][delay to acheive max. update desired]
+        if ((last_used_bitmask & (1U<<last_updated_channel)) == 0) {
+
+            channels_update_complete = true;
+            last_updated_channel = 0;
+            delay_time_us += VOLZ_DATA_FRAME_SIZE * us_per_byte + us_gap;
+
+            // Limit the maximum update rate according to the user's set parameter
+            // Constrain the maximum update rate to be 400 Hz (2,500 us) & minimum update rate to 50 Hz (20,000 us)
+            // const uint32_t maximum_rate_us = constrain_int32(float(1.0 /_update_rate * 1000000.0), 2500, 20000);
+            const uint32_t maximum_rate_us = constrain_int32(float(1.0 /_update_rate * 1000000), 2500, 20000);
+            if (delay_time_us < maximum_rate_us) {
+                delay_time_us = maximum_rate_us - (last_channel_update_time - last_volz_update_time);
+            }
+            last_volz_update_time = now;
+
+            return;
         }
 
-        const SRV_Channel *channel = SRV_Channels::srv_channel(i);
+        // Increment the last_updated channel
+        last_updated_channel++;
+        const SRV_Channel *channel = SRV_Channels::srv_channel(last_updated_channel);
         if (channel == nullptr) {
-            continue;
+            return;
         }
 
         // constrain current channel PWM within range
@@ -442,7 +484,7 @@ void AP_Volz_Protocol::update()
         uint8_t data[VOLZ_DATA_FRAME_SIZE];
 
         data[0] = _reg_set_position;
-        data[1] = i + 1;                // send actuator id as 1 based index so ch1 will have id 1, ch2 will have id 2 ....
+        data[1] = last_updated_channel + 1;         // send actuator id as 1 based index so ch1 will have id 1, ch2 will have id 2 ....
         data[2] = HIGHBYTE(cmd_transmit);
         data[3] = LOWBYTE(cmd_transmit);
 
@@ -453,16 +495,8 @@ void AP_Volz_Protocol::update()
 
         port->write(data, VOLZ_DATA_FRAME_SIZE);
 
-        delay_time_us += VOLZ_DATA_FRAME_SIZE * us_per_byte + us_gap;
-    }
-
-    // Limit the maximum update rate according to the user's set parameter
-    // Constrain the maximum update rate to be 400 Hz (2,500 us) & minimum update rate to 50 Hz (20,000 us)
-    // const uint32_t maximum_rate_us = constrain_int32(float(1.0 /_update_rate * 1000000.0), 2500, 20000);
-    const uint32_t maximum_rate_us = constrain_int32(float(1.0 /_update_rate * 1000000), 2500, 20000);
-    if (delay_time_us < maximum_rate_us) {
-        delay_time_us = maximum_rate_us;
-    }
+    // }
+    
 }
 
 // calculate output servo angle given the input PWM
