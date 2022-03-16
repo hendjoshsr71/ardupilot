@@ -42,11 +42,11 @@ float PID::get_pid(float error, float scaler)
     if (_last_t == 0 || dt > 1000) {
         dt = 0;
 
-		// if this PID hasn't been used for a full second then zero
-		// the intergator term. This prevents I buildup from a
-		// previous fight mode from causing a massive return before
-		// the integrator gets a chance to correct itself
-		reset_I();
+        // if this PID hasn't been used for a full second then zero
+        // the integrator term. This prevents I buildup from a
+        // previous fight mode from causing a massive return before
+        // the integrator gets a chance to correct itself
+        reset_I();
     }
     _last_t = tnow;
 
@@ -59,15 +59,15 @@ float PID::get_pid(float error, float scaler)
         float derivative;
         const float delta_time = (float)dt * 0.001f;
 
-		if (isnan(_last_derivative)) {
-			// we've just done a reset, suppress the first derivative
-			// term as we don't want a sudden change in input to cause
-			// a large D output change			
-			derivative = 0;
-			_last_derivative = 0;
-		} else {
-			derivative = (error - _last_error) / delta_time;
-		}
+        if (isnan(_last_derivative)) {
+            // we've just done a reset, suppress the first derivative
+            // term as we don't want a sudden change in input to cause
+            // a large D output change
+            derivative = 0;
+            _last_derivative = 0;
+        } else {
+            derivative = (error - _last_error) / delta_time;
+        }
 
         // discrete low pass filter, cuts out the
         // high frequency noise that can drive the controller crazy
@@ -77,12 +77,12 @@ float PID::get_pid(float error, float scaler)
                       (derivative - _last_derivative));
 
         // update state
-        _last_error             = error;
-        _last_derivative    = derivative;
+        _last_error      = error;
+        _last_derivative = derivative;
 
         // add in derivative component
         _pid_info.D = _kd * derivative;
-        output                          += _pid_info.D;
+        output += _pid_info.D;
     }
 
     // scale the P and D components
@@ -92,14 +92,14 @@ float PID::get_pid(float error, float scaler)
 
     // Compute integral component if time has elapsed
     if ((fabsf(_ki) > 0) && (dt > 0)) {
-        _integrator             += (error * _ki) * scaler * delta_time;
+        _integrator += (error * _ki) * scaler * delta_time;
         if (_integrator < -_imax) {
             _integrator = -_imax;
         } else if (_integrator > _imax) {
             _integrator = _imax;
         }
         _pid_info.I = _integrator;
-        output                          += _integrator;
+        output += _integrator;
     }
 
     _pid_info.target = output;
@@ -110,8 +110,8 @@ void
 PID::reset_I()
 {
     _integrator = 0;
-	// we use NAN (Not A Number) to indicate that the last 
-	// derivative value is not valid
+    // we use NAN (Not A Number) to indicate that the last
+    // derivative value is not valid
     _last_derivative = NAN;
     _pid_info.I = 0;
 }
