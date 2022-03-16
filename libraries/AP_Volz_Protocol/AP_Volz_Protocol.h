@@ -131,17 +131,22 @@ private:
 
     float compute_angle_from_pwm(uint8_t channel, uint16_t output_pwm, int16_t protocol_angle_min, int16_t protocol_angle_max);
 
-    uint32_t last_volz_update_time;
+    uint32_t last_volz_update_time;     // last time (us) all servos were updated
     uint32_t delay_time_us;
     uint32_t us_per_byte;
     uint32_t us_gap;
 
     uint32_t last_used_bitmask;
 
+    uint8_t last_updated_channel;           // index of last updated channel
+    bool channels_update_complete;          // true: if all channels have been updated
+    uint32_t last_channel_update_time;      // last time (us) channel update command was sent
+
     // Parameters
     AP_Int32 bitmask;           // Servo channel bitmask
     AP_Int8 _protocol;          // Protocol type: VOLZ_EXTENDED_POSITION, VOLZ DA26/30, UAVOS/VOLZ RS485 ICD
     AP_Int16 _update_rate;      // Update rate in Hz
+    AP_Float _channel_delay;    // Spacing delay between sending each channel command
     AP_Int16 _servo_angle_min[16];
     AP_Int16 _servo_angle_max[16];
 
