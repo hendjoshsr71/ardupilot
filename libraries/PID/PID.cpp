@@ -38,6 +38,7 @@ float PID::get_pid(float error, float scaler)
 {
     const uint32_t tnow = AP_HAL::millis();
     uint32_t dt = tnow - _last_t;
+    const float delta_time = (float)dt * 0.001f;
 
     if (_last_t == 0 || dt > 1000) {
         dt = 0;
@@ -57,7 +58,6 @@ float PID::get_pid(float error, float scaler)
     // Compute derivative component if time has elapsed
     if ((fabsf(_kd) > 0) && (dt > 0)) {
         float derivative;
-        const float delta_time = (float)dt * 0.001f;
 
         if (isnan(_last_derivative)) {
             // we've just done a reset, suppress the first derivative
@@ -91,7 +91,7 @@ float PID::get_pid(float error, float scaler)
     _pid_info.P *= scaler;
 
     // Compute integral component if time has elapsed
-    if ((fabsf(_ki) > 0) && (dt > 0)) {
+    if (!is_zero(_ki) && is_positive(dt)) {
         _integrator += (error * _ki) * scaler * delta_time;
         if (_integrator < -_imax) {
             _integrator = -_imax;
