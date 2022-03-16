@@ -91,7 +91,7 @@ float PID::get_pid(float error, float scaler)
     _pid_info.P *= scaler;
 
     // Compute integral component if time has elapsed
-    if (!is_zero(_ki) && is_positive(dt)) {
+    if (!is_zero(_ki) && (dt > 0)) {
         _integrator += (error * _ki) * scaler * delta_time;
         if (_integrator < -_imax) {
             _integrator = -_imax;
