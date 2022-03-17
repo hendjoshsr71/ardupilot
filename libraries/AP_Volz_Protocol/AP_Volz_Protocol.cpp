@@ -14,6 +14,9 @@
 
 #include <GCS_MAVLink/GCS.h>
 
+// REMOVE THIS DEBUG
+#include <AP_Logger/AP_Logger.h>
+
 extern const AP_HAL::HAL& hal;
 
 const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
@@ -364,11 +367,11 @@ void AP_Volz_Protocol::init(void)
     AP_SerialManager &serial_manager = AP::serialmanager();
     port = serial_manager.find_serial(AP_SerialManager::SerialProtocol_Volz,0);
 
-    if (port) {
-        const uint32_t baudrate = serial_manager.find_baudrate(AP_SerialManager::SerialProtocol_Robotis, 0);
-        us_per_byte = 10.5 * 1e6 / baudrate;  // 91.1 usec with 115.2K baud 
-        us_gap = 4.0 * 1e6 / baudrate;        // 34.722 usec with 115.2K baud
-    }
+    // if (port) {
+        // const uint32_t baudrate = serial_manager.find_baudrate(AP_SerialManager::SerialProtocol_Robotis, 0);
+        // us_per_byte = 10.5 * 1e6 / baudrate;  // 91.1 usec with 115.2K baud 
+        // us_gap = 4.0 * 1e6 / baudrate;        // 34.722 usec with 115.2K baud
+    // }
 
     update_volz_bitmask(bitmask);
 
@@ -384,21 +387,16 @@ void AP_Volz_Protocol::update()
         last_volz_update_time = AP_HAL::micros();
     }
 
-    if (port == nullptr) {
-        return;
-    }
+    // if (port == nullptr) {
+    //     return;
+    // }
 
     if (last_used_bitmask != uint32_t(bitmask.get())) {
         update_volz_bitmask(bitmask);
     }
 
-    // The volz_time_frame is updated inside of the update_volz_bitmask()
-    // this limits the maximum update rate based upon: _update_rate, # of channels, safety factor, & average transmission time
-    
-    // 
-    
-    // FIX: If the channels have been updated completely we wait
-    // If channels_update_complete false we continue and send the command for the next channel
+    // FIX: If the channels have been updated completely we wait until the delay_time required to meet the desired update rate has been reached
+    // If channels_update_complete false we continue and send the next channel's command
     const uint32_t now = AP_HAL::micros();
     if (now - last_volz_update_time < delay_time_us && channels_update_complete) {
         return;
@@ -407,19 +405,29 @@ void AP_Volz_Protocol::update()
     channels_update_complete = false;
 
     // We delay between sending each separate channel _channel_delay (ms)
-    if (now - last_channel_update_time < (_channel_delay * 1000.0)) {
+    const uint32_t channel_update_time_length = now - last_channel_update_time;
+    if (channel_update_time_length < (_channel_delay * 1000.0)) {
         return;
     }
 
     // REMOVE OR RETURN TO ABOVE
     // Prepare to Remove this txspace check we already have timing checks...
-    if (port->txspace() < VOLZ_DATA_FRAME_SIZE) {
-        GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port%i: out of space \n", AP::serialmanager().find_portnum(AP_SerialManager::SerialProtocol_Volz, 0));
-        return;
-    }
+    // if (port->txspace() < VOLZ_DATA_FRAME_SIZE) {
+    //     GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port%i: out of space \n", AP::serialmanager().find_portnum(AP_SerialManager::SerialProtocol_Volz, 0));
+    //     return;
+    // }
+
+    AP::logger().Write("VOLC",
+            "TimeUS," "ChTime," "dlyTime", // labels
+            "s"           "s"     "s"    , // units
+            "F"           "F"     "F"    , // multipliers
+            "I"           "I"     "I"    , // types
+            now, last_channel_update_time, delay_time_us);
 
     last_channel_update_time = now;
     delay_time_us = 0;
+
+
 
     // loop for all servo channels
     // for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
@@ -430,19 +438,26 @@ void AP_Volz_Protocol::update()
         // IE if using three servos you must use this bit mask 0b0000000000000111
         // For UAVOS servos we need to do the following [Ch1][z Delay (ms)][Ch2][z (ms)][Ch3][z (ms)][delay to acheive max. update desired]
         if ((last_used_bitmask & (1U<<last_updated_channel)) == 0) {
-
-            channels_update_complete = true;
-            last_updated_channel = 0;
-            delay_time_us += VOLZ_DATA_FRAME_SIZE * us_per_byte + us_gap;
-
             // Limit the maximum update rate according to the user's set parameter
             // Constrain the maximum update rate to be 400 Hz (2,500 us) & minimum update rate to 50 Hz (20,000 us)
             // const uint32_t maximum_rate_us = constrain_int32(float(1.0 /_update_rate * 1000000.0), 2500, 20000);
             const uint32_t maximum_rate_us = constrain_int32(float(1.0 /_update_rate * 1000000), 2500, 20000);
-            if (delay_time_us < maximum_rate_us) {
-                delay_time_us = maximum_rate_us - (last_channel_update_time - last_volz_update_time);
+            // int64_t constrain_delay_time_us = int64_t(last_channel_update_time - last_volz_update_time) - int64_t(maximum_rate_us);
+            int64_t constrain_delay_time_us = abs(int64_t(maximum_rate_us) - int64_t(last_channel_update_time - last_volz_update_time));
+            delay_time_us = constrain_int32(constrain_delay_time_us, 100, maximum_rate_us);
+
+            // Constrain delay_time in case it gets too small
+            if (delay_time_us < 100 ) {
+                delay_time_us = 100;
+                GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Delay too small %i",delay_time_us);
             }
+
+            // Set the new volz update time now that all channels have been sent
             last_volz_update_time = now;
+
+            // Reset states to prepare for next update
+            channels_update_complete = true;
+            last_updated_channel = 0;
 
             return;
         }
@@ -493,7 +508,7 @@ void AP_Volz_Protocol::update()
         data[4] = HIGHBYTE(crc);
         data[5] = LOWBYTE(crc);
 
-        port->write(data, VOLZ_DATA_FRAME_SIZE);
+        // port->write(data, VOLZ_DATA_FRAME_SIZE);
 
     // }
     
