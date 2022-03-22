@@ -335,6 +335,71 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("16MAX", 42, AP_Volz_Protocol, _servo_angle_max[15], 180),
 
+////////////// MOVE THESE ABOVE ONE DONE TESTING FOR PR  ////
+
+    // @Param: SER0
+    // @DisplayName: Serial 0, Channel Mask
+    // @Description: Serial 0, Channel Mask: Servos which should be sent across this serial port
+    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
+    // @User: Standard
+    AP_GROUPINFO("SER0", 43, AP_Volz_Protocol, _bitmask[0], 0),
+
+#if SERIALMANAGER_NUM_PORTS > 1
+    // @Param: SER1
+    // @DisplayName: Serial 1, Channel Mask
+    // @Description: Serial 1, Channel Mask: Servos which should be sent across this serial port
+    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
+    // @User: Standard
+    AP_GROUPINFO("SER1", 44, AP_Volz_Protocol, _bitmask[1], 0),
+#endif
+
+#if SERIALMANAGER_NUM_PORTS > 2
+    // @Param: SER2
+    // @DisplayName: Serial 2, Channel Mask
+    // @Description: Serial 2, Channel Mask: Servos which should be sent across this serial port
+    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
+    // @User: Standard
+    AP_GROUPINFO("SER2", 45, AP_Volz_Protocol, _bitmask[2], 0),
+#endif
+
+#if SERIALMANAGER_NUM_PORTS > 3
+    // @Param: SER3
+    // @DisplayName: Serial 3, Channel Mask
+    // @Description: Serial 3, Channel Mask: Servos which should be sent across this serial port
+    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
+    // @User: Standard
+    AP_GROUPINFO("SER3", 46, AP_Volz_Protocol, _bitmask[3], 0),
+#endif
+
+#if SERIALMANAGER_NUM_PORTS > 4
+    // @Param: SER4
+    // @DisplayName: Serial 4, Channel Mask
+    // @Description: Serial 4, Channel Mask: Servos which should be sent across this serial port
+    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
+    // @User: Standard
+    AP_GROUPINFO("SER4", 47, AP_Volz_Protocol, _bitmask[4], 0),
+#endif
+
+#if SERIALMANAGER_NUM_PORTS > 5
+    // @Param: SER5
+    // @DisplayName: Serial 5, Channel Mask
+    // @Description: Serial 5, Channel Mask: Servos which should be sent across this serial port
+    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
+    // @User: Standard
+    AP_GROUPINFO("SER5", 48, AP_Volz_Protocol, _bitmask[5], 0),
+#endif
+
+#if SERIALMANAGER_NUM_PORTS > 6
+    // @Param: SER6
+    // @DisplayName: Serial 6, Channel Mask
+    // @Description: Serial 6, Channel Mask: Servos which should be sent across this serial port
+    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
+    // @User: Standard
+    AP_GROUPINFO("SER6", 49, AP_Volz_Protocol, _bitmask[6], 0),
+#endif
+
+/////////////////////// MOVE ABOVE DEBUG ///////////////
+
     AP_GROUPEND
 };
 
@@ -351,17 +416,26 @@ void AP_Volz_Protocol::init(void)
     if (Protocol(_protocol.get()) == Protocol::DISABLED) {
         return;
     }
-    
-    AP_SerialManager &serial_manager = AP::serialmanager();
-    port = serial_manager.find_serial(AP_SerialManager::SerialProtocol_Volz,0);
 
-    if (port) {
-        const uint32_t baudrate = serial_manager.find_baudrate(AP_SerialManager::SerialProtocol_Robotis, 0);
-        us_per_byte = 10.5 * 1e6 / baudrate;  // 91.1 usec with 115.2K baud 
-        us_gap = 4.0 * 1e6 / baudrate;        // 34.722 usec with 115.2K baud
+    AP_SerialManager& sm = AP::serialmanager();
+
+    for (uint8_t i = 0; i < ARRAY_SIZE(_ports); i++) {
+        _ports[i] = sm.find_serial(AP_SerialManager::SerialProtocol_Volz, i);
+        if (_ports[i] == nullptr) {
+            continue;
+        }
+        _num_ports++;
     }
 
-    update_volz_bitmask(bitmask);
+    // Note there is only one baudrate for volzservos 115.2K baud
+    // if (_port) {
+    //     const uint32_t baudrate = serial_manager.find_baudrate(AP_SerialManager::SerialProtocol_Volz, 0);
+    //     us_per_byte = 10.5 * 1e6 / baudrate;  // 91.1 usec with 115.2K baud 
+    //     us_gap = 4.0 * 1e6 / baudrate;        // 34.722 usec with 115.2K baud
+    // }
+
+/// IS IT REALLY NEEDED TO UPDATE THE ENABLED CHANNELS WITHOUT REBOOT?????
+    // update_volz_bitmask(bitmask);
 
     // Protocol Changes Require Rebooting
     update_protocol_registers(_protocol);
@@ -372,97 +446,126 @@ void AP_Volz_Protocol::update()
     if (!initialised) {
         initialised = true;
         init();
-        last_volz_update_time = AP_HAL::micros();
-    }
-
-    if (port == nullptr) {
+        _last_volz_update_time = AP_HAL::micros();
         return;
     }
 
-    if (last_used_bitmask != uint32_t(bitmask.get())) {
-        update_volz_bitmask(bitmask);
-    }
-
-    // The volz_time_frame is updated inside of the update_volz_bitmask()
     // this limits the maximum update rate based upon: _update_rate, # of channels, safety factor, & average transmission time
+    // 
     const uint32_t now = AP_HAL::micros();
-    if (now - last_volz_update_time < delay_time_us) {
+    if (_last_volz_update_time != 0  && now - _last_volz_update_time < (8000)) {
         return;
     }
+    _last_volz_update_time = now;
+    _delay_time_us = 0;
 
-    // REMOVE OR RETURN TO ABOVE
-    // Prepare to Remove this txspace check we already have timing checks...
-    if (port->txspace() < VOLZ_DATA_FRAME_SIZE) {
-        GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port%i: out of space \n", AP::serialmanager().find_portnum(AP_SerialManager::SerialProtocol_Volz, 0));
-        return;
-    }
+/// IS IT REALLY NEEDED TO UPDATE THE ENABLED CHANNELS WITHOUT REBOOT?????
+    // if (_last_used_bitmask != uint32_t(bitmask.get())) {
+    //     update_volz_bitmask(bitmask);
+    // }
 
-    last_volz_update_time = now;
-    delay_time_us = 0;
-
-    // loop for all servo channels
-    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
-        // check if current channel is needed for Volz protocol
-        if ((last_used_bitmask & (1U<<i)) == 0) {
+    // Loop over all of the Volz enabled serial ports
+    for (uint8_t port_id = 0; port_id < _num_ports; port_id++) {
+        if (_ports[port_id] == nullptr) {
             continue;
         }
 
-        const SRV_Channel *channel = SRV_Channels::srv_channel(i);
-        if (channel == nullptr) {
+        // Should just do this on initialization and store it
+        const int8_t ser_n_num = AP::serialmanager().find_portnum(AP_SerialManager::SerialProtocol_Volz, port_id);
+        if (ser_n_num == -1) {
             continue;
         }
 
-        // constrain current channel PWM within range
-        const uint16_t output_pwm = constrain_int16(channel->get_output_pwm(), VOLZ_PWM_POSITION_MIN, VOLZ_PWM_POSITION_MAX);
+        // GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port = %s\n", _ports[port_id]->uart_info());
 
-        uint16_t cmd_transmit = 0x0800;     // Set to center position for the old protcol to not get compiler warning
-        const Protocol protocol = Protocol(_protocol.get());
-        switch (protocol) {
-        case Protocol::DISABLED:
-            break;
-        case Protocol::DA26_RS485:
-            {
-                const float angle =  compute_angle_from_pwm(i, output_pwm, DA26_POSITION_ANGLE_MIN, DA26_POSITION_ANGLE_MAX);
-                cmd_transmit = da26_compute_cmd_to_tx(angle);
-                break;
-            }
-        case Protocol::UAVOS_VOLZ_RS485_ICD:
-            {
-                const float angle =  compute_angle_from_pwm(i, output_pwm, UAVOS_VOLZ_RS485_ICD_POSITION_ANGLE_MIN, UAVOS_VOLZ_RS485_ICD_POSITION_ANGLE_MIN);
-                cmd_transmit = icd_rs485_compute_cmd_to_tx(angle);
-                break;
-            }
-        case Protocol::VOLZ_EXTENDED_POSITION:
-            // This old method is suspect for many reasons..... bad scale factor, wrong linearization, doesn't form the transmitted command according to the spec.
-            cmd_transmit = extended_position_compute_cmd_to_tx(output_pwm);
-            break;
+        if (_ports[port_id]->txspace() < VOLZ_DATA_FRAME_SIZE) {
+            // RETURN TO ABOVE DEBUG Only
+            // Prepare to Remove this txspace check
+            GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port %u: out of space \n", port_id);
+            continue;
         }
 
-        // prepare Volz protocol data.
-        uint8_t data[VOLZ_DATA_FRAME_SIZE];
+        // FIX on init collect the maximum number of servo channels for all ports and use that here
+        // loop for all servo channels
+        for (uint8_t ch_id = 0; ch_id < NUM_SERVO_CHANNELS; ch_id++) {
+            // GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port Num %i: Bitmask %i", ser_n_num, _bitmask[ser_n_num].get());
 
-        data[0] = _reg_set_position;
-        data[1] = i + 1;                // send actuator id as 1 based index so ch1 will have id 1, ch2 will have id 2 ....
-        data[2] = HIGHBYTE(cmd_transmit);
-        data[3] = LOWBYTE(cmd_transmit);
+            // check if current channel is needed for Volz protocol
+            if ((_bitmask[ser_n_num].get() & (1U<<ch_id)) == 0) {
+                continue;
+            }
 
-        // add CRC result to the message
-        const uint16_t crc = crc_volz(data);
-        data[4] = HIGHBYTE(crc);
-        data[5] = LOWBYTE(crc);
+            uint16_t cmd_transmit = 0;
+            if (!compute_position_command_tx(ch_id, cmd_transmit)) {
+                continue;
+            }
 
-        port->write(data, VOLZ_DATA_FRAME_SIZE);
+            // prepare Volz protocol data.
+            uint8_t data[VOLZ_DATA_FRAME_SIZE];
 
-        delay_time_us += VOLZ_DATA_FRAME_SIZE * us_per_byte + us_gap;
+            data[0] = _reg_set_position;
+            data[1] = ch_id + 1;                // send actuator id as 1 based index so ch1 will have id 1, ch2 will have id 2 ....
+            data[2] = HIGHBYTE(cmd_transmit);
+            data[3] = LOWBYTE(cmd_transmit);
+
+            // add CRC result to the message
+            const uint16_t crc = crc_volz(data);
+            data[4] = HIGHBYTE(crc);
+            data[5] = LOWBYTE(crc);
+
+            _ports[port_id]->write(data, VOLZ_DATA_FRAME_SIZE);
+
+            _delay_time_us += VOLZ_DATA_FRAME_SIZE * _us_per_byte + _us_gap;
+        }
     }
 
     // Limit the maximum update rate according to the user's set parameter
     // Constrain the maximum update rate to be 400 Hz (2,500 us) & minimum update rate to 50 Hz (20,000 us)
     // const uint32_t maximum_rate_us = constrain_int32(float(1.0 /_update_rate * 1000000.0), 2500, 20000);
     const uint32_t maximum_rate_us = constrain_int32(float(1.0 /_update_rate * 1000000), 2500, 20000);
-    if (delay_time_us < maximum_rate_us) {
-        delay_time_us = maximum_rate_us;
+
+    _delay_time_us = (AP_HAL::micros() - _last_volz_update_time);     // Compute the total time to complete updates across all serial and servo channels
+    if(_delay_time_us < maximum_rate_us) {
+        _delay_time_us = maximum_rate_us - _delay_time_us;
+    } else {
+        GCS_SEND_TEXT(MAV_SEVERITY_CRITICAL,"VOLZ: Not enough time between loops for update rate: %i", _update_rate.get());
+        _delay_time_us = 500;
     }
+}
+
+bool AP_Volz_Protocol::compute_position_command_tx(uint8_t ch_id, uint16_t &command_tx)
+{
+    const SRV_Channel *channel = SRV_Channels::srv_channel(ch_id);
+    if (channel == nullptr) {
+        return false;
+    }
+
+    // constrain current channel PWM within range
+    const uint16_t output_pwm = constrain_int16(channel->get_output_pwm(), VOLZ_PWM_POSITION_MIN, VOLZ_PWM_POSITION_MAX);
+
+    const Protocol protocol = Protocol(_protocol.get());
+    switch (protocol) {
+    case Protocol::DISABLED:
+        return false;
+    case Protocol::DA26_RS485:
+        {
+            const float angle =  compute_angle_from_pwm(ch_id, output_pwm, DA26_POSITION_ANGLE_MIN, DA26_POSITION_ANGLE_MAX);
+            command_tx = da26_compute_cmd_to_tx(angle);
+            break;
+        }
+    case Protocol::UAVOS_VOLZ_RS485_ICD:
+        {
+            const float angle =  compute_angle_from_pwm(ch_id, output_pwm, UAVOS_VOLZ_RS485_ICD_POSITION_ANGLE_MIN, UAVOS_VOLZ_RS485_ICD_POSITION_ANGLE_MIN);
+            command_tx = icd_rs485_compute_cmd_to_tx(angle);
+            break;
+        }
+    case Protocol::VOLZ_EXTENDED_POSITION:
+        // This old method is suspect for many reasons..... bad scale factor, wrong linearization, doesn't form the transmitted command according to the spec.
+        command_tx = extended_position_compute_cmd_to_tx(output_pwm);
+        break;
+    }
+
+    return true;
 }
 
 // calculate output servo angle given the input PWM
@@ -506,9 +609,10 @@ uint16_t AP_Volz_Protocol::crc_volz(uint8_t data[VOLZ_DATA_FRAME_SIZE])
     return crc;
 }
 
+/// IS IT REALLY NEEDED TO UPDATE THE ENABLED CHANNELS WITHOUT REBOOT?????
 void AP_Volz_Protocol::update_volz_bitmask(uint32_t new_bitmask)
 {
-    last_used_bitmask = new_bitmask;
+    _last_used_bitmask = new_bitmask;
 
     uint8_t count = 0;
     for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
@@ -517,6 +621,7 @@ void AP_Volz_Protocol::update_volz_bitmask(uint32_t new_bitmask)
         }
     }
 }
+/// IS IT REALLY NEEDED TO UPDATE THE ENABLED CHANNELS WITHOUT REBOOT?????
 
 // Compute the originally coded protocol EXTENDED_POSITION
 uint16_t AP_Volz_Protocol::extended_position_compute_cmd_to_tx(uint16_t pwm)

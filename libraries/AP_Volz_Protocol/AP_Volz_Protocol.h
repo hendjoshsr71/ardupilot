@@ -118,12 +118,11 @@ public:
     static const struct AP_Param::GroupInfo var_info[];
 
 protected:
+    bool compute_position_command_tx(uint8_t ch_id, uint16_t &command_tx);
     uint16_t extended_position_compute_cmd_to_tx(uint16_t pwm);     // Extended_Position Format (originally coded)
     uint16_t da26_compute_cmd_to_tx(float angle);                   // DA26/30 Legacy Protocol: Computes transmitted command from a given angle
     uint16_t icd_rs485_compute_cmd_to_tx(float angle);              // UAVOS & VOLZ ISC RS485 Protocol: Computes transmitted command from a given angle
 private:
-    AP_HAL::UARTDriver *port;
-    
     void init(void);
     uint16_t crc_volz(uint8_t data[VOLZ_DATA_FRAME_SIZE]);
     void update_volz_bitmask(uint32_t new_bitmask);
@@ -131,15 +130,19 @@ private:
 
     float compute_angle_from_pwm(uint8_t channel, uint16_t output_pwm, int16_t protocol_angle_min, int16_t protocol_angle_max);
 
-    uint32_t last_volz_update_time;
-    uint32_t delay_time_us;
-    uint32_t us_per_byte;
-    uint32_t us_gap;
+    uint8_t _num_ports;                                             // Maximum number of serial ports marked VOLZ
+    AP_HAL::UARTDriver* _ports[SERIALMANAGER_NUM_PORTS];            // Array of serial ports marked VOLZ, this can also be used for redundant control
 
-    uint32_t last_used_bitmask;
+    uint32_t _last_volz_update_time;
+    uint32_t _delay_time_us;
+    uint32_t _us_per_byte = 91;
+    uint32_t _us_gap = 35;
+
+    uint32_t _last_used_bitmask;
 
     // Parameters
-    AP_Int32 bitmask;           // Servo channel bitmask
+    AP_Int32 bitmask;                               // Servo channel bitmask
+    AP_Int32 _bitmask[SERIALMANAGER_NUM_PORTS];     // Servo channel bitmask
     AP_Int8 _protocol;          // Protocol type: VOLZ_EXTENDED_POSITION, VOLZ DA26/30, UAVOS/VOLZ RS485 ICD
     AP_Int16 _update_rate;      // Update rate in Hz
     AP_Int16 _servo_angle_min[16];
