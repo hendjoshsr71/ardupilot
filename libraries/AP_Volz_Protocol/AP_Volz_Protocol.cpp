@@ -13,6 +13,7 @@
 #if NUM_SERVO_CHANNELS
 
 #include <GCS_MAVLink/GCS.h>
+#include <AP_Scheduler/AP_Scheduler.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -22,7 +23,9 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Description: Enable of volz servo protocol to specific channels
     // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
     // @User: Standard
-    AP_GROUPINFO("MASK",  1, AP_Volz_Protocol, bitmask, 0),
+    AP_GROUPINFO("MASK", 1, AP_Volz_Protocol, bitmask, 0),
+
+// FIXME I THINK UAVOS_VOLZ_RS485_ICD should be default moving forward as it is supported from two manufacturers 
 
     // @Param: TYPE
     // @DisplayName: Volz Protocol Type
@@ -30,7 +33,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Bitmask: 0:Disabled, 1:DA26_RS485, 2:UAVOS_VOLZ_RS485_ICD, 3:Volz_Extended_Position
     // @User: Standard
     // @RebootRequired: True
-    AP_GROUPINFO_FLAGS("TYPE",  2, AP_Volz_Protocol, _protocol, 0, AP_PARAM_FLAG_ENABLE),
+    AP_GROUPINFO_FLAGS("TYPE", 2, AP_Volz_Protocol, _protocol, 0, AP_PARAM_FLAG_ENABLE),
 
     // @Param: RATE
     // @DisplayName: Volz Maximum Update Rate (Hz)
@@ -39,7 +42,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @Range: 50 400
     // @User: Standard
-    AP_GROUPINFO("RATE",  3, AP_Volz_Protocol, _update_rate, 100),
+    AP_GROUPINFO("RATE", 3, AP_Volz_Protocol, _update_rate, 100),
 
     // Leave room for additional general parameters here
     // SKIP index 4 -10
@@ -335,7 +338,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("16MAX", 42, AP_Volz_Protocol, _servo_angle_max[15], 180),
 
-////////////// MOVE THESE ABOVE ONE DONE TESTING FOR PR  ////
+////////////// MOVE THESE ABOVE ONCE DONE TESTING FOR PR  ////
 
     // @Param: SER0
     // @DisplayName: Serial 0, Channel Mask
@@ -398,7 +401,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     AP_GROUPINFO("SER6", 49, AP_Volz_Protocol, _bitmask[6], 0),
 #endif
 
-/////////////////////// MOVE ABOVE DEBUG ///////////////
+/// FIX ME MOVE ABOVE MIN?MAX PARAMS ONCE DONE TESTING
 
     AP_GROUPEND
 };
@@ -434,9 +437,6 @@ void AP_Volz_Protocol::init(void)
     //     us_gap = 4.0 * 1e6 / baudrate;        // 34.722 usec with 115.2K baud
     // }
 
-/// IS IT REALLY NEEDED TO UPDATE THE ENABLED CHANNELS WITHOUT REBOOT?????
-    // update_volz_bitmask(bitmask);
-
     // Protocol Changes Require Rebooting
     update_protocol_registers(_protocol);
 }
@@ -450,19 +450,14 @@ void AP_Volz_Protocol::update()
         return;
     }
 
+    // FIX ME: Update the delay_time based upon the main calling loop rate eg Copter's 400Hz
     // this limits the maximum update rate based upon: _update_rate, # of channels, safety factor, & average transmission time
-    // 
     const uint32_t now = AP_HAL::micros();
-    if (_last_volz_update_time != 0  && now - _last_volz_update_time < (8000)) {
+    if (_last_volz_update_time != 0  && now - _last_volz_update_time < (_delay_time_us)) {
         return;
     }
     _last_volz_update_time = now;
     _delay_time_us = 0;
-
-/// IS IT REALLY NEEDED TO UPDATE THE ENABLED CHANNELS WITHOUT REBOOT?????
-    // if (_last_used_bitmask != uint32_t(bitmask.get())) {
-    //     update_volz_bitmask(bitmask);
-    // }
 
     // Loop over all of the Volz enabled serial ports
     for (uint8_t port_id = 0; port_id < _num_ports; port_id++) {
@@ -476,19 +471,13 @@ void AP_Volz_Protocol::update()
             continue;
         }
 
-        // GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port = %s\n", _ports[port_id]->uart_info());
-
         if (_ports[port_id]->txspace() < VOLZ_DATA_FRAME_SIZE) {
-            // RETURN TO ABOVE DEBUG Only
-            // Prepare to Remove this txspace check
-            GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port %u: out of space \n", port_id);
+            // GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port %u: out of space \n", port_id);
             continue;
         }
 
-        // FIX on init collect the maximum number of servo channels for all ports and use that here
-        // loop for all servo channels
+        // Loop over all servo channels
         for (uint8_t ch_id = 0; ch_id < NUM_SERVO_CHANNELS; ch_id++) {
-            // GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port Num %i: Bitmask %i", ser_n_num, _bitmask[ser_n_num].get());
 
             // check if current channel is needed for Volz protocol
             if ((_bitmask[ser_n_num].get() & (1U<<ch_id)) == 0) {
@@ -504,7 +493,7 @@ void AP_Volz_Protocol::update()
             uint8_t data[VOLZ_DATA_FRAME_SIZE];
 
             data[0] = _reg_set_position;
-            data[1] = ch_id + 1;                // send actuator id as 1 based index so ch1 will have id 1, ch2 will have id 2 ....
+            data[1] = ch_id + 1;                // send actuator id as 1 based index so CH1 will have ID 1, CH2 will have ID 2 ....
             data[2] = HIGHBYTE(cmd_transmit);
             data[3] = LOWBYTE(cmd_transmit);
 
@@ -521,12 +510,14 @@ void AP_Volz_Protocol::update()
 
     // Limit the maximum update rate according to the user's set parameter
     // Constrain the maximum update rate to be 400 Hz (2,500 us) & minimum update rate to 50 Hz (20,000 us)
-    // const uint32_t maximum_rate_us = constrain_int32(float(1.0 /_update_rate * 1000000.0), 2500, 20000);
-    const uint32_t maximum_rate_us = constrain_int32(float(1.0 /_update_rate * 1000000), 2500, 20000);
+    const uint32_t loop_period_us = AP::scheduler().get_loop_period_us();
+    const int16_t update_rate_us = MAX(float(1.0 /_update_rate * 1000000.0), loop_period_us);
+    // const uint32_t maximum_rate_us = constrain_int32(float(1.0 /update_rate * 1000000.0), 2500, 20000);
+    const uint32_t maximum_rate_us = constrain_int32(update_rate_us, 2500, 20000);
 
     _delay_time_us = (AP_HAL::micros() - _last_volz_update_time);     // Compute the total time to complete updates across all serial and servo channels
     if(_delay_time_us < maximum_rate_us) {
-        _delay_time_us = maximum_rate_us - _delay_time_us;
+        _delay_time_us = maximum_rate_us - _delay_time_us - 0.25 * loop_period_us;
     } else {
         GCS_SEND_TEXT(MAV_SEVERITY_CRITICAL,"VOLZ: Not enough time between loops for update rate: %i", _update_rate.get());
         _delay_time_us = 500;
@@ -560,7 +551,6 @@ bool AP_Volz_Protocol::compute_position_command_tx(uint8_t ch_id, uint16_t &comm
             break;
         }
     case Protocol::VOLZ_EXTENDED_POSITION:
-        // This old method is suspect for many reasons..... bad scale factor, wrong linearization, doesn't form the transmitted command according to the spec.
         command_tx = extended_position_compute_cmd_to_tx(output_pwm);
         break;
     }
@@ -569,17 +559,17 @@ bool AP_Volz_Protocol::compute_position_command_tx(uint8_t ch_id, uint16_t &comm
 }
 
 // calculate output servo angle given the input PWM
-float AP_Volz_Protocol::compute_angle_from_pwm(uint8_t channel, uint16_t output_pwm, int16_t protocol_angle_min, int16_t protocol_angle_max)
+float AP_Volz_Protocol::compute_angle_from_pwm(uint8_t channel, uint16_t pwm, float protocol_angle_min, float protocol_angle_max)
 {
     // Check the set min and max servo angle limits are within the protocol bounds
     const uint16_t angle_min = constrain_int16(_servo_angle_min[channel], protocol_angle_min, protocol_angle_max);
     const uint16_t angle_max = constrain_int16(_servo_angle_max[channel], protocol_angle_min, protocol_angle_max);
 
-    // This linearization to convert from PWM to a servo angle assumes end points given by the variables and mid-pont at 0 degrees deflection
-    // scale the PWM value to Volz value
+    // This linearization to convert from PWM to a servo angle assumes end points given by the variables
+    // and mid-pont at 0 degrees deflection to scale the PWM value to an output angle
     const float angle_to_pwm_scale = float(angle_max - angle_min) / float(VOLZ_PWM_POSITION_MAX - VOLZ_PWM_POSITION_MIN);
     const float angle_to_pwm_intercept = - angle_to_pwm_scale * (VOLZ_PWM_POSITION_MAX + VOLZ_PWM_POSITION_MIN) * 0.5;
-    float angle = angle_to_pwm_scale * output_pwm + angle_to_pwm_intercept;
+    float angle = angle_to_pwm_scale * pwm + angle_to_pwm_intercept;
 
     // Constrain the angle to the servo min. and max. as defined by the protocol
     angle = constrain_float(angle, protocol_angle_min, protocol_angle_max);
@@ -609,20 +599,6 @@ uint16_t AP_Volz_Protocol::crc_volz(uint8_t data[VOLZ_DATA_FRAME_SIZE])
     return crc;
 }
 
-/// IS IT REALLY NEEDED TO UPDATE THE ENABLED CHANNELS WITHOUT REBOOT?????
-void AP_Volz_Protocol::update_volz_bitmask(uint32_t new_bitmask)
-{
-    _last_used_bitmask = new_bitmask;
-
-    uint8_t count = 0;
-    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
-        if (new_bitmask & (1U<<i)) {
-            count++;
-        }
-    }
-}
-/// IS IT REALLY NEEDED TO UPDATE THE ENABLED CHANNELS WITHOUT REBOOT?????
-
 // Compute the originally coded protocol EXTENDED_POSITION
 uint16_t AP_Volz_Protocol::extended_position_compute_cmd_to_tx(uint16_t pwm)
 {
@@ -646,10 +622,10 @@ uint16_t AP_Volz_Protocol::da26_compute_cmd_to_tx(float angle)
     const float scale = DA26_POSTION_SCALE;
     const uint16_t cmd = static_cast<uint16_t>(angle * scale) + DA26_POSITION_CENTER;
 
-    // Get the TX HIGH_BYTE: ARG1   [0 | 0 | 0 | Bit 11 | Bit 10 | Bit 9 | Bit 8 | Bit 7]
+    // Get the TX HIGH_BYTE: ARG1 [0 | 0 | 0 | Bit 11 | Bit 10 | Bit 9 | Bit 8 | Bit 7]
     const uint8_t high_byte = static_cast<uint8_t>(cmd >> 7);
 
-    // Get the TX LOW_BYTE: ARG2    [0 | Bit 6 | Bit 5 | Bit 4 | Bit 3 | Bit 2 | Bit 1 | Bit 0]
+    // Get the TX LOW_BYTE:  ARG2 [0 | Bit 6 | Bit 5 | Bit 4 | Bit 3 | Bit 2 | Bit 1 | Bit 0]
     const uint8_t low_byte = static_cast<uint8_t>(cmd & 0x7F);
 
     return UINT16_VALUE(high_byte, low_byte);
@@ -675,9 +651,8 @@ uint16_t AP_Volz_Protocol::icd_rs485_compute_cmd_to_tx(float angle)
     return cmd_tx;
 }
 
-// NOTE this wont work for multi-protocol support with UAVOS and DA26 on the bus
-// FIX ME 
-// POssible solution use a a per channel bit mask???
+// NOTE: This wont work for multi-protocol support with UAVOS_VOLZ_RS485_ICD and DA26 on the same bus
+// Possible solution use a per channel bit mask for each protocol
 void AP_Volz_Protocol::update_protocol_registers(uint8_t protocol_in)
 {
     Protocol protocol = Protocol(protocol_in);
