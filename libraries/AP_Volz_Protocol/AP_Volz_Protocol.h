@@ -125,10 +125,9 @@ protected:
 private:
     void init(void);
     uint16_t crc_volz(uint8_t data[VOLZ_DATA_FRAME_SIZE]);
-    void update_volz_bitmask(uint32_t new_bitmask);
     void update_protocol_registers(uint8_t protocol);       // Update the Volz registers according to the Protocol Parameter
 
-    float compute_angle_from_pwm(uint8_t channel, uint16_t output_pwm, int16_t protocol_angle_min, int16_t protocol_angle_max);
+    float compute_angle_from_pwm(uint8_t channel, uint16_t pwm, float protocol_angle_min, float protocol_angle_max);
 
     uint8_t _num_ports;                                             // Maximum number of serial ports marked VOLZ
     AP_HAL::UARTDriver* _ports[SERIALMANAGER_NUM_PORTS];            // Array of serial ports marked VOLZ, this can also be used for redundant control
@@ -137,8 +136,6 @@ private:
     uint32_t _delay_time_us;
     uint32_t _us_per_byte = 91;
     uint32_t _us_gap = 35;
-
-    uint32_t _last_used_bitmask;
 
     // Parameters
     AP_Int32 bitmask;                               // Servo channel bitmask
