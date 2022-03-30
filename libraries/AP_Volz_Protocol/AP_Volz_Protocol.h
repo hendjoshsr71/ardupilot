@@ -132,6 +132,8 @@ private:
     uint8_t _num_ports;                                             // Maximum number of serial ports marked VOLZ
     AP_HAL::UARTDriver* _ports[SERIALMANAGER_NUM_PORTS];            // Array of serial ports marked VOLZ, this can also be used for redundant control
 
+    uint8_t _current_channel;    // Current Channel to be sent
+
     uint32_t _last_volz_update_time;
     uint32_t _delay_time_us;
     uint32_t _us_per_byte = 91;

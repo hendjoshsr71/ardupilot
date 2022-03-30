@@ -453,47 +453,51 @@ void AP_Volz_Protocol::update()
     // FIX ME: Update the delay_time based upon the main calling loop rate eg Copter's 400Hz
     // this limits the maximum update rate based upon: _update_rate, # of channels, safety factor, & average transmission time
     const uint32_t now = AP_HAL::micros();
-    if (_last_volz_update_time != 0  && now - _last_volz_update_time < (_delay_time_us)) {
-        return;
-    }
+    // if (_last_volz_update_time != 0  && now - _last_volz_update_time < (_delay_time_us)) {
+    //     return;
+    // }
     _last_volz_update_time = now;
     _delay_time_us = 0;
 
     // Loop over all of the Volz enabled serial ports
-    for (uint8_t port_id = 0; port_id < _num_ports; port_id++) {
-        if (_ports[port_id] == nullptr) {
-            continue;
+    // for (uint8_t port_id = 0; port_id < _num_ports; port_id++) {
+        if (_ports[0] == nullptr) {
+            GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ: serial port NULLPTR??");
+            return;
         }
 
-        // Should just do this on initialization and store it
-        const int8_t ser_n_num = AP::serialmanager().find_portnum(AP_SerialManager::SerialProtocol_Volz, port_id);
+        // // Should just do this on initialization and store it
+        const int8_t ser_n_num = AP::serialmanager().find_portnum(AP_SerialManager::SerialProtocol_Volz, 0);
         if (ser_n_num == -1) {
-            continue;
+            GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port : Too many enabled??");
+            return;
         }
 
-        if (_ports[port_id]->txspace() < VOLZ_DATA_FRAME_SIZE) {
-            // GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port %u: out of space \n", port_id);
-            continue;
+        if (_ports[0]->txspace() < VOLZ_DATA_FRAME_SIZE) {
+            GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port %u: out of space \n", 0);
+            return;
         }
 
         // Loop over all servo channels
-        for (uint8_t ch_id = 0; ch_id < NUM_SERVO_CHANNELS; ch_id++) {
+        // for (uint8_t ch_id = 0; ch_id < NUM_SERVO_CHANNELS; ch_id++) {
 
             // check if current channel is needed for Volz protocol
-            if ((_bitmask[ser_n_num].get() & (1U<<ch_id)) == 0) {
-                continue;
+            if ((_bitmask[2].get() & (1U<<_current_channel)) == 0) {
+                GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ: not all channels enabled 1-5");
+                return;
             }
 
             uint16_t cmd_transmit = 0;
-            if (!compute_position_command_tx(ch_id, cmd_transmit)) {
-                continue;
+            if (!compute_position_command_tx(_current_channel, cmd_transmit)) {
+                GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ: servo library error");
+                return;
             }
 
             // prepare Volz protocol data.
             uint8_t data[VOLZ_DATA_FRAME_SIZE];
 
             data[0] = _reg_set_position;
-            data[1] = ch_id + 1;                // send actuator id as 1 based index so CH1 will have ID 1, CH2 will have ID 2 ....
+            data[1] = _current_channel + 1;                // send actuator id as 1 based index so CH1 will have ID 1, CH2 will have ID 2 ....
             data[2] = HIGHBYTE(cmd_transmit);
             data[3] = LOWBYTE(cmd_transmit);
 
@@ -502,11 +506,17 @@ void AP_Volz_Protocol::update()
             data[4] = HIGHBYTE(crc);
             data[5] = LOWBYTE(crc);
 
-            _ports[port_id]->write(data, VOLZ_DATA_FRAME_SIZE);
+            _ports[0]->write(data, VOLZ_DATA_FRAME_SIZE);
+
+            _current_channel++;
+            // Only accept 5 channels this should get us 88Hz at Copter's 400Hz loop rate
+            if (_current_channel > 4) {
+                _current_channel = 0;
+            }
 
             _delay_time_us += VOLZ_DATA_FRAME_SIZE * _us_per_byte + _us_gap;
-        }
-    }
+        // }
+    // }
 
     // Limit the maximum update rate according to the user's set parameter
     // Constrain the maximum update rate to be 400 Hz (2,500 us) & minimum update rate to 50 Hz (20,000 us)
