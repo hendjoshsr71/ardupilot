@@ -2733,6 +2733,11 @@ def add_apperiph_defaults(f):
 #endif
 
 #endif
+
+#ifndef AP_VOLZ_ENABLED
+#define AP_VOLZ_ENABLED 0
+#endif
+
 ''')
 
 
