@@ -6,14 +6,14 @@
  * 
  * January 2022: Added Volz DA26/30 RS485 Protocol & UAVOS & Volz ICD R485 Protocol
  */
-#include <AP_HAL/AP_HAL.h>
-#include <SRV_Channel/SRV_Channel.h>
-
 #include "AP_Volz_Protocol.h"
-#if NUM_SERVO_CHANNELS
 
-#include <GCS_MAVLink/GCS.h>
-#include <AP_Scheduler/AP_Scheduler.h>
+#if AP_VOLZ_ENABLED
+
+#include <AP_HAL/AP_HAL.h>
+
+#include <AP_SerialManager/AP_SerialManager.h>
+#include <SRV_Channel/SRV_Channel.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -679,4 +679,5 @@ void AP_Volz_Protocol::update_protocol_registers(uint8_t protocol_in)
         break;
     }
 }
-#endif //NUM_SERVO_CHANNELS
+
+#endif  // AP_VOLZ_ENABLED

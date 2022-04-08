@@ -33,6 +33,14 @@
 
 #pragma once
 
+#include <AP_HAL/AP_HAL_Boards.h>
+
+#ifndef AP_VOLZ_ENABLED
+#define AP_VOLZ_ENABLED 1
+#endif
+
+#if AP_VOLZ_ENABLED
+
 #include <AP_HAL/AP_HAL.h>
 #include <AP_SerialManager/AP_SerialManager.h>
 #include <AP_Param/AP_Param.h>
@@ -152,3 +160,5 @@ private:
     uint8_t _reg_read_position;
     uint8_t _reg_read_servo_id;
 };
+
+#endif  // AP_VOLZ_PROTOCOL
