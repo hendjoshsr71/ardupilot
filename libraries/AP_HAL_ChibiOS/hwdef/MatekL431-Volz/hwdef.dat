@@ -1,0 +1,26 @@
+include ../MatekL431/hwdef.inc
+
+define CAN_APP_NODE_NAME "org.ardupilot.MatekL431-Volz"
+
+define HAL_USE_ADC FALSE
+define STM32_ADC_USE_ADC1 FALSE
+define HAL_DISABLE_ADC_DRIVER TRUE
+
+# support all rangefinder types
+#define HAL_PERIPH_ENABLE_RANGEFINDER
+
+#define AP_PERIPH_RANGEFINDER_PORT_DEFAULT 2
+#define RANGEFINDER_MAX_INSTANCES 1
+
+# Enable RC output
+define HAL_PERIPH_ENABLE_RC_OUT 1
+
+# Enable Volz Servo Serial Output
+define HAL_PERIPH_ENABLE_SERVO_VOLZ 1
+define AP_PERIPH_VOLZ_PORT_DEFAULT 3
+
+#define NUM_SERVO_CHANNELS 2
+
+#define SERIALMANAGER_NUM_PORTS 3
+
+#define HAL_LOGGING_ENABLED 0
