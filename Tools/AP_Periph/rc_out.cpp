@@ -37,6 +37,20 @@ void AP_Periph_FW::rcout_init()
     }
 #endif
 
+#ifdef HAL_PERIPH_ENABLE_SERVO_VOLZ
+    // if (rangefinder.get_type(0) != RangeFinder::Type::NONE && g.rangefinder_port >= 0) {
+    if (g.servo_volz_port >= 0) {
+        auto *uart = hal.serial(g.servo_volz_port);
+        GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "found volz port");
+        if (uart != nullptr) {
+            uart->begin(115200);
+            serial_manager.set_protocol_and_baud(g.servo_volz_port, AP_SerialManager::SerialProtocol_Volz, 115200);
+            GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "volz port set");
+            // servo_volz.init();
+        }
+    }
+#endif
+
     SRV_Channels::init();
 
 #if HAL_PWM_COUNT > 0
@@ -99,6 +113,28 @@ void AP_Periph_FW::rcout_srv(uint8_t actuator_id, const float command_value)
     const SRV_Channel::Aux_servo_function_t function = SRV_Channel::Aux_servo_function_t(SRV_Channel::k_rcin1 + actuator_id - 1);
     SRV_Channels::set_output_norm(function, command_value);
 
+    rcout_has_new_data_to_update = true;
+#endif
+
+#if HAL_PERIPH_ENABLE_SERVO_VOLZ
+    const SRV_Channel::Aux_servo_function_t function = SRV_Channel::Aux_servo_function_t(SRV_Channel::k_rcin1 + actuator_id - 1);
+    SRV_Channels::set_output_norm(function, command_value);
+    
+    
+    // const int8_t passthrough_from = int8_t((int16_t)function - SRV_Channel::k_rcin1);
+    
+    // if (passthrough_from != -1) {
+    //     // we are doing passthrough from input to output for this channel
+    //     RC_Channel *c = rc().channel(passthrough_from);
+    //     // c->set_radio_in()
+    //     c->set
+    //     hal.rcout->write(ch_num, output_pwm);
+    // }
+    
+    // if (!(SRV_Channels::disabled_mask & (1U<<ch_num))) {
+    //     hal.rcout->write(ch_num, output_pwm);
+    // }
+    
     rcout_has_new_data_to_update = true;
 #endif
 }

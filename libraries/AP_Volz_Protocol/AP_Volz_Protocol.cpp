@@ -14,6 +14,10 @@
 
 #include <AP_SerialManager/AP_SerialManager.h>
 #include <SRV_Channel/SRV_Channel.h>
+#include <AP_Scheduler/AP_Scheduler.h>
+
+// #DEBUG  only
+#include <GCS_MAVLink/GCS.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -68,6 +72,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("1MAX", 12, AP_Volz_Protocol, _servo_angle_max[0], 180),
 
+#if NUM_SERVO_CHANNELS > 1
     // @Param: 2MIN
     // @DisplayName: Minimum Angle
     // @Description: Minimum servo angle (degrees): Used to linearize the mapping from PWM to desired output angle.
@@ -85,7 +90,9 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("2MAX", 14, AP_Volz_Protocol, _servo_angle_max[1], 180),
+#endif
 
+#if NUM_SERVO_CHANNELS > 2
     // @Param: 3MIN
     // @DisplayName: Minimum Angle
     // @Description: Minimum servo angle (degrees): Used to linearize the mapping from PWM to desired output angle.
@@ -103,7 +110,9 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("3MAX", 16, AP_Volz_Protocol, _servo_angle_max[2], 180),
+#endif
 
+#if NUM_SERVO_CHANNELS > 3
     // @Param: 4MIN
     // @DisplayName: Minimum Angle
     // @Description: Minimum servo angle (degrees): Used to linearize the mapping from PWM to desired output angle.
@@ -121,7 +130,9 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("4MAX", 18, AP_Volz_Protocol, _servo_angle_max[3], 180),
+#endif
 
+#if NUM_SERVO_CHANNELS > 4
     // @Param: 5MIN
     // @DisplayName: Minimum Angle
     // @Description: Minimum servo angle (degrees): Used to linearize the mapping from PWM to desired output angle.
@@ -139,7 +150,9 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("5MAX", 20, AP_Volz_Protocol, _servo_angle_max[4], 180),
+#endif
 
+#if NUM_SERVO_CHANNELS > 5
     // @Param: 6MIN
     // @DisplayName: Minimum Angle
     // @Description: Minimum servo angle (degrees): Used to linearize the mapping from PWM to desired output angle.
@@ -157,7 +170,9 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("6MAX", 22, AP_Volz_Protocol, _servo_angle_max[5], 180),
+#endif
 
+#if NUM_SERVO_CHANNELS > 6
     // @Param: 7MIN
     // @DisplayName: Minimum Angle
     // @Description: Minimum servo angle (degrees): Used to linearize the mapping from PWM to desired output angle.
@@ -175,7 +190,9 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("7MAX", 24, AP_Volz_Protocol, _servo_angle_max[6], 180),
+#endif
 
+#if NUM_SERVO_CHANNELS > 7
     // @Param: 8MIN
     // @DisplayName: Minimum Angle
     // @Description: Minimum servo angle (degrees): Used to linearize the mapping from PWM to desired output angle.
@@ -193,7 +210,9 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("8MAX", 26, AP_Volz_Protocol, _servo_angle_max[7], 180),
+#endif
 
+#if NUM_SERVO_CHANNELS > 8
     // @Param: 9MIN
     // @DisplayName: Minimum Angle
     // @Description: Minimum servo angle (degrees): Used to linearize the mapping from PWM to desired output angle.
@@ -211,7 +230,9 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("9MAX", 28, AP_Volz_Protocol, _servo_angle_max[8], 180),
+#endif
 
+#if NUM_SERVO_CHANNELS > 9
     // @Param: 10MIN
     // @DisplayName: Minimum Angle
     // @Description: Minimum servo angle (degrees): Used to linearize the mapping from PWM to desired output angle.
@@ -229,7 +250,9 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("10MAX", 30, AP_Volz_Protocol, _servo_angle_max[9], 180),
+#endif
 
+#if NUM_SERVO_CHANNELS > 10
     // @Param: 11MIN
     // @DisplayName: Minimum Angle
     // @Description: Minimum servo angle (degrees): Used to linearize the mapping from PWM to desired output angle.
@@ -247,7 +270,9 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("11MAX", 32, AP_Volz_Protocol, _servo_angle_max[10], 180),
+#endif
 
+#if NUM_SERVO_CHANNELS > 11
     // @Param: 12MIN
     // @DisplayName: Minimum Angle
     // @Description: Minimum servo angle (degrees): Used to linearize the mapping from PWM to desired output angle.
@@ -265,7 +290,9 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("12MAX", 34, AP_Volz_Protocol, _servo_angle_max[11], 180),
+#endif
 
+#if NUM_SERVO_CHANNELS > 12
     // @Param: 13MIN
     // @DisplayName: Minimum Angle
     // @Description: Minimum servo angle (degrees): Used to linearize the mapping from PWM to desired output angle.
@@ -283,7 +310,9 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("13MAX", 36, AP_Volz_Protocol, _servo_angle_max[12], 180),
+#endif
 
+#if NUM_SERVO_CHANNELS > 13
     // @Param: 14MIN
     // @DisplayName: Minimum Angle
     // @Description: Minimum servo angle (degrees): Used to linearize the mapping from PWM to desired output angle.
@@ -301,7 +330,9 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("14MAX", 38, AP_Volz_Protocol, _servo_angle_max[13], 180),
+#endif
 
+#if NUM_SERVO_CHANNELS > 14
     // @Param: 15MIN
     // @DisplayName: Minimum Angle
     // @Description: Minimum servo angle (degrees): Used to linearize the mapping from PWM to desired output angle.
@@ -319,7 +350,9 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("15MAX", 40, AP_Volz_Protocol, _servo_angle_max[14], 180),
+#endif
 
+#if NUM_SERVO_CHANNELS > 15
     // @Param: 16MIN
     // @DisplayName: Minimum Angle
     // @Description: Minimum servo angle (degrees): Used to linearize the mapping from PWM to desired output angle.
@@ -337,6 +370,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("16MAX", 42, AP_Volz_Protocol, _servo_angle_max[15], 180),
+#endif
 
 ////////////// MOVE THESE ABOVE ONCE DONE TESTING FOR PR  ////
 
@@ -453,7 +487,7 @@ void AP_Volz_Protocol::update()
     // FIX ME: Update the delay_time based upon the main calling loop rate eg Copter's 400Hz
     // this limits the maximum update rate based upon: _update_rate, # of channels, safety factor, & average transmission time
     const uint32_t now = AP_HAL::micros();
-    if (_last_volz_update_time != 0  && now - _last_volz_update_time < (_delay_time_us)) {
+    if (_last_volz_update_time != 0  && now - _last_volz_update_time < (0.5 * _delay_time_us)) {
         return;
     }
     _last_volz_update_time = now;
@@ -471,10 +505,10 @@ void AP_Volz_Protocol::update()
             continue;
         }
 
-        if (_ports[port_id]->txspace() < VOLZ_DATA_FRAME_SIZE) {
-            // GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port %u: out of space \n", port_id);
-            continue;
-        }
+        // if (_ports[port_id]->txspace() < VOLZ_DATA_FRAME_SIZE) {
+        //     // GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port %u: out of space \n", port_id);
+        //     continue;
+        // }
 
         // Loop over all servo channels
         for (uint8_t ch_id = 0; ch_id < NUM_SERVO_CHANNELS; ch_id++) {
@@ -502,7 +536,7 @@ void AP_Volz_Protocol::update()
             data[4] = HIGHBYTE(crc);
             data[5] = LOWBYTE(crc);
 
-            _ports[port_id]->write(data, VOLZ_DATA_FRAME_SIZE);
+            // _ports[port_id]->write(data, VOLZ_DATA_FRAME_SIZE);
 
             _delay_time_us += VOLZ_DATA_FRAME_SIZE * _us_per_byte + _us_gap;
         }
@@ -510,9 +544,14 @@ void AP_Volz_Protocol::update()
 
     // Limit the maximum update rate according to the user's set parameter
     // Constrain the maximum update rate to be 400 Hz (2,500 us) & minimum update rate to 50 Hz (20,000 us)
+    
+#ifndef HAL_BUILD_AP_PERIPH
     const uint32_t loop_period_us = AP::scheduler().get_loop_period_us();
+#else
+    const uint32_t loop_period_us = 2500;   //// FIX ME HOW TO GET LOOP period here
+#endif
+
     const int16_t update_rate_us = MAX(float(1.0 /_update_rate * 1000000.0), loop_period_us);
-    // const uint32_t maximum_rate_us = constrain_int32(float(1.0 /update_rate * 1000000.0), 2500, 20000);
     const uint32_t maximum_rate_us = constrain_int32(update_rate_us, 2500, 20000);
 
     _delay_time_us = (AP_HAL::micros() - _last_volz_update_time);     // Compute the total time to complete updates across all serial and servo channels
@@ -546,7 +585,7 @@ bool AP_Volz_Protocol::compute_position_command_tx(uint8_t ch_id, uint16_t &comm
         }
     case Protocol::UAVOS_VOLZ_RS485_ICD:
         {
-            const float angle =  compute_angle_from_pwm(ch_id, output_pwm, UAVOS_VOLZ_RS485_ICD_POSITION_ANGLE_MIN, UAVOS_VOLZ_RS485_ICD_POSITION_ANGLE_MIN);
+            const float angle =  compute_angle_from_pwm(ch_id, output_pwm, UAVOS_VOLZ_RS485_ICD_POSITION_ANGLE_MIN, UAVOS_VOLZ_RS485_ICD_POSITION_ANGLE_MAX);
             command_tx = icd_rs485_compute_cmd_to_tx(angle);
             break;
         }
@@ -562,12 +601,12 @@ bool AP_Volz_Protocol::compute_position_command_tx(uint8_t ch_id, uint16_t &comm
 float AP_Volz_Protocol::compute_angle_from_pwm(uint8_t channel, uint16_t pwm, float protocol_angle_min, float protocol_angle_max)
 {
     // Check the set min and max servo angle limits are within the protocol bounds
-    const uint16_t angle_min = constrain_int16(_servo_angle_min[channel], protocol_angle_min, protocol_angle_max);
-    const uint16_t angle_max = constrain_int16(_servo_angle_max[channel], protocol_angle_min, protocol_angle_max);
+    const float angle_min = constrain_float(_servo_angle_min[channel], protocol_angle_min, protocol_angle_max);
+    const float angle_max = constrain_float(_servo_angle_max[channel], protocol_angle_min, protocol_angle_max);
 
     // This linearization to convert from PWM to a servo angle assumes end points given by the variables
-    // and mid-pont at 0 degrees deflection to scale the PWM value to an output angle
-    const float angle_to_pwm_scale = float(angle_max - angle_min) / float(VOLZ_PWM_POSITION_MAX - VOLZ_PWM_POSITION_MIN);
+    // and a mid-pont at 0 degrees deflection to scale the PWM value to an output angle
+    const float angle_to_pwm_scale = (angle_max - angle_min) / (VOLZ_PWM_POSITION_MAX - VOLZ_PWM_POSITION_MIN);
     const float angle_to_pwm_intercept = - angle_to_pwm_scale * (VOLZ_PWM_POSITION_MAX + VOLZ_PWM_POSITION_MIN) * 0.5;
     float angle = angle_to_pwm_scale * pwm + angle_to_pwm_intercept;
 

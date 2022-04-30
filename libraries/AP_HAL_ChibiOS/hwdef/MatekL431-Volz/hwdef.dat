@@ -6,18 +6,18 @@ define HAL_USE_ADC FALSE
 define STM32_ADC_USE_ADC1 FALSE
 define HAL_DISABLE_ADC_DRIVER TRUE
 
-# support all rangefinder types
-#define HAL_PERIPH_ENABLE_RANGEFINDER
-
-#define AP_PERIPH_RANGEFINDER_PORT_DEFAULT 2
-#define RANGEFINDER_MAX_INSTANCES 1
-
 # Enable RC output
-#define HAL_PERIPH_ENABLE_RC_OUT 1
+define HAL_PERIPH_ENABLE_RC_OUT 1
 
 # Enable Volz Servo Serial 
-define NUM_SERVO_CHANNELS 2
-
 define AP_VOLZ_ENABLED 1
 define HAL_PERIPH_ENABLE_SERVO_VOLZ 1
-define AP_PERIPH_VOLZ_PORT_DEFAULT 3
+define AP_PERIPH_VOLZ_PORT_DEFAULT 2
+
+define NUM_SERVO_CHANNELS 5
+
+#// default params
+#OUT_VOLZ_TYPE 2
+# Channel output bitmask for serial 3
+#OUT_VOLZ_SER3 1
+#VOLZ_PORT 2

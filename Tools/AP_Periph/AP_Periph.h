@@ -19,6 +19,8 @@
 #include <AP_Scripting/AP_Scripting.h>
 #include <AP_HAL/CANIface.h>
 
+// #include <AP_Volz_Protocol/AP_Volz_Protocol.h>
+
 #if HAL_GCS_ENABLED
 #include "GCS_MAVLink.h"
 #endif
@@ -189,6 +191,12 @@ public:
     AP_ESC_Telem esc_telem;
     uint32_t last_esc_telem_update_ms;
     void esc_telem_update();
+#endif
+
+#ifdef HAL_PERIPH_ENABLE_SERVO_VOLZ
+    // AP_Volz_Protocol servo_volz;
+    // uint32_t last_volz_update_ms;
+    // void volz_update();
 #endif
 
     SRV_Channels servo_channels;

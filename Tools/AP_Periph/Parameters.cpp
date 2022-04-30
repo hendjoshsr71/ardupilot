@@ -45,6 +45,10 @@ extern const AP_HAL::HAL &hal;
 #define MAV_SYSTEM_ID HAL_DEFAULT_MAV_SYSTEM_ID
 #endif
 
+#ifndef AP_PERIPH_VOLZ_PORT_DEFAULT
+#define AP_PERIPH_VOLZ_PORT_DEFAULT 3
+#endif
+
 /*
  *  AP_Periph parameter definitions
  *
@@ -323,6 +327,23 @@ const AP_Param::Info AP_Periph_FW::var_info[] = {
     // @RebootRequired: True
     GSCALAR(esc_telem_port, "ESC_TELEM_PORT", AP_PERIPH_ESC_TELEM_PORT_DEFAULT),
 #endif
+
+#ifdef HAL_PERIPH_ENABLE_SERVO_VOLZ
+    // @Param: VOLZ_PORT
+    // @DisplayName: Volz Servo Serial Port
+    // @Description: This is the serial port number where SERIALx_PROTOCOL will be set to Volz.
+    // @Range: 0 10
+    // @Increment: 1
+    // @User: Advanced
+    // @RebootRequired: True
+    GSCALAR(servo_volz_port, "VOLZ_PORT", AP_PERIPH_VOLZ_PORT_DEFAULT),
+
+    // // Volz Servo driver
+    // // @Group: VOLZ
+    // // @Path: ../libraries/AP_Volz_Protocol/AP_Volz_Protocol.cpp
+    // GOBJECT(servo_volz, "VOLZ", AP_Volz_Protocol),
+#endif
+
 #endif
 
 #ifdef HAL_PERIPH_ENABLE_MSP

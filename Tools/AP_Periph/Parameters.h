@@ -51,6 +51,7 @@ public:
         k_param_gps_mb_only_can_port,
         k_param_scripting,
         k_param_esc_telem_port,
+        k_param_servo_volz_port,
     };
 
     AP_Int16 format_version;
@@ -109,6 +110,11 @@ public:
 #if HAL_WITH_ESC_TELEM && !HAL_GCS_ENABLED
     AP_Int8 esc_telem_port;
 #endif
+
+#ifdef HAL_PERIPH_ENABLE_SERVO_VOLZ
+    AP_Int8 servo_volz_port;
+#endif
+
 #endif
 
     AP_Int8 debug;

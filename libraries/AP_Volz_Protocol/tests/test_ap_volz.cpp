@@ -33,7 +33,7 @@ const struct DA26_LEGACY_VALUES {
         { 45.0,  0xB60, 2912, 0x1660, 5728},
         {  0.0,  0x800, 2048, 0x1000, 4096},      // Defined as zero rotation
         {-22.0,  0x65A, 1626, 0x0C5A, 3162},
-        {-17.0,  0x6BA, 1722, 0x0D3A, 3162},
+        {-17.0,  0x6BA, 1722, 0x0D3A, 3386},
         {-45.0,  0x4A1, 1185, 0x0921, 2337},
         {-106.666,  0x000,   0, 0x0000,    0},    // Defined as maximum clockwise rotation
     };
