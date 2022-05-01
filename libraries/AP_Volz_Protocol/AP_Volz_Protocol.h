@@ -130,12 +130,12 @@ protected:
     uint16_t extended_position_compute_cmd_to_tx(uint16_t pwm);     // Extended_Position Format (originally coded)
     uint16_t da26_compute_cmd_to_tx(float angle);                   // DA26/30 Legacy Protocol: Computes transmitted command from a given angle
     uint16_t icd_rs485_compute_cmd_to_tx(float angle);              // UAVOS & VOLZ ISC RS485 Protocol: Computes transmitted command from a given angle
+    float compute_angle_from_pwm(uint8_t channel, uint16_t pwm, float protocol_angle_min, float protocol_angle_max);
+
 private:
     void init(void);
     uint16_t crc_volz(uint8_t data[VOLZ_DATA_FRAME_SIZE]);
     void update_protocol_registers(uint8_t protocol);       // Update the Volz registers according to the Protocol Parameter
-
-    float compute_angle_from_pwm(uint8_t channel, uint16_t pwm, float protocol_angle_min, float protocol_angle_max);
 
     uint8_t _num_ports;                                             // Maximum number of serial ports marked VOLZ
     AP_HAL::UARTDriver* _ports[SERIALMANAGER_NUM_PORTS];            // Array of serial ports marked VOLZ, this can also be used for redundant control
@@ -156,6 +156,7 @@ private:
     bool initialised;
 
     // Protocol Dependent Registers
+    uint8_t _last_protocol;
     uint8_t _reg_set_position;
     uint8_t _reg_read_position;
     uint8_t _reg_read_servo_id;

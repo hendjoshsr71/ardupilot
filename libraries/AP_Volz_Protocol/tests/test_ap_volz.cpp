@@ -7,26 +7,32 @@ const AP_HAL::HAL& hal = AP_HAL::get_HAL();
 class dummy : public AP_Volz_Protocol
 {
 public:
-    int16_t da26_compute_cmd_to_tx_pub(float angle);
-    int16_t icd_rs485_compute_cmd_to_tx_pub(float angle);
+    uint16_t da26_compute_cmd_to_tx_pub(float angle);
+    uint16_t icd_rs485_compute_cmd_to_tx_pub(float angle);
+    float compute_angle_from_pwm_pub(uint8_t channel, uint16_t pwm, float protocol_angle_min, float protocol_angle_max);
 };
 
-int16_t dummy::da26_compute_cmd_to_tx_pub(float angle)
+uint16_t dummy::da26_compute_cmd_to_tx_pub(float angle)
 {
     return dummy::da26_compute_cmd_to_tx(angle);
 }
 
-int16_t dummy::icd_rs485_compute_cmd_to_tx_pub(float angle)
+uint16_t dummy::icd_rs485_compute_cmd_to_tx_pub(float angle)
 {
     return dummy::icd_rs485_compute_cmd_to_tx(angle);
 }
 
+float dummy::compute_angle_from_pwm_pub(uint8_t channel, uint16_t pwm, float protocol_angle_min, float protocol_angle_max)
+{
+    return dummy::compute_angle_from_pwm_pub(channel, pwm, protocol_angle_min, protocol_angle_max);
+}
+
 const struct DA26_LEGACY_VALUES {
         float angle;            // angle (degrees)
-        uint32_t cmd_hex;       // CMD hex value
-        uint32_t cmd_dec;       // CMD decimal value
-        uint32_t tx_hex;        // TX (transmitted) value in hex
-        uint32_t tx_dec;        // TX (transmitted) value in decimal
+        uint16_t cmd_hex;       // CMD hex value
+        uint16_t cmd_dec;       // CMD decimal value
+        uint16_t tx_hex;        // TX (transmitted) value in hex
+        uint16_t tx_dec;        // TX (transmitted) value in decimal
     } conversion_table [] = {
         {106.614, 0xFFF, 4095, 0x1F7F, 8063},     // Defined as maximum counter-clockwise rotation
         { 55.0,  0xC20, 3104, 0x1820, 6176},
@@ -50,14 +56,16 @@ TEST(VOLZ_Servo_Test, Volz_Servo_da26_compute_cmd_to_tx) {
 
 const struct ICD_RS485_LEGACY_VALUES {
         float angle;            // angle (degrees)
-        uint32_t tx_hex;        // TX (transmitted) value in hex
-        uint32_t tx_dec;        // TX (transmitted) value in decimal
+        uint16_t tx_hex;        // TX (transmitted) value in hex
+        uint16_t tx_dec;        // TX (transmitted) value in decimal
     } icd_rs485_table [] = {
         {180.0, 0x800, 2048},     // Defined as maximum counter-clockwise rotation
         {170.0, 0x78E, 1934},
+        { 90.0, 0x400, 1024},
         { 45.0, 0x200,  512},
         {  0.0, 0x000,    0},      // Defined as zero rotation
         {-45.0, 0xE00, 3584},      // Note clock-wise rotations are the twos complement from 0
+        {-90.0, 0xC00, 3072},
         {-170.0, 0x872, 2162},
         {-180.0, 0x800, 2048},    // Defined as maximum clockwise rotation
     };

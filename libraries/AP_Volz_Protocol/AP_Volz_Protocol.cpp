@@ -493,6 +493,11 @@ void AP_Volz_Protocol::update()
     _last_volz_update_time = now;
     _delay_time_us = 0;
 
+    // Update protocol Registers if needed
+    if (_protocol.get() != _last_protocol) {
+        update_protocol_registers(_protocol);
+    }
+
     // Loop over all of the Volz enabled serial ports
     for (uint8_t port_id = 0; port_id < _num_ports; port_id++) {
         if (_ports[port_id] == nullptr) {
@@ -505,10 +510,10 @@ void AP_Volz_Protocol::update()
             continue;
         }
 
-        // if (_ports[port_id]->txspace() < VOLZ_DATA_FRAME_SIZE) {
-        //     // GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port %u: out of space \n", port_id);
-        //     continue;
-        // }
+        if (_ports[port_id]->txspace() < VOLZ_DATA_FRAME_SIZE) {
+            // GCS_SEND_TEXT(MAV_SEVERITY_DEBUG, "VOLZ Port %u: out of space \n", port_id);
+            continue;
+        }
 
         // Loop over all servo channels
         for (uint8_t ch_id = 0; ch_id < NUM_SERVO_CHANNELS; ch_id++) {
@@ -536,7 +541,7 @@ void AP_Volz_Protocol::update()
             data[4] = HIGHBYTE(crc);
             data[5] = LOWBYTE(crc);
 
-            // _ports[port_id]->write(data, VOLZ_DATA_FRAME_SIZE);
+            _ports[port_id]->write(data, VOLZ_DATA_FRAME_SIZE);
 
             _delay_time_us += VOLZ_DATA_FRAME_SIZE * _us_per_byte + _us_gap;
         }
@@ -658,8 +663,7 @@ uint16_t AP_Volz_Protocol::da26_compute_cmd_to_tx(float angle)
     angle = constrain_float(angle, DA26_POSITION_ANGLE_MIN, DA26_POSITION_ANGLE_MAX);
 
     // Convert the desired angle to the Commanded Hexadecimal
-    const float scale = DA26_POSTION_SCALE;
-    const uint16_t cmd = static_cast<uint16_t>(angle * scale) + DA26_POSITION_CENTER;
+    const uint16_t cmd = static_cast<uint16_t>((angle * DA26_POSTION_SCALE) + DA26_POSITION_CENTER);
 
     // Get the TX HIGH_BYTE: ARG1 [0 | 0 | 0 | Bit 11 | Bit 10 | Bit 9 | Bit 8 | Bit 7]
     const uint8_t high_byte = static_cast<uint8_t>(cmd >> 7);
