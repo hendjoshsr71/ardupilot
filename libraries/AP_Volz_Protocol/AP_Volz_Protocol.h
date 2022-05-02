@@ -51,6 +51,9 @@
 #define VOLZ_PWM_POSITION_MIN               1000
 #define VOLZ_PWM_POSITION_MAX               2000
 
+#define VOLZ_DEFAULT_ANGLE_MIN              -180
+#define  VOLZ_DEFAULT_ANGLE_MAX              180
+
 // Note the Volz DA26 and UAVOS_VOLZ_RS485_ICD serial protocols are nearly identical except for the set_position and report_position commands.
 #define VOLZ_PROTOCOL_DEFAULT                0       // Default to the original VOLZ servo Serial Protocol
 #define VOLZ_REGISTER_UNKNOWN                0
@@ -146,7 +149,6 @@ private:
     uint32_t _us_gap = 35;
 
     // Parameters
-    AP_Int32 bitmask;                               // Servo channel bitmask
     AP_Int32 _bitmask[SERIALMANAGER_NUM_PORTS];     // Servo channel bitmask
     AP_Int8 _protocol;          // Protocol type: VOLZ_EXTENDED_POSITION, VOLZ DA26/30, UAVOS/VOLZ RS485 ICD
     AP_Int16 _update_rate;      // Update rate in Hz

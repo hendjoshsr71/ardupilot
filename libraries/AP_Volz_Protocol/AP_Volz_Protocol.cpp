@@ -22,14 +22,8 @@
 extern const AP_HAL::HAL& hal;
 
 const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
-    // @Param: MASK
-    // @DisplayName: Channel Bitmask
-    // @Description: Enable of volz servo protocol to specific channels
-    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
-    // @User: Standard
-    AP_GROUPINFO("MASK", 1, AP_Volz_Protocol, bitmask, 0),
 
-// FIXME I THINK UAVOS_VOLZ_RS485_ICD should be default moving forward as it is supported from two manufacturers 
+    // Index 1 was MASK before moving to a mask per serial port
 
     // @Param: TYPE
     // @DisplayName: Volz Protocol Type
@@ -51,6 +45,67 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // Leave room for additional general parameters here
     // SKIP index 4 -10
 
+    // @Param: SER0
+    // @DisplayName: Serial 0, Channel Mask
+    // @Description: Serial 0, Channel Mask: Servos which should be sent across this serial port
+    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
+    // @User: Standard
+    AP_GROUPINFO("SER0", 11, AP_Volz_Protocol, _bitmask[0], 0),
+
+#if SERIALMANAGER_NUM_PORTS > 1
+    // @Param: SER1
+    // @DisplayName: Serial 1, Channel Mask
+    // @Description: Serial 1, Channel Mask: Servos which should be sent across this serial port
+    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
+    // @User: Standard
+    AP_GROUPINFO("SER1", 12, AP_Volz_Protocol, _bitmask[1], 0),
+#endif
+
+#if SERIALMANAGER_NUM_PORTS > 2
+    // @Param: SER2
+    // @DisplayName: Serial 2, Channel Mask
+    // @Description: Serial 2, Channel Mask: Servos which should be sent across this serial port
+    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
+    // @User: Standard
+    AP_GROUPINFO("SER2", 13, AP_Volz_Protocol, _bitmask[2], 0),
+#endif
+
+#if SERIALMANAGER_NUM_PORTS > 3
+    // @Param: SER3
+    // @DisplayName: Serial 3, Channel Mask
+    // @Description: Serial 3, Channel Mask: Servos which should be sent across this serial port
+    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
+    // @User: Standard
+    AP_GROUPINFO("SER3", 14, AP_Volz_Protocol, _bitmask[3], 0),
+#endif
+
+#if SERIALMANAGER_NUM_PORTS > 4
+    // @Param: SER4
+    // @DisplayName: Serial 4, Channel Mask
+    // @Description: Serial 4, Channel Mask: Servos which should be sent across this serial port
+    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
+    // @User: Standard
+    AP_GROUPINFO("SER4", 15, AP_Volz_Protocol, _bitmask[4], 0),
+#endif
+
+#if SERIALMANAGER_NUM_PORTS > 5
+    // @Param: SER5
+    // @DisplayName: Serial 5, Channel Mask
+    // @Description: Serial 5, Channel Mask: Servos which should be sent across this serial port
+    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
+    // @User: Standard
+    AP_GROUPINFO("SER5", 16, AP_Volz_Protocol, _bitmask[5], 0),
+#endif
+
+#if SERIALMANAGER_NUM_PORTS > 6
+    // @Param: SER6
+    // @DisplayName: Serial 6, Channel Mask
+    // @Description: Serial 6, Channel Mask: Servos which should be sent across this serial port
+    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
+    // @User: Standard
+    AP_GROUPINFO("SER6", 17, AP_Volz_Protocol, _bitmask[6], 0),
+#endif
+
     // Due to the Param name 16-char length limit there are only 5 chars for servo number plus descriptor
     // SERVO_VOLZ_1MIN <---> SERVO_VOLZ_16MIN
 
@@ -61,7 +116,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("1MIN", 11, AP_Volz_Protocol, _servo_angle_min[0], -180),
+    AP_GROUPINFO("1MIN", 18, AP_Volz_Protocol, _servo_angle_min[0], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 1MAX
     // @DisplayName: Maximum Angle
@@ -70,7 +125,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("1MAX", 12, AP_Volz_Protocol, _servo_angle_max[0], 180),
+    AP_GROUPINFO("1MAX", 19, AP_Volz_Protocol, _servo_angle_max[0], VOLZ_DEFAULT_ANGLE_MAX),
 
 #if NUM_SERVO_CHANNELS > 1
     // @Param: 2MIN
@@ -80,7 +135,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("2MIN", 13, AP_Volz_Protocol, _servo_angle_min[1], -180),
+    AP_GROUPINFO("2MIN", 20, AP_Volz_Protocol, _servo_angle_min[1], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 2MAX
     // @DisplayName: Maximum Angle
@@ -89,7 +144,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("2MAX", 14, AP_Volz_Protocol, _servo_angle_max[1], 180),
+    AP_GROUPINFO("2MAX", 21, AP_Volz_Protocol, _servo_angle_max[1], VOLZ_DEFAULT_ANGLE_MAX),
 #endif
 
 #if NUM_SERVO_CHANNELS > 2
@@ -100,7 +155,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("3MIN", 15, AP_Volz_Protocol, _servo_angle_min[2], -180),
+    AP_GROUPINFO("3MIN", 22, AP_Volz_Protocol, _servo_angle_min[2], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 3MAX
     // @DisplayName: Maximum Angle
@@ -109,7 +164,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("3MAX", 16, AP_Volz_Protocol, _servo_angle_max[2], 180),
+    AP_GROUPINFO("3MAX", 23, AP_Volz_Protocol, _servo_angle_max[2], VOLZ_DEFAULT_ANGLE_MAX),
 #endif
 
 #if NUM_SERVO_CHANNELS > 3
@@ -120,7 +175,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("4MIN", 17, AP_Volz_Protocol, _servo_angle_min[3], -180),
+    AP_GROUPINFO("4MIN", 24, AP_Volz_Protocol, _servo_angle_min[3], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 4MAX
     // @DisplayName: Maximum Angle
@@ -129,7 +184,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("4MAX", 18, AP_Volz_Protocol, _servo_angle_max[3], 180),
+    AP_GROUPINFO("4MAX", 25, AP_Volz_Protocol, _servo_angle_max[3], VOLZ_DEFAULT_ANGLE_MAX),
 #endif
 
 #if NUM_SERVO_CHANNELS > 4
@@ -140,7 +195,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("5MIN", 19, AP_Volz_Protocol, _servo_angle_min[4], -180),
+    AP_GROUPINFO("5MIN", 26, AP_Volz_Protocol, _servo_angle_min[4], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 5MAX
     // @DisplayName: Maximum Angle
@@ -149,7 +204,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("5MAX", 20, AP_Volz_Protocol, _servo_angle_max[4], 180),
+    AP_GROUPINFO("5MAX", 27, AP_Volz_Protocol, _servo_angle_max[4], VOLZ_DEFAULT_ANGLE_MAX),
 #endif
 
 #if NUM_SERVO_CHANNELS > 5
@@ -160,7 +215,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("6MIN", 21, AP_Volz_Protocol, _servo_angle_min[5], -180),
+    AP_GROUPINFO("6MIN", 28, AP_Volz_Protocol, _servo_angle_min[5], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 6MAX
     // @DisplayName: Maximum Angle
@@ -169,7 +224,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("6MAX", 22, AP_Volz_Protocol, _servo_angle_max[5], 180),
+    AP_GROUPINFO("6MAX", 29, AP_Volz_Protocol, _servo_angle_max[5], VOLZ_DEFAULT_ANGLE_MAX),
 #endif
 
 #if NUM_SERVO_CHANNELS > 6
@@ -180,7 +235,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("7MIN", 23, AP_Volz_Protocol, _servo_angle_min[6], -180),
+    AP_GROUPINFO("7MIN",30, AP_Volz_Protocol, _servo_angle_min[6], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 7MAX
     // @DisplayName: Maximum Angle
@@ -189,7 +244,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("7MAX", 24, AP_Volz_Protocol, _servo_angle_max[6], 180),
+    AP_GROUPINFO("7MAX", 31, AP_Volz_Protocol, _servo_angle_max[6], VOLZ_DEFAULT_ANGLE_MAX),
 #endif
 
 #if NUM_SERVO_CHANNELS > 7
@@ -200,7 +255,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("8MIN", 25, AP_Volz_Protocol, _servo_angle_min[7], -180),
+    AP_GROUPINFO("8MIN", 32, AP_Volz_Protocol, _servo_angle_min[7], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 8MAX
     // @DisplayName: Maximum Angle
@@ -209,7 +264,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("8MAX", 26, AP_Volz_Protocol, _servo_angle_max[7], 180),
+    AP_GROUPINFO("8MAX", 33, AP_Volz_Protocol, _servo_angle_max[7], VOLZ_DEFAULT_ANGLE_MAX),
 #endif
 
 #if NUM_SERVO_CHANNELS > 8
@@ -220,7 +275,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("9MIN", 27, AP_Volz_Protocol, _servo_angle_min[8], -180),
+    AP_GROUPINFO("9MIN", 34, AP_Volz_Protocol, _servo_angle_min[8], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 9MAX
     // @DisplayName: Maximum Angle
@@ -229,7 +284,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("9MAX", 28, AP_Volz_Protocol, _servo_angle_max[8], 180),
+    AP_GROUPINFO("9MAX", 35, AP_Volz_Protocol, _servo_angle_max[8], VOLZ_DEFAULT_ANGLE_MAX),
 #endif
 
 #if NUM_SERVO_CHANNELS > 9
@@ -240,7 +295,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("10MIN", 29, AP_Volz_Protocol, _servo_angle_min[9], -180),
+    AP_GROUPINFO("10MIN", 36, AP_Volz_Protocol, _servo_angle_min[9], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 10MAX
     // @DisplayName: Maximum Angle
@@ -249,7 +304,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("10MAX", 30, AP_Volz_Protocol, _servo_angle_max[9], 180),
+    AP_GROUPINFO("10MAX", 37, AP_Volz_Protocol, _servo_angle_max[9], VOLZ_DEFAULT_ANGLE_MAX),
 #endif
 
 #if NUM_SERVO_CHANNELS > 10
@@ -260,7 +315,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("11MIN", 31, AP_Volz_Protocol, _servo_angle_min[10], -180),
+    AP_GROUPINFO("11MIN", 38, AP_Volz_Protocol, _servo_angle_min[10], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 11MAX
     // @DisplayName: Maximum Angle
@@ -269,7 +324,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("11MAX", 32, AP_Volz_Protocol, _servo_angle_max[10], 180),
+    AP_GROUPINFO("11MAX", 39, AP_Volz_Protocol, _servo_angle_max[10], VOLZ_DEFAULT_ANGLE_MAX),
 #endif
 
 #if NUM_SERVO_CHANNELS > 11
@@ -280,7 +335,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("12MIN", 33, AP_Volz_Protocol, _servo_angle_min[11], -180),
+    AP_GROUPINFO("12MIN", 40, AP_Volz_Protocol, _servo_angle_min[11], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 12MAX
     // @DisplayName: Maximum Angle
@@ -289,7 +344,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("12MAX", 34, AP_Volz_Protocol, _servo_angle_max[11], 180),
+    AP_GROUPINFO("12MAX", 41, AP_Volz_Protocol, _servo_angle_max[11], VOLZ_DEFAULT_ANGLE_MAX),
 #endif
 
 #if NUM_SERVO_CHANNELS > 12
@@ -300,7 +355,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("13MIN", 35, AP_Volz_Protocol, _servo_angle_min[12], -180),
+    AP_GROUPINFO("13MIN", 42, AP_Volz_Protocol, _servo_angle_min[12], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 13MAX
     // @DisplayName: Maximum Angle
@@ -309,7 +364,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("13MAX", 36, AP_Volz_Protocol, _servo_angle_max[12], 180),
+    AP_GROUPINFO("13MAX", 43, AP_Volz_Protocol, _servo_angle_max[12], VOLZ_DEFAULT_ANGLE_MAX),
 #endif
 
 #if NUM_SERVO_CHANNELS > 13
@@ -320,7 +375,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("14MIN", 37, AP_Volz_Protocol, _servo_angle_min[13], -180),
+    AP_GROUPINFO("14MIN", 44, AP_Volz_Protocol, _servo_angle_min[13], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 14MAX
     // @DisplayName: Maximum Angle
@@ -329,7 +384,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("14MAX", 38, AP_Volz_Protocol, _servo_angle_max[13], 180),
+    AP_GROUPINFO("14MAX", 45, AP_Volz_Protocol, _servo_angle_max[13], VOLZ_DEFAULT_ANGLE_MAX),
 #endif
 
 #if NUM_SERVO_CHANNELS > 14
@@ -340,7 +395,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("15MIN", 39, AP_Volz_Protocol, _servo_angle_min[14], -180),
+    AP_GROUPINFO("15MIN", 4, AP_Volz_Protocol, _servo_angle_min[14], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 15MAX
     // @DisplayName: Maximum Angle
@@ -349,7 +404,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("15MAX", 40, AP_Volz_Protocol, _servo_angle_max[14], 180),
+    AP_GROUPINFO("15MAX", 47, AP_Volz_Protocol, _servo_angle_max[14], VOLZ_DEFAULT_ANGLE_MAX),
 #endif
 
 #if NUM_SERVO_CHANNELS > 15
@@ -360,7 +415,7 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("16MIN", 41, AP_Volz_Protocol, _servo_angle_min[15], -180),
+    AP_GROUPINFO("16MIN", 48, AP_Volz_Protocol, _servo_angle_min[15], VOLZ_DEFAULT_ANGLE_MIN),
 
     // @Param: 16MAX
     // @DisplayName: Maximum Angle
@@ -369,73 +424,8 @@ const AP_Param::GroupInfo AP_Volz_Protocol::var_info[] = {
     // @Range: -180 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("16MAX", 42, AP_Volz_Protocol, _servo_angle_max[15], 180),
+    AP_GROUPINFO("16MAX", 49, AP_Volz_Protocol, _servo_angle_max[15], VOLZ_DEFAULT_ANGLE_MAX),
 #endif
-
-////////////// MOVE THESE ABOVE ONCE DONE TESTING FOR PR  ////
-
-    // @Param: SER0
-    // @DisplayName: Serial 0, Channel Mask
-    // @Description: Serial 0, Channel Mask: Servos which should be sent across this serial port
-    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
-    // @User: Standard
-    AP_GROUPINFO("SER0", 43, AP_Volz_Protocol, _bitmask[0], 0),
-
-#if SERIALMANAGER_NUM_PORTS > 1
-    // @Param: SER1
-    // @DisplayName: Serial 1, Channel Mask
-    // @Description: Serial 1, Channel Mask: Servos which should be sent across this serial port
-    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
-    // @User: Standard
-    AP_GROUPINFO("SER1", 44, AP_Volz_Protocol, _bitmask[1], 0),
-#endif
-
-#if SERIALMANAGER_NUM_PORTS > 2
-    // @Param: SER2
-    // @DisplayName: Serial 2, Channel Mask
-    // @Description: Serial 2, Channel Mask: Servos which should be sent across this serial port
-    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
-    // @User: Standard
-    AP_GROUPINFO("SER2", 45, AP_Volz_Protocol, _bitmask[2], 0),
-#endif
-
-#if SERIALMANAGER_NUM_PORTS > 3
-    // @Param: SER3
-    // @DisplayName: Serial 3, Channel Mask
-    // @Description: Serial 3, Channel Mask: Servos which should be sent across this serial port
-    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
-    // @User: Standard
-    AP_GROUPINFO("SER3", 46, AP_Volz_Protocol, _bitmask[3], 0),
-#endif
-
-#if SERIALMANAGER_NUM_PORTS > 4
-    // @Param: SER4
-    // @DisplayName: Serial 4, Channel Mask
-    // @Description: Serial 4, Channel Mask: Servos which should be sent across this serial port
-    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
-    // @User: Standard
-    AP_GROUPINFO("SER4", 47, AP_Volz_Protocol, _bitmask[4], 0),
-#endif
-
-#if SERIALMANAGER_NUM_PORTS > 5
-    // @Param: SER5
-    // @DisplayName: Serial 5, Channel Mask
-    // @Description: Serial 5, Channel Mask: Servos which should be sent across this serial port
-    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
-    // @User: Standard
-    AP_GROUPINFO("SER5", 48, AP_Volz_Protocol, _bitmask[5], 0),
-#endif
-
-#if SERIALMANAGER_NUM_PORTS > 6
-    // @Param: SER6
-    // @DisplayName: Serial 6, Channel Mask
-    // @Description: Serial 6, Channel Mask: Servos which should be sent across this serial port
-    // @Bitmask: 0:Channel1,1:Channel2,2:Channel3,3:Channel4,4:Channel5,5:Channel6,6:Channel7,7:Channel8,8:Channel9,9:Channel10,10:Channel11,11:Channel12,12:Channel13,13:Channel14,14:Channel15,15:Channel16
-    // @User: Standard
-    AP_GROUPINFO("SER6", 49, AP_Volz_Protocol, _bitmask[6], 0),
-#endif
-
-/// FIX ME MOVE ABOVE MIN?MAX PARAMS ONCE DONE TESTING
 
     AP_GROUPEND
 };
@@ -487,13 +477,13 @@ void AP_Volz_Protocol::update()
     // FIX ME: Update the delay_time based upon the main calling loop rate eg Copter's 400Hz
     // this limits the maximum update rate based upon: _update_rate, # of channels, safety factor, & average transmission time
     const uint32_t now = AP_HAL::micros();
-    if (_last_volz_update_time != 0  && now - _last_volz_update_time < (0.5 * _delay_time_us)) {
+    if (_last_volz_update_time != 0  && (now - _last_volz_update_time) < _delay_time_us) {
         return;
     }
     _last_volz_update_time = now;
     _delay_time_us = 0;
 
-    // Update protocol Registers if needed
+    // Update protocol registers if needed
     if (_protocol.get() != _last_protocol) {
         update_protocol_registers(_protocol);
     }
@@ -549,7 +539,6 @@ void AP_Volz_Protocol::update()
 
     // Limit the maximum update rate according to the user's set parameter
     // Constrain the maximum update rate to be 400 Hz (2,500 us) & minimum update rate to 50 Hz (20,000 us)
-    
 #ifndef HAL_BUILD_AP_PERIPH
     const uint32_t loop_period_us = AP::scheduler().get_loop_period_us();
 #else
@@ -612,7 +601,7 @@ float AP_Volz_Protocol::compute_angle_from_pwm(uint8_t channel, uint16_t pwm, fl
     // This linearization to convert from PWM to a servo angle assumes end points given by the variables
     // and a mid-pont at 0 degrees deflection to scale the PWM value to an output angle
     const float angle_to_pwm_scale = (angle_max - angle_min) / (VOLZ_PWM_POSITION_MAX - VOLZ_PWM_POSITION_MIN);
-    const float angle_to_pwm_intercept = - angle_to_pwm_scale * (VOLZ_PWM_POSITION_MAX + VOLZ_PWM_POSITION_MIN) * 0.5;
+    const float angle_to_pwm_intercept = angle_max - angle_to_pwm_scale * VOLZ_PWM_POSITION_MAX;
     float angle = angle_to_pwm_scale * pwm + angle_to_pwm_intercept;
 
     // Constrain the angle to the servo min. and max. as defined by the protocol
