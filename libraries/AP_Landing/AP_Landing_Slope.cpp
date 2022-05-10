@@ -127,7 +127,7 @@ bool AP_Landing::type_slope_verify_land(const Location &prev_WP_loc, Location &n
             aparm.min_gndspeed_cm.load();
             aparm.throttle_cruise.load();
         }
-    } else if (type_slope_stage == SLOPE_STAGE_APPROACH && pre_flare_airspeed > 0) {
+    } else if (type_slope_stage <= SLOPE_STAGE_APPROACH && pre_flare_airspeed > 0) {
         bool reached_pre_flare_alt = pre_flare_alt > 0 && (height <= pre_flare_alt);
         bool reached_pre_flare_sec = pre_flare_sec > 0 && (height <= sink_rate * pre_flare_sec);
         if (reached_pre_flare_alt || reached_pre_flare_sec) {
@@ -385,7 +385,7 @@ bool AP_Landing::type_slope_is_preflaring(void) const
 
 bool AP_Landing::type_slope_is_on_approach(void) const
 {
-    return (type_slope_stage == SLOPE_STAGE_APPROACH ||
+    return (type_slope_stage <= SLOPE_STAGE_APPROACH ||
             type_slope_stage == SLOPE_STAGE_PREFLARE);
 }
 
