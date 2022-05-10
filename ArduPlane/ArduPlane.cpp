@@ -697,7 +697,8 @@ bool Plane::in_auto_land(void)
 
     const float rangefinder_last_change = fabsf(rangefinder_state.prev_distance - rangefinder_state.last_distance);
     if (g.rangefinder_landing && rangefinder_state.in_range &&
-         rangefinder_state.height_estimate < landing.get_preflare_alt() &&
+        rangefinder.status_orient(ROTATION_PITCH_270) == RangeFinder::Status::Good &&
+        rangefinder_state.height_estimate < landing.get_preflare_alt() &&
         smoothed_airspeed >= aparm.airspeed_min &&
         rangefinder_last_change > 0 &&
         rangefinder_last_change < 10) {

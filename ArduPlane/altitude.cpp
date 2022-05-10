@@ -512,6 +512,11 @@ float Plane::mission_alt_offset(void)
  */
 float Plane::height_above_target(void)
 {
+    if (plane.auto_state.emergency_land &&
+        !is_equal(plane.auto_state.land_alt_amsl,-1.0f)) {
+        // use emergency landing alt for target
+        return current_loc.alt*0.01 - plane.auto_state.land_alt_amsl;
+    }
     float target_alt = next_WP_loc.alt*0.01;
     if (!next_WP_loc.relative_alt) {
         target_alt -= ahrs.get_home().alt*0.01f;
