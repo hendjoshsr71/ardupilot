@@ -1910,10 +1910,11 @@ AP_AHRS::EKFType AP_AHRS::active_EKF_type(void) const
         }
 #endif
         if (hal.util->get_soft_armed() &&
-            (!filt_state.flags.using_gps ||
-             !filt_state.flags.horiz_pos_abs) &&
             should_use_gps &&
-            AP::gps().status() >= AP_GPS::GPS_OK_FIX_3D) {
+            AP::gps().status() >= AP_GPS::GPS_OK_FIX_3D &&
+            (!filt_state.flags.using_gps ||
+             !filt_state.flags.horiz_pos_abs ||
+             EKF_innovations_bad())) {
             // if the EKF is not fusing GPS or doesn't have a 2D fix
             // and we have a 3D lock, then plane and rover would
             // prefer to use the GPS position from DCM. This is a
@@ -3229,6 +3230,42 @@ const EKFGSF_yaw *AP_AHRS::get_yaw_estimator(void) const
     }
     // since there is no default case above, this is unreachable
     return nullptr;
+}
+
+/*
+  return true if current EKF innovations are very bad
+ */
+bool AP_AHRS::EKF_innovations_bad(void) const
+{
+    switch (ekf_type()) {
+    case EKFType::NONE:
+        return false;
+#if HAL_NAVEKF2_AVAILABLE
+    case EKFType::TWO: {
+        Vector3f velInnov, posInnov, magInnov;
+        float tasInnov, yawInnov;
+        EKF2.getInnovations(-1, velInnov, posInnov, magInnov, tasInnov, yawInnov);
+        return (velInnov.length() < 10 && posInnov.length() < 50);
+    }
+#endif
+#if HAL_NAVEKF3_AVAILABLE
+    case EKFType::THREE: {
+        Vector3f velInnov, posInnov, magInnov;
+        float tasInnov, yawInnov;
+        EKF3.getInnovations(-1, velInnov, posInnov, magInnov, tasInnov, yawInnov);
+        return (velInnov.length() < 10 && posInnov.length() < 50);
+    }
+#endif
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+    case EKFType::SIM:
+        return false;
+#endif
+#if HAL_EXTERNAL_AHRS_ENABLED
+    case EKFType::EXTERNAL:
+        return false; 
+#endif
+    }
+    return false;
 }
 
 // singleton instance

@@ -379,6 +379,9 @@ public:
     // set and save the ALT_M_NSE parameter value
     void set_alt_measurement_noise(float noise);
 
+    // return true if EKF innovations are bad
+    bool EKF_innovations_bad(void) const;
+
     // active EKF type for logging
     uint8_t get_active_AHRS_type(void) const {
         return uint8_t(active_EKF_type());
