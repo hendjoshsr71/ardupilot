@@ -3236,23 +3236,24 @@ const EKFGSF_yaw *AP_AHRS::get_yaw_estimator(void) const
  */
 bool AP_AHRS::EKF_innovations_bad(void) const
 {
+    Vector3f velInnov, posInnov, magInnov;
+    float tasInnov, yawInnov;
+    Vector3f ekf_eulers;
     switch (ekf_type()) {
     case EKFType::NONE:
         return false;
 #if HAL_NAVEKF2_AVAILABLE
     case EKFType::TWO: {
-        Vector3f velInnov, posInnov, magInnov;
-        float tasInnov, yawInnov;
         EKF2.getInnovations(-1, velInnov, posInnov, magInnov, tasInnov, yawInnov);
-        return (velInnov.length() < 10 && posInnov.length() < 50);
+        EKF2.getEulerAngles(-1, ekf_eulers);
+        break;
     }
 #endif
 #if HAL_NAVEKF3_AVAILABLE
     case EKFType::THREE: {
-        Vector3f velInnov, posInnov, magInnov;
-        float tasInnov, yawInnov;
         EKF3.getInnovations(-1, velInnov, posInnov, magInnov, tasInnov, yawInnov);
-        return (velInnov.length() < 10 && posInnov.length() < 50);
+        EKF3.getEulerAngles(-1, ekf_eulers);
+        break;
     }
 #endif
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
@@ -3263,6 +3264,18 @@ bool AP_AHRS::EKF_innovations_bad(void) const
     case EKFType::EXTERNAL:
         return false; 
 #endif
+    }
+    if (velInnov.length() > 10 || posInnov.length() > 50) {
+        // too much velocity or position error from sensors
+        return true;
+    }
+
+    float dcm_roll, dcm_pitch, dcm_yaw;
+    _dcm_matrix.to_euler(&dcm_roll, &dcm_pitch, &dcm_yaw);
+    const float max_angle_err = radians(20);
+    if (fabsf(dcm_roll - ekf_eulers.x) > max_angle_err ||
+        fabsf(dcm_pitch - ekf_eulers.y) > max_angle_err) {
+        return true;
     }
     return false;
 }
