@@ -321,6 +321,11 @@ public:
         AP::ins().get_delta_velocity(ret, dt);
     }
 
+    /////// FIX ME BUG HERE /////
+
+    // initialise position and speed for when we have no GPS lock
+    virtual void init_posvel(float speed, const Location &loc) { return; }
+
     // get_hgt_ctrl_limit - get maximum height to be observed by the
     // control loops in meters and a validity flag.  It will return
     // false when no limiting is required

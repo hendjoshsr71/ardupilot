@@ -2683,6 +2683,40 @@ void AP_AHRS::send_ekf_status_report(mavlink_channel_t chan) const
     }
 }
 
+// initialise position and speed for when we have no GPS lock
+void AP_AHRS::init_posvel(float speed, const Location &loc) {
+    switch (ekf_type()) {
+    case EKFType::NONE:
+
+        dcm.init_posvel(speed, loc);
+        return;
+
+#if AP_AHRS_SIM_ENABLED
+    case EKFType::SIM:
+
+        return;
+#endif
+
+#if HAL_EXTERNAL_AHRS_ENABLED
+    case EKFType::EXTERNAL: {
+
+        return;
+    }
+#endif
+
+#if HAL_NAVEKF2_AVAILABLE
+    case EKFType::TWO:
+
+        return;
+#endif
+
+#if HAL_NAVEKF3_AVAILABLE
+    case EKFType::THREE:
+        return;
+#endif
+    }
+}
+
 // passes a reference to the location of the inertial navigation origin
 // in WGS-84 coordinates
 // returns a boolean true when the inertial navigation origin has been set
