@@ -1054,8 +1054,11 @@ bool AP_AHRS_DCM::get_location(struct Location &loc) const
     if (_gps_use == GPSUse::EnableWithHeight &&
         gps.status() >= AP_GPS::GPS_OK_FIX_3D) {
         loc.alt = gps.location().alt;
-    } else if (_gps_use == AHRS_GPSUse::Enable_3D && _dead_reckon_baro) {
-        loc.alt = (baro().get_altitude() + _dead_reckon_basealt) * 100;
+    } 
+
+    ///// FIX ME HERE GPSUse::Enable_3D  or ENABLE???
+    else if (_gps_use == GPSUse::Enable && _dead_reckon_baro) {
+        loc.alt = (baro.get_altitude() + _dead_reckon_basealt) * 100;
     } else {
         loc.alt = baro.get_altitude() * 100 + AP::ahrs().get_home().alt;
     }
