@@ -54,6 +54,8 @@
 #if HAL_MSP_AIRSPEED_ENABLED
 #include "AP_Airspeed_MSP.h"
 #endif
+#include "AP_Airspeed_Synthetic.h"
+
 extern const AP_HAL::HAL &hal;
 
 #ifdef HAL_AIRSPEED_TYPE_DEFAULT
@@ -209,6 +211,20 @@ const AP_Param::GroupInfo AP_Airspeed::var_info[] = {
     // @Units: m/s
     // @User: Advanced
     AP_GROUPINFO("_WIND_WARN", 23, AP_Airspeed, _wind_warn, 0),
+
+    // @Param: _WIND_DIR
+    // @DisplayName: Wind direction
+    // @Description: This is the wind direction to be used for the synthetic airspeed estimator
+    // @Units: deg
+    // @User: Advanced
+    AP_GROUPINFO("_WIND_DIR",  26, AP_Airspeed, param[0].wind_direction_from, 0),
+
+    // @Param: _WIND_SPD
+    // @DisplayName: Wind speed
+    // @Description: This is the wind speed to be used for the synthetic airspeed estimator
+    // @Units: m/s
+    // @User: Advanced
+    AP_GROUPINFO("_WIND_SPD",  27, AP_Airspeed, param[0].wind_speed_mps, 0),
 #endif
 
 #if AIRSPEED_MAX_SENSORS > 1
@@ -279,6 +295,10 @@ const AP_Param::GroupInfo AP_Airspeed::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("2_BUS",  20, AP_Airspeed, param[1].bus, 1),
 
+
+    // Note that 21, 22 and 23 are used above by the _OPTIONS, _WIND_MAX and _WIND_WARN parameters.  Do not use them!!
+    // Note that 24 is used above by the _DEVID parameter. Do not use it!!
+
 #if AIRSPEED_MAX_SENSORS > 1
     // @Param: 2_DEVID
     // @DisplayName: Airspeed2 ID
@@ -287,10 +307,24 @@ const AP_Param::GroupInfo AP_Airspeed::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO_FLAGS("2_DEVID", 25, AP_Airspeed, param[1].bus_id, 0, AP_PARAM_FLAG_INTERNAL_USE_ONLY),
 #endif
-    
-#endif // AIRSPEED_MAX_SENSORS
 
-    // Note that 21, 22 and 23 are used above by the _OPTIONS, _WIND_MAX and _WIND_WARN parameters.  Do not use them!!
+    // Note that 26 to 27 are used above by the _WIND_DIR and _WIND_SPD parameters. Do not use them!!
+
+    // @Param: _WIND_DIR
+    // @DisplayName: Wind direction
+    // @Description: This is the wind direction to be used for the synthetic airspeed estimator
+    // @Units: deg
+    // @User: Advanced
+    AP_GROUPINFO("_WIND_DIR",  28, AP_Airspeed, param[0].wind_direction_from, 0),
+
+    // @Param: _WIND_SPD
+    // @DisplayName: Wind speed
+    // @Description: This is the wind speed to be used for the synthetic airspeed estimator
+    // @Units: m/s
+    // @User: Advanced
+    AP_GROUPINFO("_WIND_SPD",  29, AP_Airspeed, param[0].wind_speed_mps, 0),
+
+#endif // AIRSPEED_MAX_SENSORS
 
     // NOTE: Index 63 is used by AIRSPEED_TYPE, Do not use it!: AP_Param converts an index of 0 to 63 so that the index may be bit shifted
     AP_GROUPEND
@@ -449,7 +483,11 @@ void AP_Airspeed::init()
             sensor[i] = new AP_Airspeed_MSP(*this, i, 0);
 #endif
             break;
+        case TYPE_SYNTHETIC:
+            sensor[i] = new AP_Airspeed_Synthetic(*this, i);
+            break;
         }
+
         if (sensor[i] && !sensor[i]->init()) {
             GCS_SEND_TEXT(MAV_SEVERITY_ERROR, "Airspeed %u init failed", i + 1);
             delete sensor[i];
@@ -483,6 +521,18 @@ bool AP_Airspeed::get_temperature(uint8_t i, float &temperature)
     }
     if (sensor[i]) {
         return sensor[i]->get_temperature(temperature);
+    }
+    return false;
+}
+
+// return true if airspeed source is synthetic
+bool AP_Airspeed::is_synthetic(uint8_t i) const
+{
+    if (!enabled(i)) {
+        return false;
+    }
+    if (sensor[i]) {
+        return sensor[i]->is_synthetic();
     }
     return false;
 }

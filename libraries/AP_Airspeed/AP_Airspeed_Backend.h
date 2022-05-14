@@ -46,6 +46,9 @@ public:
     virtual void handle_msp(const MSP::msp_airspeed_data_message_t &pkt) {}
 #endif 
 
+    // return true if this is a synthetic airspeed sensor
+    virtual bool is_synthetic(void) const { return false; }
+
 protected:
     int8_t get_pin(void) const;
     float get_psi_range(void) const;
@@ -69,6 +72,11 @@ protected:
 
     float get_airspeed_ratio(void) const {
         return frontend.get_airspeed_ratio(instance);
+    }
+
+    void get_wind(float &direction_from_deg, float &speed_mps) const {
+        direction_from_deg = frontend.param[instance].wind_direction_from;
+        speed_mps = frontend.param[instance].wind_speed_mps;
     }
 
     // some sensors use zero offsets
@@ -107,8 +115,9 @@ protected:
         ANALOG   = 0x08,
         NMEA     = 0x09,
         ASP5033  = 0x0A,
+        SYNTHETIC = 0x0B,
     };
-    
+
 private:
     AP_Airspeed &frontend;
     uint8_t instance;
