@@ -251,7 +251,7 @@ bool GCS_MAVLINK_Sub::try_send_message(enum ap_message id)
 const AP_Param::GroupInfo GCS_MAVLINK_Parameters::var_info[] = {
     // @Param: RAW_SENS
     // @DisplayName: Raw sensor stream rate
-    // @Description: Stream rate of RAW_IMU, SCALED_IMU2, SCALED_PRESSURE, and SENSOR_OFFSETS to ground station
+    // @Description: Stream rate of RAW_IMU, SCALED_IMU2, and SCALED_PRESSURE to ground station
     // @Units: Hz
     // @Range: 0 50
     // @Increment: 1
