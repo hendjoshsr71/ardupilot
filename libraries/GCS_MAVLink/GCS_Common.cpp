@@ -5196,6 +5196,39 @@ void GCS_MAVLINK::send_uavionix_adsb_out_status() const
 #endif
 }
 
+// OpenDroneID Send Messages
+#if AP_OPENDRONEID_ENABLED
+void GCS_MAVLINK::send_open_drone_id_basic_id()
+{
+    const AP_OpenDroneID &opendrone_id = AP::opendroneid();
+    opendrone_id.send_basic_id_message();
+}
+
+void GCS_MAVLINK::send_open_drone_id_location()
+{
+    AP_OpenDroneID &opendrone_id = AP::opendroneid();
+    opendrone_id.send_location_message();
+}
+
+void GCS_MAVLINK::send_open_drone_id_system()
+{
+    const AP_OpenDroneID &opendrone_id = AP::opendroneid();
+    opendrone_id.send_system_message();
+}
+
+void GCS_MAVLINK::send_open_drone_id_operator_id()
+{
+    const AP_OpenDroneID &opendrone_id = AP::opendroneid();
+    opendrone_id.send_operator_id_message();
+}
+
+void GCS_MAVLINK::send_open_drone_id_self_id()
+{
+    const AP_OpenDroneID &opendrone_id = AP::opendroneid();
+    opendrone_id.send_self_id_message();
+}
+#endif // AP_OPENDRONEID_ENABLED
+
 void GCS_MAVLINK::send_autopilot_state_for_gimbal_device() const
 {
     // get attitude
@@ -5337,6 +5370,29 @@ bool GCS_MAVLINK::try_send_message(const enum ap_message id)
         CHECK_PAYLOAD_SIZE(BATTERY2);
         send_battery2();
         break;
+
+// OpenDroneID Send Messages
+#if AP_OPENDRONEID_ENABLED
+    case MSG_OPEN_DRONE_ID_BASIC_ID:
+        send_open_drone_id_basic_id();
+        break;
+
+    case MSG_OPEN_DRONE_ID_LOCATION:
+        send_open_drone_id_location();
+        break;
+
+    case MSG_OPEN_DRONE_ID_SYSTEM:
+        send_open_drone_id_system();
+        break;
+
+    case MSG_OPEN_DRONE_ID_OPERATOR_ID:
+        send_open_drone_id_operator_id();
+        break;
+
+    case MSG_OPEN_DRONE_ID_SELF_ID:
+        send_open_drone_id_self_id();
+        break;
+#endif
 
     case MSG_EKF_STATUS_REPORT:
         CHECK_PAYLOAD_SIZE(EKF_STATUS_REPORT);
