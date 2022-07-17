@@ -191,6 +191,8 @@ protected:
 
     bool generator_checks(bool report) const;
 
+    bool opendroneid_checks(bool display_failure) const;
+
     virtual bool system_checks(bool report);
 
     bool can_checks(bool report);

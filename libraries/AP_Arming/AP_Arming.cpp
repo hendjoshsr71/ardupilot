@@ -48,6 +48,7 @@
 #include <AP_FETtecOneWire/AP_FETtecOneWire.h>
 #include <AP_RPM/AP_RPM.h>
 #include <AP_Mount/AP_Mount.h>
+#include <AP_OpenDroneID/AP_OpenDroneID.h>
 
 #if HAL_MAX_CAN_PROTOCOL_DRIVERS
   #include <AP_CANManager/AP_CANManager.h>
@@ -1327,6 +1328,21 @@ bool AP_Arming::generator_checks(bool display_failure) const
     return true;
 }
 
+// OpenDroneID Checks
+bool AP_Arming::opendroneid_checks(bool display_failure) const
+{
+#if AP_OPENDRONEID_ENABLED
+    const AP_OpenDroneID & opendroneid = AP::opendroneid();
+
+    char failure_msg[50] = {};
+    if (!opendroneid.pre_arm_check(failure_msg, sizeof(failure_msg))) {
+        check_failed(display_failure, "OpenDroneID: %s", failure_msg);
+        return false;
+    }
+#endif
+    return true;
+}
+
 bool AP_Arming::pre_arm_checks(bool report)
 {
 #if !APM_BUILD_COPTER_OR_HELI
@@ -1363,7 +1379,8 @@ bool AP_Arming::pre_arm_checks(bool report)
         &  visodom_checks(report)
         &  aux_auth_checks(report)
         &  disarm_switch_checks(report)
-        &  fence_checks(report);
+        &  fence_checks(report)
+        &  opendroneid_checks(report);
 }
 
 bool AP_Arming::arm_checks(AP_Arming::Method method)
