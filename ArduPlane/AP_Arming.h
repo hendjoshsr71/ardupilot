@@ -20,6 +20,7 @@ public:
 
     bool pre_arm_checks(bool report) override;
     bool arm_checks(AP_Arming::Method method) override;
+    bool mandatory_checks(bool report) override;
 
     // var_info for holding Parameter information
     static const struct AP_Param::GroupInfo var_info[];

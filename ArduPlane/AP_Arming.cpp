@@ -272,6 +272,20 @@ bool AP_Arming_Plane::arm_checks(AP_Arming::Method method)
     return AP_Arming::arm_checks(method);
 }
 
+// mandatory checks that will be run if ARMING_CHECK is zero or arming forced
+bool AP_Arming_Plane::mandatory_checks(bool display_failure)
+{
+    bool result = true;
+
+#if AP_ARMING_ENFORCE_OPENDRONEID
+    // AP_ARMING_ENFORCE_OPENDRONEID Enforces the OpenDroneID arming check but allows for progressive
+    // inclusion of the check as required by airspace regulators
+    result = opendroneid_checks(display_failure);
+#endif
+
+    return result & AP_Arming::mandatory_checks(display_failure);
+}
+
 /*
   update HAL soft arm state
 */
