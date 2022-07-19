@@ -658,6 +658,12 @@ bool AP_Arming_Copter::mandatory_checks(bool display_failure)
         result = false;
     }
 
+#if AP_ARMING_ENFORCE_OPENDRONEID
+    // AP_ARMING_ENFORCE_OPENDRONEID Enforces the OpenDroneID arming check but allows for progressive
+    // inclusion of the check as required by airspace regulators
+    result = opendroneid_checks(display_failure);
+#endif
+
     return result & AP_Arming::mandatory_checks(display_failure);
 }
 
