@@ -178,6 +178,7 @@ public:
         uint32_t time_week_ms;              ///< GPS time (milliseconds from start of GPS week)
         uint16_t time_week;                 ///< GPS week number
         Location location;                  ///< last fix location
+        float height_above_ellipsoid;       ///< height above the WGS84 ellipsoid (meters)
         float ground_speed;                 ///< ground speed in m/sec
         float ground_course;                ///< ground course in degrees
         float gps_yaw;                      ///< GPS derived yaw information, if available (degrees)
@@ -201,6 +202,8 @@ public:
         uint64_t last_corrected_gps_time_us;///< the system time we got the last corrected GPS timestamp, microseconds
         bool corrected_timestamp_updated;  ///< true if the corrected timestamp has been updated
         uint32_t lagged_sample_count;       ///< number of samples with 50ms more lag than expected
+        uint32_t time_accuracy;             ///< time accuracy (nano seconds)
+        uint32_t have_time_accuracy;        ///< does GPS give time accuracy? Set to true only once available.
 
         // all the following fields must only all be filled by RTK capable backend drivers
         uint32_t rtk_time_week_ms;         ///< GPS Time of Week of last baseline in milliseconds
@@ -297,6 +300,16 @@ public:
         return location(primary_instance);
     }
 
+    // Height (meters) above the WGS84 ellipsoid
+    float height_above_ellipsoid(uint8_t instance) const {
+        return state[instance].height_above_ellipsoid;
+    }
+
+    // Height (meters) above the WGS84 ellipsoid
+    float height_above_ellipsoid() const {
+        return height_above_ellipsoid(primary_instance);
+    }
+
     // report speed accuracy
     bool speed_accuracy(uint8_t instance, float &sacc) const;
     bool speed_accuracy(float &sacc) const {
@@ -311,6 +324,14 @@ public:
     bool vertical_accuracy(uint8_t instance, float &vacc) const;
     bool vertical_accuracy(float &vacc) const {
         return vertical_accuracy(primary_instance, vacc);
+    }
+
+    // Time accuracy in seconds
+    bool time_accuracy(uint8_t instance, float &t_acc) const;
+
+    // Time accuracy in seconds
+    bool time_accuracy(float &t_acc) const {
+        return time_accuracy(primary_instance, t_acc);
     }
 
     // 3D velocity in NED format
