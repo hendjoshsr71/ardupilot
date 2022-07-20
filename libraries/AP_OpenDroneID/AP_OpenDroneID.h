@@ -22,13 +22,20 @@
  * (and a DroneBeacon MAVLink transponder connected to ttyUSB1)
  *
  * The Remote ID implementation expects a transponder that caches the received MAVLink messages from ArduPilot
- * and transmits them at the required intervals. So static messages are only send once to the transponder.
+ * and transmits them at the required intervals. So static messages are only sent once to the transponder.
  */
 
 #pragma once
 
 #ifndef AP_OPENDRONEID_ENABLED
 #define AP_OPENDRONEID_ENABLED 1
+#endif
+
+// Enforces the OpenDroneID arming check
+// Allows for progressive inclusion of this as required by regulators dues to different
+// requirement dates for new vehicles vs. retrofits in various countries
+#ifndef AP_ARMING_ENFORCE_OPENDRONEID
+#define AP_ARMING_ENFORCE_OPENDRONEID 1
 #endif
 
 #include <AP_Math/AP_Math.h>
@@ -74,6 +81,7 @@ public:
     bool transmit_operator_id_message;
 
     void init();
+    bool pre_arm_check(char* failmsg, uint8_t failmsg_len) const;
     void update();
     void send_dynamic_out();
     void send_static_out();
@@ -151,6 +159,7 @@ public:
          _ua_type = (MAV_ODID_UA_TYPE) constrain_uint16(ua_type, MAV_ODID_UA_TYPE_NONE, MAV_ODID_UA_TYPE_OTHER);
     }
 
+    // This can be removed 
     void set_height_reference(MAV_ODID_HEIGHT_REF reference) {
         //check if reference is valid
         _height_reference = (MAV_ODID_HEIGHT_REF) constrain_uint16(reference, MAV_ODID_HEIGHT_REF_OVER_TAKEOFF, MAV_ODID_HEIGHT_REF_OVER_GROUND);
@@ -272,6 +281,10 @@ private:
 
     // parameters
     AP_Int32 _serial_number; // do we need this parameter?
+    AP_Float _baro_accuracy;    // Vertical accuracy of the barometer when installed
+    AP_Int8  _ua_type_parm;     // Unmanned aircraft type parameter
+
+
     mavlink_channel_t _chan; // MAVLink channel that communicates with the Remote ID Transceiver
     uint32_t _last_send_dynamic_messages_ms;
     uint32_t _last_send_static_messages_ms;
@@ -283,7 +296,9 @@ private:
     MAV_ODID_STATUS _uav_status;
     MAV_ODID_HEIGHT_REF _height_reference;
 
-    struct Location _operator_position;
+    Location _takeoff_location;
+
+    Location _operator_position;
     uint32_t _operator_timestamp;
 
     uint16_t _area_count;
