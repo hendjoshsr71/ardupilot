@@ -504,6 +504,14 @@ bool AP_GPS::vertical_accuracy(uint8_t instance, float &vacc) const
     return false;
 }
 
+bool AP_GPS::time_accuracy(uint8_t instance, float &t_acc) const
+{
+    if (state[instance].have_time_accuracy) {
+        t_acc = state[instance].time_accuracy * 1.0E-9;
+        return true;
+    }
+    return false;
+}
 
 /**
    convert GPS week and milliseconds to unix epoch in milliseconds
@@ -2133,9 +2141,11 @@ void AP_GPS::Write_GPS(uint8_t i)
 
     /* write auxiliary accuracy information as well */
     float hacc = 0, vacc = 0, sacc = 0;
+    float t_acc = 0.0;
     horizontal_accuracy(i, hacc);
     vertical_accuracy(i, vacc);
     speed_accuracy(i, sacc);
+    time_accuracy(i, t_acc);
     struct log_GPA pkt2{
         LOG_PACKET_HEADER_INIT(LOG_GPA_MSG),
         time_us       : time_us,
@@ -2147,9 +2157,18 @@ void AP_GPS::Write_GPS(uint8_t i)
         yaw_accuracy  : yaw_accuracy_deg,
         have_vv       : (uint8_t)have_vertical_velocity(i),
         sample_ms     : last_message_time_ms(i),
-        delta_ms      : last_message_delta_time_ms(i)
+        delta_ms      : last_message_delta_time_ms(i),
+        t_acc         : t_acc,
     };
     AP::logger().WriteBlock(&pkt2, sizeof(pkt2));
+
+    const struct log_GPS2 pkt3 {
+        LOG_PACKET_HEADER_INIT(LOG_GPS2_MSG),
+        time_us             : time_us,
+        instance            : i,
+        alt_above_ellipsoid : height_above_ellipsoid(i),
+    };
+    AP::logger().WriteBlock(&pkt3, sizeof(pkt3));
 }
 
 /*
