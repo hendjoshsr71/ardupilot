@@ -1287,12 +1287,12 @@ AP_GPS_UBLOX::_parse_gps(void)
         _last_pos_time        = _buffer.posllh.itow;
         state.location.lng    = _buffer.posllh.longitude;
         state.location.lat    = _buffer.posllh.latitude;
-        if (option_set(AP_GPS::HeightEllipsoid)) {
+        if (gps.get_altitude_reference_system() == AP_GPS::WGS84) {
             state.location.alt    = _buffer.posllh.altitude_ellipsoid / 10;
-        } else {
+        } else if (gps.get_altitude_reference_system() == AP_GPS::ASML){
             state.location.alt    = _buffer.posllh.altitude_msl / 10;
         }
-        state.height_above_ellipsoid = _buffer.posllh.altitude_ellipsoid * 0.001;
+        state.height_above_WGS84 = _buffer.posllh.altitude_ellipsoid * 0.001;
 
         state.status          = next_fix;
         _new_position = true;

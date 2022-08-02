@@ -180,6 +180,7 @@ AP_GPS_SIRF::_parse_gps(void)
         state.location.lat      = swap_int32(_buffer.nav.latitude);
         state.location.lng      = swap_int32(_buffer.nav.longitude);
         state.location.alt      = swap_int32(_buffer.nav.altitude_msl);
+        state.height_above_WGS84 = swap_int32(_buffer.nav.altitude_ellipsoid) * 0.1;
         state.ground_speed      = swap_int32(_buffer.nav.ground_speed)*0.01f;
         state.ground_course     = wrap_360(swap_int16(_buffer.nav.ground_course)*0.01f);
         state.num_sats          = _buffer.nav.satellites;

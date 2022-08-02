@@ -65,6 +65,10 @@ AP_GPS_SBP2::AP_GPS_SBP2(AP_GPS &_gps, AP_GPS::GPS_State &_state,
                        AP_HAL::UARTDriver *_port) :
     AP_GPS_Backend(_gps, _state, _port)
 {
+    // The SBP2 GPS Defaulted in previous code versions before Stable 4.3
+    // a WGS84 altitude reference not AMSL
+    
+
     Debug("SBP Driver Initialized");
     parser_state.state = sbp_parser_state_t::WAITING;
 }
@@ -200,6 +204,11 @@ AP_GPS_SBP2::_sbp_process_message() {
             check_new_itow(last_pos_llh.tow, parser_state.msg_len);
             break;
 
+        case SBP_POS_LLH_ACC_MSGTYPE:
+            memcpy(&last_pos_acc, parser_state.msg_buff, sizeof(struct sbp_pos_llh_acc));
+            check_new_itow(last_pos_acc.tow, parser_state.msg_len);
+            break;
+
         case SBP_DOPS_MSGTYPE:
             memcpy(&last_dops, parser_state.msg_buff, sizeof(struct sbp_dops_t));
             check_new_itow(last_dops.tow, parser_state.msg_len);
@@ -333,8 +342,15 @@ AP_GPS_SBP2::_attempt_state_update()
         //
         state.location.lat      = (int32_t) (last_pos_llh.lat * (double)1e7);
         state.location.lng      = (int32_t) (last_pos_llh.lon * (double)1e7);
-        state.location.alt      = (int32_t) (last_pos_llh.height * 100);
+        state.height_above_WGS84 = (float) last_pos_llh.height_ellipsoid;
         state.num_sats          = last_pos_llh.n_sats;
+
+
+        if (gps.get_altitude_reference_system() == AP_GPS::WGS84) {
+            state.location.alt    = state.height_above_WGS84 * 0.1;
+        } else if (gps.get_altitude_reference_system() == AP_GPS::ASML){
+            state.location.alt    = (int32_t) (last_pos_acc.height_msl * 100);
+        }
 
         switch (last_pos_llh.flags.fix_mode) {
             case 1:

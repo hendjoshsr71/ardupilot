@@ -178,7 +178,8 @@ public:
         uint32_t time_week_ms;              ///< GPS time (milliseconds from start of GPS week)
         uint16_t time_week;                 ///< GPS week number
         Location location;                  ///< last fix location
-        float height_above_ellipsoid;       ///< height above the WGS84 ellipsoid (meters)
+        float height_above_WGS84;           ///< height above the WGS84 ellipsoid (meters)
+        bool have_height_above_WGS84;       ///< true if has height above the WGS84 ellipsoid
         float ground_speed;                 ///< ground speed in m/sec
         float ground_course;                ///< ground course in degrees
         float gps_yaw;                      ///< GPS derived yaw information, if available (degrees)
@@ -301,13 +302,13 @@ public:
     }
 
     // Height (meters) above the WGS84 ellipsoid
-    float height_above_ellipsoid(uint8_t instance) const {
-        return state[instance].height_above_ellipsoid;
+    float height_above_WGS84(uint8_t instance) const {
+        return state[instance].height_above_WGS84;
     }
 
     // Height (meters) above the WGS84 ellipsoid
-    float height_above_ellipsoid() const {
-        return height_above_ellipsoid(primary_instance);
+    float height_above_WGS84() const {
+        return height_above_WGS84(primary_instance);
     }
 
     // report speed accuracy
@@ -458,6 +459,16 @@ public:
         return have_gps_yaw(primary_instance);
     }
 
+    // return true if the GPS currently has the height above the WGS84 ellipsoid available
+    bool have_height_above_WGS84(uint8_t instance) const {
+        return state[instance].have_height_above_WGS84;
+    }
+
+    // return true if the primary GPS currently has the height above the WGS84 ellipsoid available
+    bool have_height_above_WGS84(void) const {
+        return have_height_above_WGS84(primary_instance);
+    }
+
     // return true if the GPS is configured to provide yaw. This will
     // be true if we expect the GPS to provide yaw, even if it
     // currently is not able to provide yaw
@@ -600,6 +611,7 @@ protected:
     AP_Float _blend_tc;
     AP_Int16 _driver_options;
     AP_Int8 _primary;
+    AP_Int8 _altitude_reference;
 #if HAL_ENABLE_LIBUAVCAN_DRIVERS
     AP_Int32 _node_id[GPS_MAX_RECEIVERS];
     AP_Int32 _override_node_id[GPS_MAX_RECEIVERS];
@@ -615,12 +627,20 @@ protected:
         SBF_UseBaseForYaw = (1U << 1U),
         UBX_Use115200     = (1U << 2U),
         UAVCAN_MBUseDedicatedBus  = (1 << 3U),
-        HeightEllipsoid   = (1U << 4),
+    };
+
+    enum AltitudeReference : int8_t {
+        ASML  = 0,
+        WGS84 = 1,
     };
 
     // check if an option is set
     bool option_set(const DriverOptions option) const {
         return (uint8_t(_driver_options.get()) & uint8_t(option)) != 0;
+    }
+
+    AltitudeReference get_altitude_reference_system() const {
+        return AltitudeReference(_altitude_reference.get());
     }
 
 private:

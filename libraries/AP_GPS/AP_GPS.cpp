@@ -312,7 +312,7 @@ const AP_Param::GroupInfo AP_GPS::var_info[] = {
     // @Param: _DRV_OPTIONS
     // @DisplayName: driver options
     // @Description: Additional backend specific options
-    // @Bitmask: 0:Use UART2 for moving baseline on ublox,1:Use base station for GPS yaw on SBF,2:Use baudrate 115200,3:Use dedicated CAN port b/w GPSes for moving baseline,4:Use ellipsoid height instead of AMSL for uBlox driver
+    // @Bitmask: 0:Use UART2 for moving baseline on ublox,1:Use base station for GPS yaw on SBF,2:Use baudrate 115200,3:Use dedicated CAN port b/w GPSes for moving baseline
     // @User: Advanced
     AP_GROUPINFO("_DRV_OPTIONS", 22, AP_GPS, _driver_options, 0),
 #endif
@@ -393,6 +393,13 @@ const AP_Param::GroupInfo AP_GPS::var_info[] = {
     AP_GROUPINFO("2_CAN_OVRIDE", 31, AP_GPS, _override_node_id[1], 0),
 #endif // GPS_MAX_RECEIVERS > 1
 #endif // HAL_ENABLE_LIBUAVCAN_DRIVERS
+
+    // @Param: _HGT_REFRNC
+    // @DisplayName: Altitude Reference System
+    // @Description: Altitude reference system for GPS measurement to the estimation and control systems
+    // @Bitmask: 0:Use Above Mean Sea Level Geoid Height,1:Use WGS84 ellipsoid height
+    // @User: Advanced
+    AP_GROUPINFO("_HGT_REFRNC", 32, AP_GPS, _altitude_reference, 0),
 
     AP_GROUPEND
 };
@@ -790,12 +797,16 @@ AP_GPS_Backend *AP_GPS::_detect_instance(uint8_t instance)
 #if AP_GPS_SBP2_ENABLED
         if ((_type[instance] == GPS_TYPE_AUTO || _type[instance] == GPS_TYPE_SBP) &&
                  AP_GPS_SBP2::_detect(dstate->sbp2_detect_state, data)) {
+            // the SBP2 orignally used WGS84 as the default altitude reference system, ADDED: AUG-2022
+            _altitude_reference.set_default(WGS84);
             return new AP_GPS_SBP2(*this, state[instance], _port[instance]);
         }
 #endif //AP_GPS_SBP2_ENABLED
 #if AP_GPS_SBP_ENABLED
         if ((_type[instance] == GPS_TYPE_AUTO || _type[instance] == GPS_TYPE_SBP) &&
                  AP_GPS_SBP::_detect(dstate->sbp_detect_state, data)) {
+            // the SBP orignally used WGS84 as the default altitude reference system, ADDED: AUG-2022
+            _altitude_reference.set_default(WGS84);
             return new AP_GPS_SBP(*this, state[instance], _port[instance]);
         }
 #endif //AP_GPS_SBP_ENABLED
@@ -2166,7 +2177,7 @@ void AP_GPS::Write_GPS(uint8_t i)
         LOG_PACKET_HEADER_INIT(LOG_GPS2_MSG),
         time_us             : time_us,
         instance            : i,
-        alt_above_ellipsoid : height_above_ellipsoid(i),
+        alt_above_ellipsoid : height_above_WGS84(i),
     };
     AP::logger().WriteBlock(&pkt3, sizeof(pkt3));
 }

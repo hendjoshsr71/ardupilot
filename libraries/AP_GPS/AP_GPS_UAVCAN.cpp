@@ -413,6 +413,7 @@ void AP_GPS_UAVCAN::handle_fix_msg(const FixCb &cb)
         loc.lng = cb.msg->longitude_deg_1e8 / 10;
         loc.alt = cb.msg->height_msl_mm / 10;
         interim_state.location = loc;
+        interim_state.height_above_WGS84 = cb.msg->height_ellipsoid_mm *0.001;
 
         if (!uavcan::isNaN(cb.msg->ned_velocity[0])) {
             Vector3f vel(cb.msg->ned_velocity[0], cb.msg->ned_velocity[1], cb.msg->ned_velocity[2]);
