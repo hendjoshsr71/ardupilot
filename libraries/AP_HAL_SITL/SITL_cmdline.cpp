@@ -116,6 +116,7 @@ void SITL_State::_usage(void)
            "\t--start-time TIMESTR     set simulation start time in UNIX timestamp\n"
            "\t--sysid ID               set SYSID_THISMAV\n"
            "\t--slave number           set the number of JSON slaves\n"
+           "\t--ship-loc location      set ship start location (lat,lng,alt,yaw)\n"
         );
 }
 
@@ -203,6 +204,7 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
     _synthetic_clock_mode = false;
     // default to CMAC
     const char *home_str = nullptr;
+    const char *ship_loc_str = nullptr;
     const char *model_str = nullptr;
     _use_fg_view = true;
     char *autotest_dir = nullptr;
@@ -267,6 +269,7 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
         CMDLINE_START_TIME,
         CMDLINE_SYSID,
         CMDLINE_SLAVE,
+        CMDLINE_SHIP_LOC,
 #if STORAGE_USE_FLASH
         CMDLINE_SET_STORAGE_FLASH_ENABLED,
 #endif
@@ -326,6 +329,7 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
         {"start-time",      true,   0, CMDLINE_START_TIME},
         {"sysid",           true,   0, CMDLINE_SYSID},
         {"slave",           true,   0, CMDLINE_SLAVE},
+        {"ship-loc",        true,   0, CMDLINE_SHIP_LOC},
 #if STORAGE_USE_FLASH
         {"set-storage-flash-enabled", true,   0, CMDLINE_SET_STORAGE_FLASH_ENABLED},
 #endif
@@ -518,6 +522,12 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
 #endif
             break;
         }
+        case CMDLINE_SHIP_LOC:
+#if AP_SIM_SHIP_ENABLED
+            ship_loc_str = gopt.optarg;
+#endif
+            break;
+
         default:
             _usage();
             exit(1);
@@ -546,6 +556,17 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
                     exit(1);
                 }
                 sitl_model->set_start_location(home, home_yaw);
+            }
+
+            // Set ship initial location
+            if (ship_loc_str != nullptr) {
+                Location ship_loc;
+                float ship_yaw;
+                if (!parse_or_lookup_location_string("ship location", ship_loc_str, ship_loc, ship_yaw)) {
+                    exit(1);
+                }
+                //_sitl->shipsim.set_start_location(ship_loc, ship_yaw);
+                sitl_model->set_ship_start_location(ship_loc, ship_yaw);
             }
 
             sitl_model->set_interface_ports(simulator_address, simulator_port_in, simulator_port_out);

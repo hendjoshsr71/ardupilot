@@ -93,6 +93,8 @@ void SITL_State::_sitl_setup()
 
         fprintf(stdout, "Using Irlock at port : %d\n", _irlock_port);
         _sitl->irlock_port = _irlock_port;
+
+        _sitl->shipsim.set_start_location(sitl_model->get_ship_start_location(), sitl_model->get_ship_start_yaw());
     }
 
     if (_synthetic_clock_mode) {
