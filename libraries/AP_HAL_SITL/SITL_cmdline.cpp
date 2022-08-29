@@ -542,17 +542,12 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
             if (home_str != nullptr) {
                 Location home;
                 float home_yaw;
-                if (strchr(home_str,',') == nullptr) {
-                    if (!lookup_location(home_str, home, home_yaw)) {
-                        ::printf("Failed to find location (%s).  Should be in locations.txt or LAT,LON,ALT,HDG e.g. 37.4003371,-122.0800351,0,353\n", home_str);
-                        exit(1);
-                    }
-                } else if (!parse_home(home_str, home, home_yaw)) {
-                    ::printf("Failed to parse home string (%s).  Should be LAT,LON,ALT,HDG e.g. 37.4003371,-122.0800351,0,353\n", home_str);
+                if (!parse_or_lookup_location_string("home", home_str, home, home_yaw)) {
                     exit(1);
                 }
                 sitl_model->set_start_location(home, home_yaw);
             }
+
             sitl_model->set_interface_ports(simulator_address, simulator_port_in, simulator_port_out);
             sitl_model->set_speedup(speedup);
             sitl_model->set_instance(_instance);
@@ -614,15 +609,33 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
 }
 
 /*
-  parse a home string into a location and yaw
+  parse or lookup a location string into a location object and yaw
  */
-bool SITL_State::parse_home(const char *home_str, Location &loc, float &yaw_degrees)
+bool SITL_State::parse_or_lookup_location_string(const char *loc_type, const char *location_str, Location &loc, float &yaw_degrees)
+{
+    if (strchr(location_str,',') == nullptr) {
+        if (!lookup_location(loc_type, location_str, loc, yaw_degrees)) {
+            ::printf("Failed to find location (%s). Should be in locations.txt or LAT,LON,ALT,HDG e.g. 37.4003371,-122.0800351,0,353\n", location_str);
+            return false;
+        }
+    } else if (!parse_location(loc_type, location_str, loc, yaw_degrees)) {
+        ::printf("Failed to parse %s string (%s). Should be LAT,LON,ALT,HDG e.g. 37.4003371,-122.0800351,0,353\n", loc_type, location_str);
+        return false;
+    }
+
+    return true;
+}
+
+/*
+  parse a location string into a location object and yaw
+ */
+bool SITL_State::parse_location(const char *loc_type, const char *location_str, Location &loc, float &yaw_degrees)
 {
     char *saveptr = nullptr;
-    char *s = strdup(home_str);
+    char *s = strdup(location_str);
     if (!s) {
         free(s);
-        ::printf("No home string supplied\n");
+        ::printf("No %s string supplied\n", loc_type);
         return false;
     }
     char *lat_s = strtok_r(s, ",", &saveptr);
@@ -672,7 +685,7 @@ bool SITL_State::parse_home(const char *home_str, Location &loc, float &yaw_degr
 /*
   lookup a location in locations.txt in ROMFS
  */
-bool SITL_State::lookup_location(const char *home_str, Location &loc, float &yaw_degrees)
+bool SITL_State::lookup_location(const char *loc_type, const char *location_str, Location &loc, float &yaw_degrees)
 {
     const char *locations = "@ROMFS/locations.txt";
     FileData *fd = AP::FS().load_file(locations);
@@ -685,13 +698,13 @@ bool SITL_State::lookup_location(const char *home_str, Location &loc, float &yaw
         delete fd;
         return false;
     }
-    size_t len = strlen(home_str);
+    size_t len = strlen(location_str);
     char *saveptr = nullptr;
     for (char *s = strtok_r(str, "\r\n", &saveptr);
          s;
          s=strtok_r(nullptr, "\r\n", &saveptr)) {
-        if (strncasecmp(s, home_str, len) == 0 && s[len]=='=') {
-            bool ok = parse_home(&s[len+1], loc, yaw_degrees);
+        if (strncasecmp(s, location_str, len) == 0 && s[len]=='=') {
+            bool ok = parse_location(loc_type, &s[len+1], loc, yaw_degrees);
             free(str);
             delete fd;
             return ok;
@@ -699,7 +712,7 @@ bool SITL_State::lookup_location(const char *home_str, Location &loc, float &yaw
     }
     free(str);
     delete fd;
-    ::printf("Failed to find location '%s'\n", home_str);
+    ::printf("Failed to find location '%s'\n", location_str);
     return false;
 }
     

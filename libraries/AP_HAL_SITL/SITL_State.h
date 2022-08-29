@@ -117,13 +117,20 @@ public:
     };
     std::vector<struct AP_Param::defaults_table_struct> cmdline_param;
 
+    /* parse or lookup a location string into a location object and yaw
+       calls exit() if it fails to parse or lookup the location
+     */
+    static bool parse_or_lookup_location_string(const char *description, const char *location_str, Location &loc, float &yaw_degrees);
+
     /* parse a home location string */
-    static bool parse_home(const char *home_str,
-                           Location &loc,
-                           float &yaw_degrees);
+    static bool parse_location(const char *loc_type,
+                               const char *location_str,
+                               Location &loc,
+                               float &yaw_degrees);
 
     /* lookup a location in locations.txt */
-    static bool lookup_location(const char *home_str,
+    static bool lookup_location(const char *loc_type,
+                                const char *location_str,
                                 Location &loc,
                                 float &yaw_degrees);
     
