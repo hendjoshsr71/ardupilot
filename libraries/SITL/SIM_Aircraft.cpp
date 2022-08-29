@@ -100,6 +100,27 @@ void Aircraft::set_start_location(const Location &start_loc, const float start_y
     dcm.from_euler(0.0f, 0.0f, radians(home_yaw));
 }
 
+// Method to set the initial location of the ship
+// yaw (degrees)
+void Aircraft::set_ship_start_location(Location &loc, float yaw)
+{
+    if (!loc.initialised()) {
+        return;
+    }
+
+    ship_location = loc;
+    ship_yaw = yaw;
+
+    ::printf("Ship home: Lat:%f, Lng:%f, Alt: %fm, hdg =%f deg\n",
+             ship_location.lat * 1e-7,
+             ship_location.lng * 1e-7,
+             ship_location.alt * 0.01,
+             ship_yaw);
+
+    // location = home;
+    // ground_level = home.alt * 0.01f;
+}
+
 /*
    return difference in altitude between home position and current loc
 */

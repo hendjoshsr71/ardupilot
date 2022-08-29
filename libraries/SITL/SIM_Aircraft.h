@@ -49,6 +49,8 @@ public:
     // called directly after constructor:
     virtual void set_start_location(const Location &start_loc, const float start_yaw);
 
+    void set_ship_start_location(Location &loc, float yaw);
+
     /*
       set simulation speedup
      */
@@ -156,6 +158,9 @@ public:
 
     float get_battery_voltage() const { return battery_voltage; }
 
+    const Location & get_ship_start_location() const { return ship_location; }
+    float get_ship_start_yaw() const { return ship_yaw; }
+
 protected:
     SIM *sitl;
     // origin of position vector
@@ -164,6 +169,10 @@ protected:
     Location home;
     bool home_is_set;
     Location location;
+
+    // Ship start location and yaw
+    Location ship_location;
+    float ship_yaw;
 
     float ground_level;
     float home_yaw;

@@ -69,6 +69,7 @@ void Ship::update(float delta_t)
     Vector2f dpos(dist, 0);
     dpos.rotate(radians(heading_deg));
 
+    location.offset(dpos.x, dpos.y);
     position += dpos;
 }
 
@@ -89,14 +90,21 @@ Vector2f ShipSim::get_ground_speed_adjustment(const Location &loc, float &yaw_ra
         yaw_rate = 0;
         return Vector2f(0,0);
     }
+
     Location shiploc = home;
     shiploc.offset(ship.position.x, ship.position.y);
+
+    // Location shiploc = ship.location;
+    // shiploc.offset(ship.position.x, ship.position.y);
+
+    // if (loc.get_distance(ship.location) > deck_size) {
     if (loc.get_distance(shiploc) > deck_size) {
         yaw_rate = 0;
         return Vector2f(0,0);
     }
 
     // find center of the circle that the ship is on
+    // Location center = ship.location;
     Location center = shiploc;
     const float path_radius = path_size.get()*0.5;
     center.offset_bearing(ship.heading_deg+(ship.yaw_rate>0?90:-90), path_radius);
@@ -108,6 +116,7 @@ Vector2f ShipSim::get_ground_speed_adjustment(const Location &loc, float &yaw_ra
     // work out how far around the circle ahead or behind we are for
     // rotating velocity
     const float bearing1 = center.get_bearing(loc);
+    // const float bearing2 = center.get_bearing(ship.location);
     const float bearing2 = center.get_bearing(shiploc);
     const float heading = ship.heading_deg + degrees(bearing1-bearing2);
 
@@ -130,13 +139,26 @@ void ShipSim::update(void)
     uint32_t now_us = AP_HAL::micros();
 
     if (!initialised) {
-        home = sitl->state.home;
-        if (home.lat == 0 && home.lng == 0) {
-            return;
+        // If the initial ship location isn't set by the constructions then use the vehicle home location
+        if (!ship.location.initialised())
+        {
+            home = sitl->state.home;
+            if (!home.initialised()) {
+                return;
+            }
+            ship.location = home;
+        } else {
+            home = ship.location;
         }
+
         const Vector3f &ofs = offset.get();
         home.offset(ofs.x, ofs.y);
         home.alt -= ofs.z*100;
+
+        ship.location.offset(ofs.x, ofs.y);
+
+        // THIS IS BAD SWITCH AND DONT LOSE YOUR WORK THIS TIME :)
+        ship.location.alt -= ofs.z*100;
 
         initialised = true;
         ::printf("ShipSim home %f %f\n", home.lat*1.0e-7, home.lng*1.0e-7);
@@ -196,11 +218,17 @@ void ShipSim::send_report(void)
     /*
       send a GLOBAL_POSITION_INT messages
      */
+    // Location loc = ship.location;
+
     Location loc = home;
     loc.offset(ship.position.x, ship.position.y);
 
-    int32_t alt_mm = home.alt * 10;  // assume home altitude
+    // Assume the altitude is the smaes as the ships 
+    int32_t alt_mm;
+    UNUSED_RESULT(ship.location.get_alt_cm(Location::AltFrame::ABSOLUTE, alt_mm));
+    alt_mm *= 10;
 
+// THIS ISN'T THE WAY TO ENFORCE ship height at terrain level should be altering location in update loop instead.....
 #if AP_TERRAIN_AVAILABLE
     auto terrain = AP::terrain();
     float height;
@@ -242,6 +270,28 @@ void ShipSim::send_report(void)
     if (len > 0) {
         mav_socket.send(buf, len);
     }
+}
+
+// Method to set the initial location of the ship
+// yaw (degrees)
+void ShipSim::set_start_location(const Location &location, float yaw)
+{
+    if (!location.initialised()) {
+        return;
+    }
+
+    ship.location = location;
+    ship.heading_deg = yaw;
+
+    // home = ship.location;
+
+    ::printf("Ship home: Lat:%f, Lng:%f, Alt: %fm, hdg =%f deg\n",
+             ship.location.lat * 1e-7,
+             ship.location.lng * 1e-7,
+             ship.location.alt * 0.01,
+             ship.heading_deg);
+
+    // ground_level = home.alt * 0.01f;
 }
 
 #endif

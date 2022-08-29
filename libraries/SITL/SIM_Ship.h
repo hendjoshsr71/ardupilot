@@ -22,6 +22,7 @@
 
 #ifndef AP_SIM_SHIP_ENABLED
 #define AP_SIM_SHIP_ENABLED (CONFIG_HAL_BOARD == HAL_BOARD_SITL)
+// #define AP_SIM_SHIP_ENABLED 1
 #endif
 
 #if AP_SIM_SHIP_ENABLED
@@ -43,6 +44,7 @@ class Ship {
 private:
     void update(float delta_t);
     
+    Location location;
     Vector2f position;
     float heading_deg;
     float yaw_rate;
@@ -63,6 +65,8 @@ public:
       whether it is on a ship
      */
     Vector2f get_ground_speed_adjustment(const Location &loc, float &yaw_rate);
+
+    void set_start_location(const Location &location, float yaw);
 
 private:
 
