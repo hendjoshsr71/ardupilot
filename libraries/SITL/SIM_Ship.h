@@ -71,11 +71,11 @@ public:
 private:
 
     AP_Int8 enable;
-    AP_Float speed;
-    AP_Float path_size;
-    AP_Float deck_size;
+    AP_Float speed;       // Speed (m/s)
+    AP_Float path_size;   // 
+    AP_Float deck_size;   // Deck size 
     AP_Int8 sys_id;
-    AP_Vector3f offset;
+    AP_Vector3f offset;   // 
 
     Location home;
     const char *target_address = "127.0.0.1";

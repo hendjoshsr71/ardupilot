@@ -36,11 +36,45 @@ using namespace SITL;
 
 // SITL Ship parameters
 const AP_Param::GroupInfo ShipSim::var_info[] = {
-    AP_GROUPINFO("ENABLE",    1, ShipSim,  enable, 0),
+    // @Param: ENABLE
+    // @DisplayName: Ship Simulator Enable
+    // @Description: Enables the SITL ship simulator
+    // @Values: 0:Disabled,1:Enabled
+    // @User: Advanced
+    AP_GROUPINFO_FLAGS("ENABLE",    1, ShipSim,  enable, 0, AP_PARAM_FLAG_ENABLE),
+
+    // @Param: SPEED
+    // @DisplayName: Ship Speed
+    // @Description: Ship speed (m/s), the ship moves in a circle with this speed
+    // @Units: m/s
+    // @User: Advanced
     AP_GROUPINFO("SPEED",     2, ShipSim,  speed, 3),
+
+    // @Param: PSIZE
+    // @DisplayName: Path Diameter
+    // @Description: Path diameter (m), the ship moves in a circle with this diameter
+    // @Units: m
+    // @User: Advanced
     AP_GROUPINFO("PSIZE",     3, ShipSim,  path_size, 1000),
+
+
+    // @Param: ENABLE
+    // @DisplayName: MAVLINK System ID of the ship
+    // @Description: MAVLINK System ID of the ship
+    // @Range: 0 127
+    // @Increment: 1
+    // @User: Advanced
     AP_GROUPINFO("SYSID",     4, ShipSim,  sys_id, 17),
+
+
+    // @Param: DSIZE
+    // @DisplayName: Deck Size
+    // @Description: Deck Size (m), assumed to be a square with dimensions DSIZE by DSIZE
+    // @Units: m
+    // @User: Advanced
     AP_GROUPINFO("DSIZE",     5, ShipSim,  deck_size, 10),
+
+
     AP_GROUPINFO("OFS",       7, ShipSim,  offset, 0),
     AP_GROUPEND
 };
