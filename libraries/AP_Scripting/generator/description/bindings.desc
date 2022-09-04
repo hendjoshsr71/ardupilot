@@ -527,6 +527,59 @@ singleton AP_Mount method set_angle_target void uint8_t 0 UINT8_MAX float'skip_c
 singleton AP_Mount method set_rate_target void uint8_t 0 UINT8_MAX float'skip_check float'skip_check float'skip_check boolean
 singleton AP_Mount method set_roi_target void uint8_t 0 UINT8_MAX Location
 
+-- ----EFI Library----
+include AP_EFI/AP_EFI_Scripting.h
+include AP_EFI/AP_EFI_State.h
+
+userdata Cylinder_Status depends (AP_EFI_SCRIPTING_ENABLED == 1)
+userdata Cylinder_Status field ignition_timing_deg float'skip_check read write
+userdata Cylinder_Status field injection_time_ms float'skip_check read write
+userdata Cylinder_Status field cylinder_head_temperature float'skip_check read write
+userdata Cylinder_Status field exhaust_gas_temperature float'skip_check read write
+userdata Cylinder_Status field lambda_coefficient float'skip_check read write
+
+userdata EFI_State depends (AP_EFI_SCRIPTING_ENABLED == 1)
+userdata EFI_State rename _efi_state
+userdata EFI_State field last_updated_ms uint32_t'skip_check read write
+userdata EFI_State field general_error boolean'skip_check read write
+userdata EFI_State field engine_load_percent uint8_t'skip_check read write
+userdata EFI_State field engine_speed_rpm uint32_t'skip_check read write
+userdata EFI_State field spark_dwell_time_ms float'skip_check read write
+
+userdata EFI_State field atmospheric_pressure_kpa float'skip_check read write
+userdata EFI_State field intake_manifold_pressure_kpa float'skip_check read write
+userdata EFI_State field intake_manifold_temperature float'skip_check read write
+userdata EFI_State field coolant_temperature float'skip_check read write
+userdata EFI_State field oil_pressure float'skip_check read write
+userdata EFI_State field oil_temperature float'skip_check read write
+userdata EFI_State field fuel_pressure float'skip_check read write
+userdata EFI_State field fuel_consumption_rate_cm3pm float'skip_check read write
+userdata EFI_State field estimated_consumed_fuel_volume_cm3 float'skip_check read write
+userdata EFI_State field throttle_position_percent uint8_t'skip_check read write
+userdata EFI_State field ecu_index uint8_t'skip_check read write
+
+-- Not completed yet
+-- userdata EFI_State field spark_plug_usage Spark_Plug_Usage'enum read write
+-- vector userdata EFI_State field cylinder_status Cylinder_Status[ENGINE_MAX_CYLINDERS]'enum read write
+
+-- Not completed due to enum not being based on type INT
+-- userdata EFI_State field engine_state Engine_State'enum read write AP_EFI Engine_State::STOPPED Engine_State::FAULT
+-- userdata EFI_State field crankshaft_sensor_status Crankshaft_Sensor_Status'enum read write AP_EFI Crankshaft_Sensor_Status::NOT_SUPPORTED Crankshaft_Sensor_Status::ERROR
+-- userdata EFI_State field temperature_status Temperature_Status'enum read write AP_EFI Temperature_Status::NOT_SUPPORTED Temperature_Status::EGT_ABOVE_NOMINAL
+-- userdata EFI_State field fuel_pressure_status Fuel_Pressure_Status'enum read write AP_EFI Fuel_Pressure_Status::NOT_SUPPORTED Fuel_Pressure_Status::ABOVE_NOMINAL
+-- userdata EFI_State field oil_pressure_status Oil_Pressure_Status'enum read write AP_EFI Oil_Pressure_Status::NOT_SUPPORTED Oil_Pressure_Status::EGT_ABOVE_NOMINAL
+-- userdata EFI_State field detonation_status Detonation_Status'enum read write AP_EFI Detonation_Status::NOT_SUPPORTED Detonation_Status::OBSERVED
+-- userdata EFI_State field misfire_status Misfire_Status'enum read write AP_EFI Misfire_Status::NOT_SUPPORTED Misfire_Status::OBSERVED
+-- userdata EFI_State field debris_status Debris_Status'enum read write AP_EFI Debris_Status::NOT_SUPPORTED Debris_Status::DETECTED
+-- userdata EFI_State field spark_plug_usage Spark_Plug_Usage'enum read write AP_EFI Spark_Plug_Usage::SINGLE Spark_Plug_Usage::BOTH_ACTIVE
+
+include AP_EFI/AP_EFI.h
+singleton AP_EFI depends HAL_EFI_ENABLED == 1
+singleton AP_EFI rename efi
+singleton AP_EFI method handle_scripting void EFI_State'skip_check
+
+-- ----END EFI Library----
+
 singleton AP_Logger rename logger
 singleton AP_Logger manual write AP_Logger_Write
 
