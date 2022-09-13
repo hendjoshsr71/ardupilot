@@ -52,6 +52,7 @@ _sim_vehicle() {
     '--moddebug=[mavproxy module debug]:int:' \
     '(-v --vehicle)'{-v,--vehicle}'[vehicle type]:vehicle:_sim_vehicle_vehicles' \
     '(-f --frame)'{-f,--frame}'[set vehicle frame type]:frame:_vehicle_frames' \
+    '(--ship-location=)'{--ship-location=}'[set ship start location (lat,lon,alt,heading)]:LOCATION:' \
   && ret=0
 
 

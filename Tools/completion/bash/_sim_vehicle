@@ -52,6 +52,7 @@ _sim_vehicle() {
   opts+=" --moddebug"
   opts+=" -v --vehicle"
   opts+=" -f --frame"
+  opts+=" --ship-location"
 
   # Prevent word reuse TODO: add -vvv case
   lim=$((COMP_CWORD - 1))
