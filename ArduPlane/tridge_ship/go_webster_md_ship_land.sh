@@ -1,0 +1,1 @@
+../../Tools/autotest/sim_vehicle.py -D -l 38.1477852,-76.4278057,10,315 --console --map -f quadplane --ship-location 38.0899579,-76.4430996,0.0,180.0 $*
