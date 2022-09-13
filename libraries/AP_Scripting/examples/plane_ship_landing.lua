@@ -33,10 +33,15 @@ function bind_add_param(name, idx, default_value)
 end
 
 -- setup SHIP specific parameters
-assert(param:add_table(PARAM_TABLE_KEY, PARAM_TABLE_PREFIX, 3), 'could not add param table')
+assert(param:add_table(PARAM_TABLE_KEY, PARAM_TABLE_PREFIX, 7), 'could not add param table')
 SHIP_ENABLE     = bind_add_param('ENABLE', 1, 0)
 SHIP_LAND_ANGLE = bind_add_param('LAND_ANGLE', 2, 0)
 SHIP_AUTO_OFS   = bind_add_param('AUTO_OFS', 3, 0)
+SHIP_BCN_TMR    = bind_add_param('BCN_TMR', 4, 5)       -- Lost beacon failsafe timer: the time (seconds) that the beacon must be lost for before the lost beacon failsafe action
+SHIP_BCN_LND_DST= bind_add_param('BCN_LND_DST', 5, 10)  -- Lost beacon failsafe VTOL land distance: the vertical distance (meters) in VTOL Land, from the last known ship position below which a failsafe action will not occur. Set to -1.0 to disable this check
+SHIP_AUT_VEL_DST= bind_add_param('AUT_VEL_DST', 6, 25)  -- Auto Mode Takeoff Velocity and Position Matching Distance from Beacon: The distance (meters) which the plane must be within of the beacon target location in order to use velocity and position matching for takeoffs.
+SHIP_QLT_VEL_DST= bind_add_param('QLT_VEL_DST', 7, 300)  -- QLoiter Mode Takeoff Velocity and Position Matching Distance from Beacon: The distance (meters) which the plane must be within of the beacon target location in order to use velocity and position matching for QLoiter.
+
 
 -- other parameters
 RCMAP_THROTTLE  = bind_param("RCMAP_THROTTLE")
@@ -51,9 +56,12 @@ FOLL_OFS_X      = bind_param("FOLL_OFS_X")
 FOLL_OFS_Y      = bind_param("FOLL_OFS_Y")
 FOLL_OFS_Z      = bind_param("FOLL_OFS_Z")
 
+
 -- an auth ID to disallow arming when we don't have the beacon
 local auth_id = arming:get_aux_auth_id()
 arming:set_aux_auth_failed(auth_id, "Ship: no beacon")
+
+-- what happens to the above line during an inflight reboot or scripting restart??
 
 -- current target
 local target_pos = Location()
@@ -74,6 +82,15 @@ local reached_alt = false
 local throttle_pos = THROTTLE_HIGH
 local have_target = false
 
+-- Beacon variables for failsafe
+local last_beacon_time = 0.0
+local in_lost_beacon_failsafe = true
+
+-- get time in seconds since boot
+function get_time()
+   return millis():tofloat() * 0.001
+end
+
 -- square a variable
 function sq(v)
    return v*v
@@ -88,6 +105,7 @@ function check_parameters()
       FOLL_ENABLE = 1,
       FOLL_OFS_TYPE = 1,
       FOLL_ALT_TYPE = 0,
+      FOLL_DIST_MAX = 10000,      -- accept targets within 100 km, this should get set via a SHIP parameter
    }
 
    for p, v in pairs(key_params) do
@@ -363,16 +381,75 @@ function update_auto_offset()
    SHIP_AUTO_OFS:set_and_save(0)
 end
 
+-- Lost beacon failsafe
+function do_lost_beacon_failsafe()
+      -- if we are already in the failsafe action we do not do it again
+      if in_lost_beacon_failsafe then
+         return false
+      end
+
+      -- if link has beacon has not been lost for more than SHIP_BCN_TMR
+      if (get_time() - last_beacon_time) < SHIP_BCN_TMR:get() then
+         return false
+      end
+
+   -- If in the final landing sequence and within SHIP_BCN_LND_DST of the target
+   -- then do not activate the failsafe action
+   -- local dist_above_ship = (current_pos:alt() * 0.01) - get_target_alt()
+   -- if (SHIP_BCN_LND_DST:get() <= 0.0) or (dist_above_ship < SHIP_BCN_LND_DST:get()) then
+   --    return false
+   -- end
+
+   gcs:send_text(0, "LOST BEACON FAILSAFE")
+
+   return true
+end
+
 -- main update function
 function update()
    if SHIP_ENABLE:get() < 1 then
       return
    end
 
-   update_target()
-   if not have_target then
+   -- move this to initialization checks
+   -- later add param for failsafe action type and don't do this check if not enabled
+   if mission:get_landing_sequence_start() == 0 then
+      -- should slow down error messages
+      gcs:send_text(0, "SHIP_LANDING: No DO_LAND_START found")
       return
    end
+
+   update_target()
+   if not have_target then
+      -- we have lost communication to the follow beacon on the given ID number
+
+      -- perform failsafe checks
+      if do_lost_beacon_failsafe() then
+
+         -- if  we are in the final descent stage enusre we go up to RTL_ALT 
+         -- before starting the land sequence to prevent hitting the superstructure
+
+
+         --  Go to the nearest do_landing_sequence_start command
+         local found_do_land_start = mission:jump_to_landing_sequence()
+
+         -- if no do_land_start is found revert to going to original takeoff on dry land
+         -- if not found_do_land_start then
+         --    -- Set new target to original takeoff
+         -- end
+
+         vehicle:set_mode(MODE_AUTO)
+
+         in_lost_beacon_failsafe = true
+      end
+
+      -- if we are below the final descent stage altitude should we just switch to 
+      -- velocity matching only?
+
+      return
+   end
+   in_lost_beacon_failsafe = false
+   last_beacon_time = get_time()
 
    current_pos = ahrs:get_position()
    if not current_pos then
@@ -414,7 +491,16 @@ function update()
       
    elseif vehicle_mode == MODE_AUTO then
       local id = mission:get_current_nav_id()
-      if id == NAV_VTOL_TAKEOFF or id == NAV_TAKEOFF then
+
+      -- Are we within the target radius where we perfom velocity matching on auto takeoff?
+      local distace_to_target = target_pos:get_distance(current_pos)
+      local is_near_target = distace_to_target < SHIP_AUT_VEL_DST:get()
+
+      -- DEBUG 
+      -- gcs:send_text(0, string.format("Auto takeoff near target = %.2f", distace_to_target))
+      -- gcs:send_text(0, "Auto takeoff near target")
+
+      if (id == NAV_VTOL_TAKEOFF or id == NAV_TAKEOFF) and is_near_target then
          vehicle:set_velocity_match(target_velocity:xy())
          local tpos = current_pos:copy()
          tpos:alt(next_WP:alt())
@@ -422,7 +508,12 @@ function update()
       end
 
    elseif vehicle_mode == MODE_QLOITER then
-      vehicle:set_velocity_match(target_velocity:xy())
+      -- Are we within the target radius where we perfom velocity matching in QLOITER?
+      local distace_to_target = target_pos:get_distance(current_pos)
+      local is_near_target = distace_to_target < SHIP_QLT_VEL_DST:get()
+      if is_near_target then
+         vehicle:set_velocity_match(target_velocity:xy())
+      end
    end
 
 end
