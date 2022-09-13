@@ -756,6 +756,9 @@ def start_vehicle(binary, opts, stuff, spawns=None):
 
         cmd.append("--start-time=%d" % start_time_UTC)
 
+    if opts.ship_location is not None:
+        cmd.extend(["--ship-loc", str(opts.ship_location)])
+
     old_dir = os.getcwd()
     for i, i_dir in zip(instances, instance_dir):
         c = ["-I" + str(i)]
@@ -1229,6 +1232,10 @@ group_sim.add_option("", "--auto-sysid",
                      default=False,
                      action='store_true',
                      help="Set SYSID_THISMAV based upon instance number")
+group_sim.add_option("", "--ship-location",
+                     type='string',
+                     default=None,
+                     help="set ship start location (lat,lon,alt,heading)")
 parser.add_option_group(group_sim)
 
 
@@ -1412,6 +1419,11 @@ elif cmd_opts.location is not None:
 else:
     progress("Starting up at SITL location")
     location = None
+
+if cmd_opts.ship_location:
+    ship_location = [(float)(x) for x in cmd_opts.ship_location.split(",")]
+    progress("Starting Ship up at %s" % (ship_location,))
+
 if cmd_opts.swarm is not None:
     offsets = find_offsets(instances, cmd_opts.swarm)
 elif cmd_opts.auto_offset_line is not None:
