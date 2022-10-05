@@ -6,8 +6,6 @@ SITL::Rotoye::Rotoye() :
 {
     add_register("External Temperature", SMBusBattRotoyeDevReg::TEMP_EXT, SITL::I2CRegisters::RegMode::RDONLY);
 
-    set_register(SMBusBattRotoyeDevReg::SERIAL, (uint16_t)39);
-
     const char *manufacturer_name = "Rotoye";
     set_block(SMBusBattDevReg::MANUFACTURE_NAME, manufacturer_name);
 
