@@ -1,0 +1,14 @@
+# hw definition file for processing by chibios_hwdef.py
+# Modal AI FCV2
+
+# MCU class and specific type
+MCU STM32H7xx STM32H743xx
+
+include hwdef.inc
+
+# to be compatible with the px4 bootloader we need
+# to use a different RAM_MAP
+env USE_ALT_RAM_MAP 1
+
+# build ABIN for flash-from-bootloader support:
+env BUILD_ABIN True
