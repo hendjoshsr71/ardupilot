@@ -1,0 +1,96 @@
+
+# ModalAI have an ID allocated??
+# USB setup
+# USB_VENDOR 0x2DAE # ONLY FOR USE BY HEX! NOBODY ELSE
+# USB_PRODUCT 0x1016
+# USB_STRING_MANUFACTURER "Hex/ProfiCNC"
+
+# crystal frequency
+OSCILLATOR_HZ 16000000
+
+# board ID for firmware load
+APJ_BOARD_ID 41776
+
+# default to all pins low to avoid ESD issues
+DEFAULTGPIO OUTPUT LOW PULLDOWN
+
+FLASH_SIZE_KB 2048
+
+# bootloader is installed at zero offset
+FLASH_RESERVE_START_KB 0
+
+# the location where the bootloader will put the firmware
+# the H753 has 128k sectors
+FLASH_BOOTLOADER_LOAD_KB 128
+
+define HAL_LED_ON 0
+
+PE5 LED_BOOTLOADER OUTPUT HIGH OPENDRAIN    # Blue LED
+PE3 LED_ACTIVITY OUTPUT HIGH OPENDRAIN      # Red LED
+
+# order of UARTs (and USB)
+#            USB1_1 TELEM1 TELEM2 GPS1 Debug
+SERIAL_ORDER OTG1 UART7 UART5 USART1 USART3
+
+# USB
+PA11 OTG_FS_DM OTG1
+PA12 OTG_FS_DP OTG1
+PA9 VBUS INPUT OPENDRAIN    # This input pin is used to detect that power is valid on USB.
+
+# UART7 Telem 1, TELEM_UART_4W
+PF6 UART7_RX UART7
+PE8 UART7_TX UART7
+PF8 UART7_RTS UART7
+PE10 UART7_CTS UART7
+
+# UART5 Telem 2, MSS_UART_4W
+PD2 UART5_RX UART5
+PC12 UART5_TX UART5
+PC8 UART5_RTS UART5
+PC9 UART5_CTS UART5
+
+# USART1 GPS1, UART_2W
+PB7 USART1_RX USART1
+PB6 USART1_TX USART1
+
+# USART3 Debug, UART_2W
+PD8 USART3_TX USART3
+PD9 USART3_RX USART3
+
+# Debug Pins
+PA13 JTMS-SWDIO SWD
+PA14 JTCK-SWCLK SWD
+
+# Add CS pins to ensure they are high in bootloader
+
+/* SPI
+ * SPI1 : ICM_42688_1
+ * SPI2 : ICM_42688_2
+ * SPI5 : FRAM 256 Kb
+ * SPI6 : Reserved
+ *
+ */
+PI9 ICM_42688_1_CS CS
+PH5 ICM_42688_2_CS CS
+PG7 FRAM_CS CS SPEED_VERYLOW
+PI10 GYRO_EXT_CS CS
+
+# enable DFU by default
+ENABLE_DFU_BOOT 1
+
+# enable flashing from SD card:
+include sdcard.inc
+define FATFS_HAL_DEVICE SDCD2
+
+# enable FAT filesystem support (needs a microSD defined via SDMMC)
+define HAL_OS_FATFS_IO 1
+define AP_BOOTLOADER_FLASH_FROM_SD_ENABLED 1
+
+# FATFS support:
+define CH_CFG_USE_MEMCORE 1
+define CH_CFG_USE_HEAP 1
+define CH_CFG_USE_SEMAPHORES 0
+define CH_CFG_USE_MUTEXES 1
+define CH_CFG_USE_DYNAMIC 1
+define CH_CFG_USE_WAITEXIT 1
+define CH_CFG_USE_REGISTRY 1
