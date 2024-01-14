@@ -398,6 +398,8 @@ public:
     void send_uavionix_adsb_out_status() const;
     void send_autopilot_state_for_gimbal_device() const;
 
+    bool send_smart_battery_info();
+
     // lock a channel, preventing use by MAVLink
     void lock(bool _lock) {
         _locked = _lock;
@@ -1090,8 +1092,8 @@ private:
 #endif
 
     uint32_t last_mavlink_stats_logged;
-
     uint8_t last_battery_status_idx;
+    uint8_t last_smart_battery_info_idx;
 
     // if we've ever sent a DISTANCE_SENSOR message out of an
     // orientation we continue to send it out, even if it is not
