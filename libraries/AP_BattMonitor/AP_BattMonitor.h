@@ -158,6 +158,9 @@ public:
         bool        has_state_of_health_pct;   // state_of_health_pct is only valid if this is true
         uint8_t     instance;                  // instance number of this backend
         const struct AP_Param::GroupInfo *var_info;
+#if AP_BATTERY_SMART_BATTERY_INFO_ENABLED
+        bool        smart_batt_logging_flag;   // smart_batt_logging_flag for when data is first ready to be logged
+#endif
     };
 
     static const struct AP_Param::GroupInfo *backend_var_info[AP_BATT_MONITOR_MAX_INSTANCES];
@@ -279,6 +282,10 @@ public:
     // return true if state of health (as a percentage) can be provided and fills in soh_pct argument
     bool get_state_of_health_pct(uint8_t instance, uint8_t &soh_pct) const;
 
+    // send the mavlink smart_battery_info message
+    // returns false only if an instance didn't have enough space available on the link
+    bool send_mavlink_smart_battery_info(const uint8_t instance, const mavlink_channel_t chan) const;
+
     static const struct AP_Param::GroupInfo var_info[];
 
 #if AP_BATTERY_SCRIPTING_ENABLED
@@ -298,11 +305,18 @@ private:
     uint32_t    _log_battery_bit;
     uint8_t     _num_instances;                                     /// number of monitors
 
+#if AP_BATTERY_SMART_BATTERY_INFO_ENABLED
+    uint8_t     _last_logging_count;
+#endif
+
     void convert_dynamic_param_groups(uint8_t instance);
 
     /// returns the failsafe state of the battery
     Failsafe check_failsafe(const uint8_t instance);
     void check_failsafes(void); // checks all batteries failsafes
+
+    // Log battery information
+    void log_data(void);
 
     battery_failsafe_handler_fn_t _battery_failsafe_handler_fn;
     const int8_t *_failsafe_priorities; // array of failsafe priorities, sorted highest to lowest priority, -1 indicates no more entries

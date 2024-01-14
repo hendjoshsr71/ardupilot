@@ -56,6 +56,10 @@ void AP_BattMonitor_DroneCAN::subscribe_msgs(AP_DroneCAN* ap_dronecan)
         AP_BoardConfig::allocation_error("battinfo_aux_sub");
     }
 
+    if (Canard::allocate_sub_arg_callback(ap_dronecan, &handle_cuav_cbat_trampoline, ap_dronecan->get_driver_index()) == nullptr) {
+        AP_BoardConfig::allocation_error("cuav_cbat_sub");
+    }
+
     if (Canard::allocate_sub_arg_callback(ap_dronecan, &handle_mppt_stream_trampoline, ap_dronecan->get_driver_index()) == nullptr) {
         AP_BoardConfig::allocation_error("mppt_stream_sub");
     }
@@ -173,8 +177,9 @@ void AP_BattMonitor_DroneCAN::handle_battery_info_aux(const ardupilot_equipment_
     }
     _interim_state.is_powering_off = msg.is_powering_off;
     if (!isnan(msg.nominal_voltage) && msg.nominal_voltage > 0) {
-        float remaining_capacity_ah = _remaining_capacity_wh / msg.nominal_voltage;
-        float full_charge_capacity_ah = _full_charge_capacity_wh / msg.nominal_voltage;
+        _nominal_voltage = msg.nominal_voltage;
+        float remaining_capacity_ah = _remaining_capacity_wh / _nominal_voltage;
+        float full_charge_capacity_ah = _full_charge_capacity_wh / _nominal_voltage;
         _interim_state.consumed_mah = (full_charge_capacity_ah - remaining_capacity_ah) * 1000;
         _interim_state.consumed_wh = _full_charge_capacity_wh - _remaining_capacity_wh;
         _interim_state.time_remaining =  is_zero(_interim_state.current_amps) ? 0 : (remaining_capacity_ah / _interim_state.current_amps * 3600);
@@ -184,6 +189,30 @@ void AP_BattMonitor_DroneCAN::handle_battery_info_aux(const ardupilot_equipment_
     _has_cell_voltages = true;
     _has_battery_info_aux = true;
 }
+
+void AP_BattMonitor_DroneCAN::handle_cuav_cbat(const cuav_equipment_power_CBAT &msg)
+{
+    WITH_SEMAPHORE(_sem_battmon);
+    // uint8_t cell_count = MIN(ARRAY_SIZE(_interim_state.cell_voltages.cells), msg.voltage_cell.len);
+
+    // _cycle_count = msg.cycle_count;
+    // for (uint8_t i = 0; i < cell_count; i++) {
+    //     _interim_state.cell_voltages.cells[i] = msg.voltage_cell.data[i] * 1000;
+    // }
+    // _interim_state.is_powering_off = msg.is_powering_off;
+    // if (!isnan(msg.nominal_voltage) && msg.nominal_voltage > 0) {
+    //     float remaining_capacity_ah = _remaining_capacity_wh / msg.nominal_voltage;
+    //     float full_charge_capacity_ah = _full_charge_capacity_wh / msg.nominal_voltage;
+    //     _interim_state.consumed_mah = (full_charge_capacity_ah - remaining_capacity_ah) * 1000;
+    //     _interim_state.consumed_wh = _full_charge_capacity_wh - _remaining_capacity_wh;
+    //     _interim_state.time_remaining =  is_zero(_interim_state.current_amps) ? 0 : (remaining_capacity_ah / _interim_state.current_amps * 3600);
+    //     _interim_state.has_time_remaining = true;
+    // }
+
+    // _has_cell_voltages = true;
+    // _has_battery_info_aux = true;
+}
+
 
 void AP_BattMonitor_DroneCAN::handle_mppt_stream(const mppt_Stream &msg)
 {
@@ -264,6 +293,15 @@ void AP_BattMonitor_DroneCAN::handle_battery_info_aux_trampoline(AP_DroneCAN *ap
     driver->handle_battery_info_aux(msg);
 }
 
+void AP_BattMonitor_DroneCAN::handle_cuav_cbat_trampoline(AP_DroneCAN *ap_dronecan, const CanardRxTransfer& transfer, const cuav_equipment_power_CBAT &msg)
+{
+    AP_BattMonitor_DroneCAN* driver = get_dronecan_backend(ap_dronecan, transfer.source_node_id, transfer.source_node_id);
+    if (driver == nullptr) {
+        return;
+    }
+    driver->handle_cuav_cbat(msg);
+}
+
 void AP_BattMonitor_DroneCAN::handle_mppt_stream_trampoline(AP_DroneCAN *ap_dronecan, const CanardRxTransfer& transfer, const mppt_Stream &msg)
 {
     AP_BattMonitor_DroneCAN* driver = get_dronecan_backend(ap_dronecan, transfer.source_node_id, transfer.source_node_id);
@@ -334,6 +372,66 @@ bool AP_BattMonitor_DroneCAN::capacity_remaining_pct(uint8_t &percentage) const
     percentage = _soc;
     return true;
 }
+
+#if AP_BATTERY_SMART_BATTERY_INFO_ENABLED
+
+bool AP_BattMonitor_DroneCAN::get_product_name(char *product_name, uint8_t buflen) const
+{
+    return false;
+}
+
+// return true if design_capacity in mAh (capacity when newly manufactured) can be provided and fills it in
+bool AP_BattMonitor_DroneCAN::get_design_capacity_mah(float &design_capacity_mah) const
+{
+    if (is_zero(_design_capacity_mah)) {
+        return false;
+    }
+
+    design_capacity_mah = _design_capacity_mah;
+    return true;
+}
+
+// returns true if the full charge capacity in mAh (accounting for battery degradation) can be provided and fills it in
+bool AP_BattMonitor_DroneCAN::get_full_charge_capacity_mah(float &full_charge_capacity) const
+{
+    // Prefer returning a non-derived quantity (ie not w-h / V_nominal)
+    if (_has_cuav_cbat) {
+        full_charge_capacity = _full_charge_capacity_mah;
+        return true;
+    }
+
+    if (_has_battery_info_aux)
+    {
+        full_charge_capacity = _full_charge_capacity_wh / _nominal_voltage;
+        return true;
+    }
+
+    return false;
+}
+
+
+// returns true if the design voltage in volts (maximum charging voltage) can be provided and fill it in
+bool AP_BattMonitor_DroneCAN::get_design_voltage(float &design_voltage) const
+{
+    return false;
+}
+
+// returns true if the manufacture date can be provided and fills it in
+bool AP_BattMonitor_DroneCAN::get_manufacture_date(char *manufacture_date, uint8_t buflen) const
+{
+    return false;
+}
+
+// returns true if the number of cells in series can be provided and fills it in
+bool AP_BattMonitor_DroneCAN::get_cells_in_series(uint8_t &cells_in_series) const
+{
+    if (!_has_cuav_cbat) {
+        return false;
+    }
+    cells_in_series = _num_cells_in_series;
+    return true;
+}
+#endif
 
 // reset remaining percentage to given value
 bool AP_BattMonitor_DroneCAN::reset_remaining(float percentage)

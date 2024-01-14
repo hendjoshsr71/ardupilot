@@ -61,6 +61,26 @@ public:
     // return true if state of health (as a percentage) can be provided and fills in soh_pct argument
     bool get_state_of_health_pct(uint8_t &soh_pct) const;
 
+#if AP_BATTERY_SMART_BATTERY_INFO_ENABLED
+    // returns true if product name can be filled in from either manufacturer name and device name
+    virtual bool get_product_name(char *product_name, uint8_t buflen) const { return false; }
+
+    // returns true if design_capacity in mAh (capacity when newly manufactured) can be provided and fills it in
+    virtual bool get_design_capacity_mah(float &design_capacity) const { return false; }
+
+    // returns true if the full charge capacity in mAh (accounting for battery degradation) can be provided and fills it in
+    virtual bool get_full_charge_capacity_mah(float &full_capacity) const { return false; }
+
+    // returns true if the design voltage in volts (maximum charging voltage) can be provided and fills it in
+    virtual bool get_design_voltage(float &design_voltage) const { return false; }
+
+    // returns true if the manufacture date can be provided and fills it in
+    virtual bool get_manufacture_date(char *manufacture_date, uint8_t buflen) const { return false; }
+
+    // returns true if the number of cells in series can be provided and fills it in
+    virtual bool get_cells_in_series(uint8_t &cells_in_series) const { return false; }
+#endif
+
     /// get voltage with sag removed (based on battery current draw and resistance)
     /// this will always be greater than or equal to the raw voltage
     float voltage_resting_estimate() const;
@@ -83,6 +103,11 @@ public:
     // logging functions 
     void Log_Write_BAT(const uint8_t instance, const uint64_t time_us) const;
     void Log_Write_BCL(const uint8_t instance, const uint64_t time_us) const;
+    bool Log_Write_BATI(uint8_t instance) const;
+
+    // Send the mavlink message for the smart_battery_info message
+    // returns false only if an instance didn't have enough space available on the link
+    bool send_mavlink_smart_battery_info(const uint8_t instance, const mavlink_channel_t chan) const;
 
     // set desired MPPT powered state (enabled/disabled)
     virtual void mppt_set_powered_state(bool power_on) {};
@@ -120,6 +145,26 @@ private:
     float       _current_filt_amps;      // filtered current
     float       _resistance_voltage_ref; // voltage used for maximum resistance calculation
     float       _resistance_current_ref; // current used for maximum resistance calculation
+
+    struct Smart_Batt_Info{
+        char        product_name[MAVLINK_MSG_SMART_BATTERY_INFO_FIELD_DEVICE_NAME_LEN];             // Static device name. Encode as manufacturer and product names separated using an underscore. First Char \0: field not provided
+        char        serial_number[MAVLINK_MSG_SMART_BATTERY_INFO_FIELD_SERIAL_NUMBER_LEN];          // Serial number in ASCII characters, 0 terminated. First Char \0: field not provided
+        char        manufacture_date[MAVLINK_MSG_SMART_BATTERY_INFO_FIELD_MANUFACTURE_DATE_LEN];    // Manufacture date (DD/MM/YYYY) in ASCII characters, 0 terminated. First Char \0: field not provided
+        float       capacity_design_mah;    // [mAh] design capacity when full according to manufacturer
+        float       capacity_full_mah;      // [mAh] capacity when full (accounting for battery degradation)
+        float       design_voltage;         // [V] maximum charging voltage
+        uint16_t    cycles;                 // charge/discharge cycle count
+        uint8_t     cells_in_series;        // number of battery cells in series
+        bool        got_cells_in_series;
+        bool        got_cycle_count;
+        bool        got_capacity_design;
+        bool        got_capacity_full;
+        bool        got_design_voltage;
+    };
+
+    // Smart battery info. helper to gather data for logging and mavlink
+    // returns false if cells_in_series is not available
+    bool get_smart_batt_info(Smart_Batt_Info &smart_batt_info) const;
 };
 
 #if AP_BATTERY_SCRIPTING_ENABLED

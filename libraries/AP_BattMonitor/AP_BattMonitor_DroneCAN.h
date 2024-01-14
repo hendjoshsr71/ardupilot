@@ -44,6 +44,26 @@ public:
 
     bool get_cycle_count(uint16_t &cycles) const override;
 
+#if AP_BATTERY_SMART_BATTERY_INFO_ENABLED
+    // returns true if product name can be filled in from either manufacturer name and device name
+    bool get_product_name(char *product_name, uint8_t buflen) const override;
+
+    // returns true if design_capacity in mAh (capacity when newly manufactured) can be provided and fills it in
+    bool get_design_capacity_mah(float &design_capacity_mah) const override;
+
+    // returns true if the full charge capacity in mAh (accounting for battery degradation) can be provided and fills it in
+    bool get_full_charge_capacity_mah(float &full_charge_capacity) const override;
+
+    // returns true if the design voltage in volts (maximum charging voltage) can be provided and fill it in
+    bool get_design_voltage(float &design_voltage) const override;
+
+    // returns true if the manufacture date can be provided and fills it in
+    bool get_manufacture_date(char *manufacture_date, uint8_t buflen) const override;
+
+    // returns true if the number of cells in series can be provided and fills it in
+    bool get_cells_in_series(uint8_t &cells_in_series) const override;
+#endif
+
     // return mavlink fault bitmask (see MAV_BATTERY_FAULT enum)
     uint32_t get_mavlink_fault_bitmask() const override;
 
@@ -52,6 +72,7 @@ public:
     static void handle_battery_info_trampoline(AP_DroneCAN *ap_dronecan, const CanardRxTransfer& transfer, const uavcan_equipment_power_BatteryInfo &msg);
     static void handle_battery_info_aux_trampoline(AP_DroneCAN *ap_dronecan, const CanardRxTransfer& transfer, const ardupilot_equipment_power_BatteryInfoAux &msg);
     static void handle_mppt_stream_trampoline(AP_DroneCAN *ap_dronecan, const CanardRxTransfer& transfer, const mppt_Stream &msg);
+    static void handle_cuav_cbat_trampoline(AP_DroneCAN *ap_dronecan, const CanardRxTransfer& transfer, const cuav_equipment_power_CBAT &msg);
 
     void mppt_set_powered_state(bool power_on) override;
 
@@ -62,6 +83,8 @@ private:
     void handle_battery_info(const uavcan_equipment_power_BatteryInfo &msg);
     void handle_battery_info_aux(const ardupilot_equipment_power_BatteryInfoAux &msg);
     void update_interim_state(const float voltage, const float current, const float temperature_K, const uint8_t soc, uint8_t soh_pct);
+
+    void handle_cuav_cbat(const cuav_equipment_power_CBAT &msg);
 
     static bool match_battery_id(uint8_t instance, uint8_t battery_id);
 
@@ -99,8 +122,27 @@ private:
     bool _has_time_remaining;
     bool _has_battery_info_aux;
     uint8_t _instance;                  // instance of this battery monitor
+    float _nominal_voltage;             // Nominal voltage of the battery pack
 
     AP_Float _curr_mult;                 // scaling multiplier applied to current reports for adjustment
+
+#if AP_BATTERY_SMART_BATTERY_INFO_ENABLED
+    bool _has_cuav_cbat;                    // ID 20300: CUAV CBAT.uavcan
+    float _full_charge_capacity_mah;        // full charge capacity (mAh) : none derived (ie not w-h / V_nominal)
+    float _design_capacity_mah;                 // battery pack design capacity in mAh (capacity when newly manufactured)
+    uint8_t _num_cells_in_series;           // Number of battery cell in series
+
+
+    uint8_t _device_name_len;
+    char _device_name[32 + 1];
+    uint8_t _manufacturer_name_len;
+    char _manufacturer_name[32 + 1];
+
+    bool _has_manufacture_date;
+    uint8_t _manufacture_date[3];       // manufacturer date {day, month, year since 1980}
+#endif
+
+
     // MPPT variables
     struct {
         bool is_detected;               // true if this UAVCAN device is a Packet Digital MPPT
