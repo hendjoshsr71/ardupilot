@@ -92,7 +92,7 @@ const AP_Param::GroupInfo SIM::var_info[] = {
     // @Units: V
     // @User: Advanced
     AP_GROUPINFO("BATT_VOLTAGE",  19, SIM,  batt_voltage,  12.6f),
-    AP_GROUPINFO("BATT_CAP_AH",   20, SIM,  batt_capacity_ah,  0),
+    // AP_GROUPINFO("BATT_CAP_AH",   20, SIM,  batt_capacity_ah,  0),
     AP_GROUPINFO("SONAR_GLITCH",  23, SIM,  sonar_glitch, 0),
     AP_GROUPINFO("SONAR_RND",     24, SIM,  sonar_noise, 0),
     // @Param: RC_FAIL
