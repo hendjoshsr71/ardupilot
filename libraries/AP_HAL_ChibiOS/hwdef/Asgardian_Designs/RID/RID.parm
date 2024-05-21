@@ -1,0 +1,17 @@
+# RemoteID / OpenDroneID Parameters
+
+# TURN OFF READONLY AS THIS IS FOR DEVELOPMENT
+DID_ENABLE 1
+DID_OPTIONS 1
+DID_MAVPORT -1
+DID_CANDRIVER 1
+AHRS_EKF_TYPE 3
+
+
+# enforce OpenDroneID on DroneCAN. Note that we need to lock down key parameters
+# to ensure the integrity of the RemoteID system
+# DID_ENABLE 1 @READONLY
+# DID_OPTIONS 1 @READONLY
+# DID_MAVPORT -1 @READONLY
+# DID_CANDRIVER 1 @READONLY
+# AHRS_EKF_TYPE 3 @READONLY
