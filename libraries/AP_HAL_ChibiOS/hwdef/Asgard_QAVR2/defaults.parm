@@ -1,24 +1,231 @@
-# H6_HL Electric
+# Asgard QAVR2
+# ArduCopter Version: 4.5
 
-#  Flight Controller
-# Matek H743 Slim V3
-
+# Flight Controller
+# @include ../MatekH743-bd-shot/defaults.parm
 
 # All vehicles
-#@include ../Asgardian_Designs/all_vehicles_defaults.parm
+@include ../Asgardian_Designs/all_vehicles_defaults.parm
 
 # Airframe
-#@include ../Asgardian_Designs/Frames/H6/H6_HL.parm
+@include ../Asgardian_Designs/Frames/H6/H6.parm
+
 
 # Energy Source
-#@include ../Asgardian_Designs/Energy_Source/Batteries/FILL_IN_LATER.parm
+@include ../Asgardian_Designs/Energy_Source/Batteries/FILL_IN_LATER.parm
 
 # ESC
-#@include ../Asgardian_Designs/ESCs/TMotor_F55A_ProII.parm
+@include ../Asgardian_Designs/ESCs/TMotor_F55A_ProII.parm
 
 # Electric Motor
-#@include ../Asgardian_Designs/Motors/Lumineer_popo_2306_unknown_KV.parm
+@include ../Asgardian_Designs/Motors/Lumineer_popo_2306_unknown_KV.parm
 
 # Vehicle Specific
 
-# 
+# Flight Controller Port Mapping
+# Try to keep this the same for every vehicle !! Fix old vehicles!!
+
+
+
+# Acro Parameters
+
+# FIXME
+# Enable Air Mode Permanently until we can add it on a switch
+ACRO_OPTIONS 1
+
+# Acro Rates
+ACRO_RP_EXPO 0.3
+ACRO_RP_RATE 670
+
+# Turn off Acro Trainer which is on by default
+# FIXME : Note acro trainer could be used to create BF horizon mode
+ACRO_TRAINER 0
+
+ACRO_Y_EXPO 0.3
+ACRO_Y_RATE 670
+
+# Acro yaw rate time constant,makes this quite small
+# FIXME check the related vars in BF
+ACRO_Y_RATE_TC 0.01
+
+# Flight controller (FC)
+# FC Orientation
+AHRS_ORIENTATION 8
+
+# Angle Mode Maximum Angle in centi-degrees
+ANGLE_MAX 6500
+
+
+# Arming ACRO_OPTIONS
+
+# Turn off arming by rudder it is dangerous for acro flying
+ARMING_RUDDER 0
+
+
+# Vehicle Tuning
+
+# FIXME add link to here about copter control diagram to help understanding
+
+# FIXME Needs sane values for 5"
+# Attitude Control Maximum Angular Acceleration 
+ATC_ACCEL_P_MAX 340000
+ATC_ACCEL_R_MAX 340000
+ATC_ACCEL_Y_MAX 216000
+
+
+
+# Yaw PID
+ATC_ANG_YAW_P 11
+
+# Manual flying input time constant (smaller # means sharper/faster response)
+# FIXME check equivalent to BF for this
+ATC_INPUT_TC 0.01
+
+
+# Pitch PID
+ATC_RAT_PIT_D 0.0007
+ATC_RAT_PIT_FLTD 50
+ATC_RAT_PIT_FLTT 40
+ATC_RAT_PIT_I 0.092
+ATC_RAT_PIT_P 0.092
+
+ATC_RAT_PIT_SMAX 25
+
+# ATC_RAT_{axis}_SMAX
+# Safety SMax lowers D-gain when oscillations are detected above the given Hz values
+
+# Roll PID
+ATC_RAT_RLL_D 0.0007
+ATC_RAT_RLL_FLTD 50
+ATC_RAT_RLL_FLTT 40
+ATC_RAT_RLL_I 0.072
+ATC_RAT_RLL_P 0.072
+
+ATC_RAT_RLL_SMAX 25
+
+# YAW PID
+ATC_RAT_YAW_D 0.012
+ATC_RAT_YAW_FLTD 5
+ATC_RAT_YAW_FLTE 7.5
+ATC_RAT_YAW_I 0.014
+ATC_RAT_YAW_P 0.14
+
+ATC_RAT_YAW_SMAX 25
+
+# Maximum System Angular Rates
+# These are the maximum possible by the system or can be used as Pilot feel rates 
+ATC_RATE_P_MAX 670
+ATC_RATE_R_MAX 670
+ATC_RATE_Y_MAX 670
+
+# FIXME Throttle gain boost ratio
+ATC_THR_G_BOOST 0.3
+
+# FIXME and check
+# Throttle vs attiude control prioritization during manual flight (higher means prioritize attitude)
+ATC_THR_MIX_MAN 4
+
+# Autotune Settings
+# Do not autotune yaw with pitch/roll always do it separately
+AUTOTUNE_AGGR 0.075
+AUTOTUNE_AXES 3
+AUTOTUNE_MIN_D 0.0003
+
+# Battery Safety
+
+# 6S Li-Ion values
+# BATT_ARM_VOLT 19.1
+# Disable the arming voltage check, trust the pilot
+BATT_ARM_VOLT 0
+
+# Battery capacity in mAh
+BATT_CAPACITY 2800
+
+# BATT_CRT_VOLT 18
+BATT_CRT_VOLT 0
+
+# BATT_LOW_MAH 600
+BATT_LOW_MAH 0
+
+# BATT_LOW_VOLT 18.6
+BATT_LOW_VOLT 0
+
+# EKF Settings
+# FIXME and CHECK these vs the crazy take off log
+
+# This noise controls the growth of the vertical accelerometer delta velocity bias state error estimate. Increasing it makes accelerometer bias estimation faster and noisier.
+# Default : 0.02 m/s^3
+EK3_ABIAS_P_NSE 0.0005
+
+# The accelerometer bias state will be limited to +- this value
+# Default : 1.0 m/s^3
+EK3_ACC_BIAS_LIM 0.1
+
+# Filtering 
+# Enable the onboard FFT
+# FIXME Check min and max 
+
+FFT_ENABLE 1
+FFT_MAXHZ 950
+FFT_MINHZ 16
+FFT_NUM_FRAMES 5
+
+# FFT_OPTIONS
+# Compute the FFT after the filtering: harmonic notch and low pass filter
+FFT_OPTIONS 3
+
+# Signal to Noise Ratio in dB
+FFT_SNR_REF 5
+
+FFT_WINDOW_SIZE 128
+
+# Flight Mode Channel setup
+# ELRS asks flight mode be on channel 12
+FLTMODE_CH 12
+
+# Never leave flight modes to chance specify all of them
+# Mode #  : Value : Name
+#       1 :   0   : Stabilize
+#       2 :   0   : Stabilize
+#       3 :   2   : Alt-hold
+#       4 :   2   : Alt-hold
+#       5 :   1   : Acro
+#       6 :   1   : Acro
+
+FLTMODE1 0
+FLTMODE2 0
+FLTMODE3 2
+FLTMODE4 2
+FLTMODE5 1
+FLTMODE6 1
+
+# Frame Class : QUAD
+FRAME_CLASS 1
+
+# Frame Type
+# Most useful class types that determine the motor order around the frame
+# Value : Name                 : Propeller Rotation Direction
+# 12    : BetaFlightX          : Propellers inward
+# 18    : BetaFlightX Reversed : Propellers outward
+FRAME_TYPE 12
+
+# Failsafes
+
+# Always land when a throttle failsafe occurs
+FS_THR_ENABLE 3
+
+# INS Accelerometer filter (hz)
+INS_ACCEL_FILTER 10
+
+# INS Fast sample
+# This should always be enabled for all available IMUs that may be used by the various EKF lanes
+INS_FAST_SAMPLE 7
+
+# This is the first low pass filter 
+# On new setup this should be lowered for safety
+#  AP Default : 20 Hz 
+# Starting point 5" Propellers 60 Hz
+INS_GYRO_FILTER 150
+
+# Notch filtering 
+
