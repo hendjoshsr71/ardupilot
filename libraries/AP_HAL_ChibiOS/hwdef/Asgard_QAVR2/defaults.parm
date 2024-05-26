@@ -5,20 +5,20 @@
 # @include ../MatekH743-bd-shot/defaults.parm
 
 # All vehicles
-@include ../Asgardian_Designs/all_vehicles_defaults.parm
+#@include ../Asgardian_Designs/all_vehicles_defaults.parm
 
 # Airframe
-@include ../Asgardian_Designs/Frames/H6/H6.parm
+#@include ../Asgardian_Designs/Frames/H6/H6.parm
 
 
 # Energy Source
-@include ../Asgardian_Designs/Energy_Source/Batteries/FILL_IN_LATER.parm
+#@include ../Asgardian_Designs/Energy_Source/Batteries/FILL_IN_LATER.parm
 
 # ESC
-@include ../Asgardian_Designs/ESCs/TMotor_F55A_ProII.parm
+#@include ../Asgardian_Designs/ESCs/TMotor_F55A_ProII.parm
 
 # Electric Motor
-@include ../Asgardian_Designs/Motors/Lumineer_popo_2306_unknown_KV.parm
+#@include ../Asgardian_Designs/Motors/Lumineer_popo_2306_unknown_KV.parm
 
 # Vehicle Specific
 
