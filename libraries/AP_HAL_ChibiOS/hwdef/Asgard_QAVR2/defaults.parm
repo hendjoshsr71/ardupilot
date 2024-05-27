@@ -253,7 +253,7 @@ INS_HNTCH_REF 1
 #       It should be set to 0 once verified to lower the size of the logs
 INS_LOG_BAT_LGIN 5
 INS_LOG_BAT_MASK 7
-INS_LOG_BAT_OPTIONS 4
+INS_LOG_BAT_OPTS 4
 
 # LOGGING Params
 # LOG_BITMASK
@@ -300,7 +300,7 @@ OSD_CELL_COUNT 6
 # Buzzer & LED
 
 # Silent and Dark Mode
-# NTF_BUZZ_PIN 0
+# NTF_BUZZ_PIN -1
 # NTF_LED_BRIGHT 0
 # NTF_DISPLAY_TYPE 0
 
