@@ -30,8 +30,8 @@
 # Acro Parameters
 
 # FIXME
-# Enable Air Mode Permanently until we can add it on a switch
-ACRO_OPTIONS 1
+# Disable Air Mode instead set it on a switch
+ACRO_OPTIONS 0
 
 # Acro Rates
 ACRO_RP_EXPO 0.3
@@ -150,6 +150,13 @@ BATT_LOW_MAH 0
 # BATT_LOW_VOLT 18.6
 BATT_LOW_VOLT 0
 
+# Compass settings
+# Disable the compass for now
+COMPASS_ENABLE 0
+COMPASS_USE 0
+COMPASS_USE2 0
+COMPASS_USE3 0
+
 # EKF Settings
 # FIXME and CHECK these vs the crazy take off log
 
@@ -255,7 +262,7 @@ INS_LOG_BAT_OPTIONS 4
 # LOG_DISARMED 1 : Set this when debugging start up issues or EKF issues
 # LOG_FILE_DSRMROT 1: Create a new log file for each arm/disarm cycle
 LOG_BITMASK 65535
-LOG_FILE_DSRMROT 0
+LOG_FILE_DSRMROT 1
 
 # Loiter Speed in cm/s
 LOIT_SPEED 2500
@@ -263,7 +270,7 @@ LOIT_SPEED 2500
 # Motor linearization parameters
 # Note changing any of these after tuning requires retuning
 MOT_BAT_VOLT_MAX 25.2
-MOT_BAT_VOLT_MIN 15.9
+MOT_BAT_VOLT_MIN 16.8
 
 # MOT_PWM_TYPE set to DSHOT600
 MOT_PWM_TYPE 6
@@ -279,14 +286,24 @@ MOT_SPIN_MIN 0.06
 MOT_SPOOL_TIME 0.2
 MOT_THST_EXPO 0.5
 
+# Set motor hover thrust to the approximate hover value, this should be estimated lower than
+MOT_THST_HOVER 0.12
 
 # Battery dependent
 # NOTE we must explicitly set the number of battery cells
 # Setting this automatically like BetaFlight does can never work and is dangerous when using LI-Ion cells.
 # BF assumes you are always starting with a fully charged packed, which obviously is not always the case
 
-MSP_OSD_CELLS 6
+MSP_OSD_NCELLS 6
 OSD_CELL_COUNT 6
+
+# Buzzer & LED
+
+# Silent and Dark Mode
+# NTF_BUZZ_PIN 0
+# NTF_LED_BRIGHT 0
+# NTF_DISPLAY_TYPE 0
+
 
 # OSD Parameters
 # Set OSD_TYPE to MSP_Display port : ie HDZero, Walksnail, newer DJI systems
@@ -301,6 +318,8 @@ OSD1_ARMING_Y 15
 OSD1_BAT_VOLT_X 45
 OSD1_BAT_VOLT_Y 0
 OSD1_BATTBAR_EN 0
+OSD1_BATTBAR_X 2
+OSD1_BATTBAR_Y 2
 OSD1_BATUSED_X 45
 OSD1_BATUSED_Y 2
 OSD1_CELLVOLT_X 25
@@ -367,11 +386,16 @@ PSC_JERK_XY 20
 # RC Options
 # Setup for ELRS
 
-# RC_OPTIONS 
-# Use passthrough for CRSF telemetry
-# Suppress CRSF mode/rate messages for ELRS systems
-# Use Link Quality for RSSI with CRSF
-# Use 420 kbaud for ELRS protocol
+# RC_OPTIONS
+# BIT # : Value : Description
+#----------------------------
+# 5     : 32    : Arming check throttle for 0 input
+# 8     : 256   : Use passthrough for CRSF telemetry
+# NOT USED YET 9     : 512   : Suppress CRSF mode/rate messages for ELRS systems
+# 11    : 2048  : Use Link Quality for RSSI with CRSF
+# 13    : 8192  : Use 420 kbaud for ELRS protocol
+# Add all the values up to get the total decimal value below
+RC_OPTIONS 10528
 
 # RC_PROTOCOLS
 # NEVER Set auto detection it is dangerous due to the inclusion of old hobby protocols that can be detected by noise on the comms lines
