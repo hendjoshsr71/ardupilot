@@ -253,7 +253,7 @@ INS_HNTCH_REF 1
 #       It should be set to 0 once verified to lower the size of the logs
 INS_LOG_BAT_LGIN 5
 INS_LOG_BAT_MASK 7
-INS_LOG_BAT_OPTS 4
+INS_LOG_BAT_OPT 4
 
 # LOGGING Params
 # LOG_BITMASK
