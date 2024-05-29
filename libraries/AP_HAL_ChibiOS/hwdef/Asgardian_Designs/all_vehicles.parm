@@ -1,0 +1,29 @@
+# Asgardian Designs
+# All Vehicles Params
+
+# Turn off arming by rudder it is dangerous for acro flying
+ARMING_RUDDER 0
+
+######### Filtering #########
+# Enable the onboard FFT
+# FIXME Check min and max 
+
+FFT_ENABLE 1
+FFT_MAXHZ 950
+FFT_MINHZ 16
+FFT_NUM_FRAMES 5
+
+# FFT_OPTIONS
+# Compute the FFT after the filtering: harmonic notch and low pass filter
+FFT_OPTIONS 3
+
+# Signal to Noise Ratio in dB
+FFT_SNR_REF 5
+
+FFT_WINDOW_SIZE 128
+
+######## RC Channel Mapping Common ########
+
+# Flight Mode Channel setup
+# ELRS asks flight mode be on channel 12
+FLTMODE_CH 12

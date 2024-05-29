@@ -1,0 +1,20 @@
+
+# FIXME
+# Disable Air Mode instead set it on a switch
+ACRO_OPTIONS 0
+
+# Acro Rates
+ACRO_RP_EXPO 0.3
+ACRO_RP_RATE 670
+
+# Turn off Acro Trainer which is on by default
+# FIXME : Note acro trainer could be used to create BF horizon mode
+ACRO_TRAINER 0
+
+ACRO_Y_EXPO 0.3
+ACRO_Y_RATE 670
+
+# Acro yaw rate time constant,makes this quite small
+# FIXME check the related vars in BF
+ACRO_Y_RATE_TC 0.01
+

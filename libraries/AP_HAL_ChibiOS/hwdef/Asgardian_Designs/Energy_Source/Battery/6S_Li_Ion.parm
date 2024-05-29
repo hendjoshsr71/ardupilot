@@ -1,0 +1,15 @@
+
+# 6S Li-Ion values
+
+# BATT_ARM_VOLT 19.1
+# BATT_CRT_VOLT 18
+# BATT_LOW_VOLT 18.6
+
+# NOTE we must explicitly set the number of battery cells
+# Setting this automatically like BetaFlight does can never work and is dangerous when using LI-Ion cells.
+# BF assumes you are always starting with a fully charged packed, which obviously is not always the case
+MSP_OSD_NCELLS 6
+OSD_CELL_COUNT 6
+
+# Average cell voltage below which the OSD element flashes
+OSD_W_AVGCELLV 3.3

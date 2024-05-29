@@ -8,11 +8,11 @@
 #@include ../Asgardian_Designs/all_vehicles_defaults.parm
 
 # Airframe
-#@include ../Asgardian_Designs/Frames/H6/H6.parm
+@include ../Asgardian_Designs/Frames/QAV_R2_5in.parm
 
 
 # Energy Source
-#@include ../Asgardian_Designs/Energy_Source/Batteries/FILL_IN_LATER.parm
+@include ../Asgardian_Designs/Energy_Source/Battery/6S_Li_Ion.parm
 
 # ESC
 #@include ../Asgardian_Designs/ESCs/TMotor_F55A_ProII.parm
@@ -20,46 +20,28 @@
 # Electric Motor
 #@include ../Asgardian_Designs/Motors/Lumineer_popo_2306_unknown_KV.parm
 
+# FPV On-Screen Display (OSD) Setup
+@include ../Asgardian_Designs/OSD/hd_zero.parm
+
 # Vehicle Specific
 
 # Flight Controller Port Mapping
 # Try to keep this the same for every vehicle !! Fix old vehicles!!
 
 
-
+######## OPERATIONS ########
 # Acro Parameters
+@include ../Asgardian_Designs/Operations/acro.parm
 
-# FIXME
-# Disable Air Mode instead set it on a switch
-ACRO_OPTIONS 0
-
-# Acro Rates
-ACRO_RP_EXPO 0.3
-ACRO_RP_RATE 670
-
-# Turn off Acro Trainer which is on by default
-# FIXME : Note acro trainer could be used to create BF horizon mode
-ACRO_TRAINER 0
-
-ACRO_Y_EXPO 0.3
-ACRO_Y_RATE 670
-
-# Acro yaw rate time constant,makes this quite small
-# FIXME check the related vars in BF
-ACRO_Y_RATE_TC 0.01
+# Angle Mode Maximum Angle in centi-degrees
+ANGLE_MAX 6500
 
 # Flight controller (FC)
 # FC Orientation
 AHRS_ORIENTATION 8
 
-# Angle Mode Maximum Angle in centi-degrees
-ANGLE_MAX 6500
+######### SYSTEM LIMITATIONS ########
 
-
-# Arming ACRO_OPTIONS
-
-# Turn off arming by rudder it is dangerous for acro flying
-ARMING_RUDDER 0
 
 
 # Vehicle Tuning
@@ -68,48 +50,19 @@ ARMING_RUDDER 0
 
 # FIXME Needs sane values for 5"
 # Attitude Control Maximum Angular Acceleration 
+# Can be used as pilot feel params
 ATC_ACCEL_P_MAX 340000
 ATC_ACCEL_R_MAX 340000
 ATC_ACCEL_Y_MAX 216000
-
-
-
-# Yaw PID
-ATC_ANG_YAW_P 11
 
 # Manual flying input time constant (smaller # means sharper/faster response)
 # FIXME check equivalent to BF for this
 ATC_INPUT_TC 0.01
 
-
-# Pitch PID
-ATC_RAT_PIT_D 0.0007
-ATC_RAT_PIT_FLTD 50
-ATC_RAT_PIT_FLTT 40
-ATC_RAT_PIT_I 0.092
-ATC_RAT_PIT_P 0.092
-
-ATC_RAT_PIT_SMAX 25
-
 # ATC_RAT_{axis}_SMAX
 # Safety SMax lowers D-gain when oscillations are detected above the given Hz values
-
-# Roll PID
-ATC_RAT_RLL_D 0.0007
-ATC_RAT_RLL_FLTD 50
-ATC_RAT_RLL_FLTT 40
-ATC_RAT_RLL_I 0.072
-ATC_RAT_RLL_P 0.072
-
+ATC_RAT_PIT_SMAX 25
 ATC_RAT_RLL_SMAX 25
-
-# YAW PID
-ATC_RAT_YAW_D 0.012
-ATC_RAT_YAW_FLTD 5
-ATC_RAT_YAW_FLTE 7.5
-ATC_RAT_YAW_I 0.014
-ATC_RAT_YAW_P 0.14
-
 ATC_RAT_YAW_SMAX 25
 
 # Maximum System Angular Rates
@@ -132,23 +85,18 @@ AUTOTUNE_AXES 3
 AUTOTUNE_MIN_D 0.0003
 
 # Battery Safety
-
-# 6S Li-Ion values
-# BATT_ARM_VOLT 19.1
 # Disable the arming voltage check, trust the pilot
 BATT_ARM_VOLT 0
 
 # Battery capacity in mAh
 BATT_CAPACITY 2800
 
-# BATT_CRT_VOLT 18
-BATT_CRT_VOLT 0
-
 # BATT_LOW_MAH 600
 BATT_LOW_MAH 0
-
-# BATT_LOW_VOLT 18.6
+BATT_CRT_VOLT 0
 BATT_LOW_VOLT 0
+
+######### BATTERY #########
 
 # Compass settings
 # Disable the compass for now
@@ -168,28 +116,6 @@ EK3_ABIAS_P_NSE 0.0005
 # Default : 1.0 m/s^3
 EK3_ACC_BIAS_LIM 0.1
 
-# Filtering 
-# Enable the onboard FFT
-# FIXME Check min and max 
-
-FFT_ENABLE 1
-FFT_MAXHZ 950
-FFT_MINHZ 16
-FFT_NUM_FRAMES 5
-
-# FFT_OPTIONS
-# Compute the FFT after the filtering: harmonic notch and low pass filter
-FFT_OPTIONS 3
-
-# Signal to Noise Ratio in dB
-FFT_SNR_REF 5
-
-FFT_WINDOW_SIZE 128
-
-# Flight Mode Channel setup
-# ELRS asks flight mode be on channel 12
-FLTMODE_CH 12
-
 # Never leave flight modes to chance specify all of them
 # Mode #  : Value : Name
 #       1 :   0   : Stabilize
@@ -206,15 +132,9 @@ FLTMODE4 2
 FLTMODE5 1
 FLTMODE6 1
 
-# Frame Class : QUAD
-FRAME_CLASS 1
 
-# Frame Type
-# Most useful class types that determine the motor order around the frame
-# Value : Name                 : Propeller Rotation Direction
-# 12    : BetaFlightX          : Propellers inward
-# 18    : BetaFlightX Reversed : Propellers outward
-FRAME_TYPE 12
+
+
 
 # Failsafes
 
@@ -289,85 +209,12 @@ MOT_THST_EXPO 0.5
 # Set motor hover thrust to the approximate hover value, this should be estimated lower than
 MOT_THST_HOVER 0.12
 
-# Battery dependent
-# NOTE we must explicitly set the number of battery cells
-# Setting this automatically like BetaFlight does can never work and is dangerous when using LI-Ion cells.
-# BF assumes you are always starting with a fully charged packed, which obviously is not always the case
-
-MSP_OSD_NCELLS 6
-OSD_CELL_COUNT 6
-
 # Buzzer & LED
 
 # Silent and Dark Mode
 # NTF_BUZZ_PIN -1
 # NTF_LED_BRIGHT 0
 # NTF_DISPLAY_TYPE 0
-
-
-# OSD Parameters
-# Set OSD_TYPE to MSP_Display port : ie HDZero, Walksnail, newer DJI systems
-OSD_TYPE 5
-
-# Battery dependent, this assumes using a Li-Ion for 3.3V/cell to start flashing the element
-OSD_W_AVGCELLV 3.3
-
-OSD1_ALTITUDE_X 45
-OSD1_ARMING_X 0
-OSD1_ARMING_Y 15
-OSD1_BAT_VOLT_X 45
-OSD1_BAT_VOLT_Y 0
-OSD1_BATTBAR_EN 0
-OSD1_BATTBAR_X 2
-OSD1_BATTBAR_Y 2
-OSD1_BATUSED_X 45
-OSD1_BATUSED_Y 2
-OSD1_CELLVOLT_X 25
-OSD1_CELLVOLT_Y 5
-OSD1_COMPASS_X 25
-OSD1_COMPASS_Y 0
-OSD1_CURRENT_X 45
-OSD1_CURRENT_Y 1
-OSD1_ENABLE 1
-OSD1_FLTMODE_X 7
-OSD1_FLTMODE_Y 16
-OSD1_GPSLAT_X 38
-OSD1_GPSLAT_Y 15
-OSD1_GPSLONG_X 38
-OSD1_GPSLONG_Y 16
-OSD1_GSPEED_X 0
-OSD1_GSPEED_Y 16
-OSD1_HEADING_X 24
-OSD1_HEADING_Y 1
-OSD1_HOME_X 0
-OSD1_HOME_Y 12
-OSD1_HOMEDIR_EN 0
-OSD1_HOMEDIR_X 5
-OSD1_HOMEDIR_Y 5
-OSD1_HOMEDIST_EN 0
-OSD1_HOMEDIST_X 5
-OSD1_HOMEDIST_Y 4
-OSD1_HORIZON_X 25
-OSD1_MESSAGE_X 13
-OSD1_MESSAGE_Y 17
-OSD1_POWER_EN 0
-OSD1_POWER_X 0
-OSD1_POWER_Y 9
-OSD1_RSSI_X 0
-OSD1_SATS_X 0
-OSD1_SATS_Y 0
-OSD1_THROTTLE_EN 0
-
-# Set text resolution to 50x18 lines
-# HDZero :  Should be 1
-OSD1_TXT_RES 1
-OSD2_TXT_RES 1
-OSD3_TXT_RES 1
-OSD4_TXT_RES 1
-
-OSD1_VSPEED_X 45
-OSD1_VTX_PWR_EN 1
-OSD1_VTX_PWR_X 8
 
 # Pilot Feel parameters
 PILOT_Y_EXPO 0.3
