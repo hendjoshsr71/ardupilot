@@ -1,0 +1,4 @@
+# Asgard QAVR2
+
+# Flight Controller
+include ../MatekH743-bdshot/hwdef.dat
