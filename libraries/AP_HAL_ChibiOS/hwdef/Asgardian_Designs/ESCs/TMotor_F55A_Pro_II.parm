@@ -1,0 +1,9 @@
+# TMotor F55A Pro II ESC
+
+# Enable BDShot + Extended Telemetry Params 
+@include BDShot_Ext_BLHeli32_AM32.parm
+
+#
+MOT_SPIN_ARM 0.03
+MOT_SPIN_MAX 0.98
+MOT_SPIN_MIN 0.06

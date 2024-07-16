@@ -1,0 +1,19 @@
+# Power Monitor Voltage & Current
+
+
+# Failsafe LOW Action is RTL
+#BATT_FS_LOW_ACT 2
+
+# add note later why use resting estimate for voltage fialsafe when you have accurate current cpacity used monitoring
+# need to set the failsafe for BATT_(low/critical)_MAH
+# BATT_FS_VOLTSRC 0
+
+BATT_MONITOR 4
+
+# These must be set by technicians on bring up using the Mauch Sensor parameters for each individual sensor
+# BATT_CURR_MULT 0
+# BATT_VOLT_MULT 0
+
+BATT_LOW_VOLT 47.5
+BATT_CAPACITY 0
+BATT_LOW_MAH 0

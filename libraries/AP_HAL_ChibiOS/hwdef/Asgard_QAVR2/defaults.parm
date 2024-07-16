@@ -1,0 +1,454 @@
+# Asgard QAVR2
+# ArduCopter Version: 4.5
+
+# Flight Controller
+# @include ../MatekH743-bd-shot/defaults.parm
+
+# All vehicles
+#@include ../Asgardian_Designs/all_vehicles_defaults.parm
+
+# Airframe
+@include ../Asgardian_Designs/Frames/QAV_R2_5in.parm
+
+
+# Energy Source
+@include ../Asgardian_Designs/Energy_Source/Battery/6S_Li_Ion.parm
+
+# ESC
+#@include ../Asgardian_Designs/ESCs/TMotor_F55A_ProII.parm
+
+# Electric Motor
+#@include ../Asgardian_Designs/Motors/Lumineer_popo_2306_unknown_KV.parm
+
+# FPV On-Screen Display (OSD) Setup
+@include ../Asgardian_Designs/OSD/hd_zero.parm
+
+# Vehicle Specific
+
+# Flight Controller Port Mapping
+# Try to keep this the same for every vehicle !! Fix old vehicles!!
+
+
+######## OPERATIONS ########
+# Acro Parameters
+@include ../Asgardian_Designs/Operations/acro.parm
+
+# Angle Mode Maximum Angle in centi-degrees
+ANGLE_MAX 6500
+
+# Flight controller (FC)
+# FC Orientation
+AHRS_ORIENTATION 8
+
+######### SYSTEM LIMITATIONS ########
+
+
+
+# Vehicle Tuning
+
+# FIXME add link to here about copter control diagram to help understanding
+
+# FIXME Needs sane values for 5"
+# Attitude Control Maximum Angular Acceleration 
+# Can be used as pilot feel params
+ATC_ACCEL_P_MAX 340000
+ATC_ACCEL_R_MAX 340000
+ATC_ACCEL_Y_MAX 216000
+
+# Manual flying input time constant (smaller # means sharper/faster response)
+# FIXME check equivalent to BF for this
+ATC_INPUT_TC 0.01
+
+# ATC_RAT_{axis}_SMAX
+# Safety SMax lowers D-gain when oscillations are detected above the given Hz values
+ATC_RAT_PIT_SMAX 25
+ATC_RAT_RLL_SMAX 25
+ATC_RAT_YAW_SMAX 25
+
+# Maximum System Angular Rates
+# These are the maximum possible by the system or can be used as Pilot feel rates 
+ATC_RATE_P_MAX 670
+ATC_RATE_R_MAX 670
+ATC_RATE_Y_MAX 670
+
+# FIXME Throttle gain boost ratio
+ATC_THR_G_BOOST 0.3
+
+# FIXME and check
+# Throttle vs attiude control prioritization during manual flight (higher means prioritize attitude)
+ATC_THR_MIX_MAN 4
+
+# Autotune Settings
+# Do not autotune yaw with pitch/roll always do it separately
+AUTOTUNE_AGGR 0.075
+AUTOTUNE_AXES 3
+AUTOTUNE_MIN_D 0.0003
+
+# Battery Safety
+# Disable the arming voltage check, trust the pilot
+BATT_ARM_VOLT 0
+
+# Battery capacity in mAh
+BATT_CAPACITY 2800
+
+# BATT_LOW_MAH 600
+BATT_LOW_MAH 0
+BATT_CRT_VOLT 0
+BATT_LOW_VOLT 0
+
+######### BATTERY #########
+
+# Compass settings
+# Disable the compass for now
+COMPASS_ENABLE 0
+COMPASS_USE 0
+COMPASS_USE2 0
+COMPASS_USE3 0
+
+# EKF Settings
+# FIXME and CHECK these vs the crazy take off log
+
+# This noise controls the growth of the vertical accelerometer delta velocity bias state error estimate. Increasing it makes accelerometer bias estimation faster and noisier.
+# Default : 0.02 m/s^3
+EK3_ABIAS_P_NSE 0.0005
+
+# The accelerometer bias state will be limited to +- this value
+# Default : 1.0 m/s^3
+EK3_ACC_BIAS_LIM 0.1
+
+# Never leave flight modes to chance specify all of them
+# Mode #  : Value : Name
+#       1 :   0   : Stabilize
+#       2 :   0   : Stabilize
+#       3 :   2   : Alt-hold
+#       4 :   2   : Alt-hold
+#       5 :   1   : Acro
+#       6 :   1   : Acro
+
+FLTMODE1 0
+FLTMODE2 0
+FLTMODE3 2
+FLTMODE4 2
+FLTMODE5 1
+FLTMODE6 1
+
+
+
+
+
+# Failsafes
+
+# Always land when a throttle failsafe occurs
+FS_THR_ENABLE 3
+
+# INS Accelerometer filter (hz)
+INS_ACCEL_FILTER 10
+
+# INS Fast sample
+# This should always be enabled for all available IMUs that may be used by the various EKF lanes
+INS_FAST_SAMPLE 7
+
+# This is the first low pass filter 
+# On new setup this should be lowered for safety
+#  AP Default : 20 Hz 
+# Starting point 5" Propellers 60 Hz
+INS_GYRO_FILTER 150
+
+# Notch filtering 
+# Setup the first filter ESC based RPM filtering for each motor
+# Use a narrow bandwidth as we using the measured RPM to set the notches this introduces less delay than a larger bandwidth
+INS_HNTCH_BW 8
+INS_HNTCH_ENABLE 1
+INS_HNTCH_MODE 3
+
+# INS_HNTCH_OPTS
+# Multi-source : Attaches a notch to each motor with RPM based feedback
+# Update at loop rate : updates the notch at SCHED_LOOP_RATE
+INS_HNTCH_OPTS 6
+
+INS_HNTCH_REF 1
+
+# INS Harmonic Notch Logging
+# NOTE: INS_LOG_BAT_MASK should be set to all IMUs during testing and verification of the filtering
+#       It should be set to 0 once verified to lower the size of the logs
+INS_LOG_BAT_LGIN 5
+INS_LOG_BAT_MASK 7
+INS_LOG_BAT_OPT 4
+
+# LOGGING Params
+# LOG_BITMASK
+#           65535 : Flight Testing Default, includes fast attitude and PID logging
+#                 : AP Defaults with Medium attitude
+# LOG_DISARMED 1 : Set this when debugging start up issues or EKF issues
+# LOG_FILE_DSRMROT 1: Create a new log file for each arm/disarm cycle
+LOG_BITMASK 65535
+LOG_FILE_DSRMROT 1
+
+# Loiter Speed in cm/s
+LOIT_SPEED 2500
+
+# Motor linearization parameters
+# Note changing any of these after tuning requires retuning
+MOT_BAT_VOLT_MAX 25.2
+MOT_BAT_VOLT_MIN 16.8
+
+# MOT_PWM_TYPE set to DSHOT600
+MOT_PWM_TYPE 6
+
+# MOT_SPIN_ARM : is the point where the motors will ALWAYS reliably start add a little margin here
+# MOT_SPIN_MIN : is the point where a bit of thrust begins to produced, offset from MOT_SPIN_ARM a bit
+MOT_SPIN_ARM 0.03
+MOT_SPIN_MAX 0.98
+MOT_SPIN_MIN 0.06
+
+# These parameters are highly dependent on the motor and propeller combination
+# The expo is the parameter that linearizes the thrust curve from minimum voltage to max. voltage
+MOT_SPOOL_TIME 0.2
+MOT_THST_EXPO 0.5
+
+# Set motor hover thrust to the approximate hover value, this should be estimated lower than
+MOT_THST_HOVER 0.12
+
+# Buzzer & LED
+
+# Silent and Dark Mode
+# NTF_BUZZ_PIN -1
+# NTF_LED_BRIGHT 0
+# NTF_DISPLAY_TYPE 0
+
+# Pilot Feel parameters
+PILOT_Y_EXPO 0.3
+PILOT_Y_RATE 670
+
+# Position Control PIDs
+
+# Z-Axis : Altitude Control
+PSC_ACCZ_I 0.24
+PSC_ACCZ_P 0.12
+PSC_JERK_Z 20
+
+# XY-Axis : Horizontal Control
+PSC_JERK_XY 20
+
+# RC Options
+# Setup for ELRS
+
+# RC_OPTIONS
+# BIT # : Value : Description
+#----------------------------
+# 5     : 32    : Arming check throttle for 0 input
+# 8     : 256   : Use passthrough for CRSF telemetry
+# NOT USED YET 9     : 512   : Suppress CRSF mode/rate messages for ELRS systems
+# 11    : 2048  : Use Link Quality for RSSI with CRSF
+# 13    : 8192  : Use 420 kbaud for ELRS protocol
+# Add all the values up to get the total decimal value below
+RC_OPTIONS 10528
+
+# RC_PROTOCOLS
+# NEVER Set auto detection it is dangerous due to the inclusion of old hobby protocols that can be detected by noise on the comms lines
+# Set to CRSF / ELRS
+RC_PROTOCOLS 512
+
+# RC Channel Calibration
+# Calibrate your controller properly to always be between the correct min/max
+# 
+# Calibrating on the FC should be considered dangerous as it now depends on getting the correct paring of RC controller to drone
+# Users normally have many transmitters, instead enforce good habits, calibrate your transmitter and use useful protocols like CRSF/ELRS that have consistent ranges
+
+# Parameter : Value : Description 
+# RC{x}_DZ  :   5   : set deadzones to be quite small
+# RC{x}_MAX :       : maximum CRSF default output when using a new model on an Edge TX transmitter
+# RC{x}_MIN :       : minimum CRSF default output when using a new model on an Edge TX transmitter
+# Note TBS CRSF Channels are 1024uS (10 bit) wide 
+# ELRS channel width can vary depending on the transmitter Settings
+#   SEE: https://www.expresslrs.org/software/switch-config/#summary-of-switch-configuration-modes
+
+RC1_DZ 5
+RC1_MAX 2012
+RC1_MIN 988
+
+RC2_DZ 5
+RC2_MAX 2012
+RC2_MIN 988
+
+# FIXME check on throttle defaults
+RC3_DZ 5
+RC3_MAX 2000
+RC3_MIN 990
+RC3_TRIM 990
+
+RC4_DZ 5
+RC4_MAX 2012
+RC4_MIN 988
+
+$ Check on arm channel
+RC5_MAX 2012
+RC5_MIN 988
+
+RC6_MAX 2012
+RC6_MIN 988
+
+RC7_MAX 2012
+RC7_MIN 988
+
+RC8_MAX 2012
+RC8_MIN 988
+
+RC9_MAX 2012
+RC9_MIN 988
+
+RC10_MAX 2012
+RC10_MIN 988
+
+RC11_MAX 2012
+RC11_MIN 988
+
+RC12_MAX 2012
+RC12_MIN 988
+
+RC13_MAX 2012
+RC13_MIN 988
+
+RC14_MAX 2012
+RC14_MIN 988
+
+RC15_MAX 2012
+RC15_MIN 988
+
+RC16_MAX 2012
+RC16_MIN 988
+
+# RC Channel Function Options
+# RC Channel # : VALUE : DESCRIPTION
+# ----------------------------------
+#    RC1       : ----- : ROLL
+#    RC2       : ----- : PITCH
+#    RC3       : ----- : THROTTLE
+#    RC4       : ----- : YAW
+
+#    RC5       : 153   : ARM/DISARM (4.2 and higher) , 154 is ARM/DISARM with Air Mode ON
+#    RC6       : ----- : ROLL
+#    RC7       : ----- : ROLL
+#    RC8       : ----- : ROLL
+#    RC9       : 151   : TURTLE MODE
+#    RC10      : 28    : Relay1 ON/OFF
+#    RC11      : ----- : ROLL
+#    RC12      : ----- : ROLL
+
+# FOR ELRS Channels Above 12 SEE DOCS about full bandwidth
+#    RC13      : ----- : ROLL
+#    RC14      : ----- : ROLL
+#    RC15      : ----- : ROLL
+#    RC16      : ----- : ROLL
+
+RC5_OPTION 153
+RC9_OPTION 151
+RC10_OPTION 28
+RC10_REVERSED 1
+
+# ArduPilot does not reverse pitch axis like is normal for aerospace, ie stick down causes pitch up
+RC2_REVERSED 1
+
+# Relay for turning off the V_sw port,
+RELAY1_FUNCTION 1
+
+# MATEK H743 Slim Specific (USER1 in BF)
+RELAY1_PIN 81
+
+# CRSF / ELRS set to Receiver Protocol
+RSSI_TYPE 3
+
+# SYSTEM PERFORMANCE
+# SCHED_LOOP_RATE is the main loop rate for the control system ie attitude control
+SCHED_LOOP_RATE 800
+
+# Scripting Notes
+# 
+# List of useful scripts 
+#
+#
+# List of main AP script location
+#
+#
+#
+#
+#
+#
+# Pros of Scripting
+#   Extendability of features without touching C++
+#
+# Cons of Scripting
+#   Not compiled code, there are checking utilities 
+#   MUST carefully consider all the inputs and outputs to functions and equations there are no guaranteed types
+#   There are many peculiar aspects to the LUA language that can cause issues for those used to C++
+#   It can crash and has crashed in odd yet mysterious ways. Keep that in mind for safety critical tasks
+#
+#
+#
+
+# Enable scripting
+SCR_ENABLE 1
+
+# It may be necessary depending on the scripts being run to increase the following
+# You can check resource useage either via logs or a GCS status message
+# SCR_HEAP_SIZE : RAM used by scripting keep a healthy margin
+# SCR_VM_I_COUNT : number of instructions before a script exits for taking to long to complete
+
+# SCR_DEBUG_OPTS
+# Most useful settings below
+# BIT # : VALUE : Description
+# BIT 1 : 2     : Runtime messages for memory usage and execution time
+# BIT 2 : 4     : Suppress logging scripts to dataflash
+# SCR_DEBUG_OPTS 2
+
+
+# BLHeli and Generic Serial pass-through timeout threshold,
+SERIAL_PASSTIMO 30 
+
+# Specific to Vehicle
+# SERIAL{x}_PROTOCOL
+# BF SERIAL # : AP SERIAL # : VALUE : DESCRIPTION
+#             : SERIAL2     : 23    : RCIN
+#             : SERIAL6     : 42    : MSP_DisplayPort
+SERIAL2_PROTOCOL 23
+SERIAL6_PROTOCOL 42
+
+# BLHeli
+SERVO_BLH_AUTO 1
+SERVO_BLH_BDMASK 15
+SERVO_BLH_MASK 15
+SERVO_DSHOT_ESC 1
+SERVO_DSHOT_RATE 2
+
+# SERVO{x}_FUNCTION
+# This maps the servo output to a motor number
+SERVO1_FUNCTION 33
+SERVO2_FUNCTION 34
+SERVO3_FUNCTION 35
+SERVO4_FUNCTION 36
+
+SERVO1_MIN 1000
+SERVO1_MAX 2000
+SERVO1_TRIM 1000
+
+SERVO2_MIN 1000
+SERVO2_MAX 2000
+SERVO2_TRIM 1000
+
+SERVO3_MIN 1000
+SERVO3_MAX 2000
+SERVO3_TRIM 1000
+
+SERVO4_MIN 1000
+SERVO4_MAX 2000
+SERVO4_TRIM 1000
+
+# DISABLE Terrain for acro / altitude hold only drone
+TERRAIN_ENABLE 0
+
+# Throttle Deadzone for Altitude Hold & Loiter around the mid-point
+THR_DZ 50
+
+# Checks we are receiving 
+# May want to disable this check. But if RPM is not reporting there is likely an issue with an ESC so....
+TKOFF_RPM_MIN 1000

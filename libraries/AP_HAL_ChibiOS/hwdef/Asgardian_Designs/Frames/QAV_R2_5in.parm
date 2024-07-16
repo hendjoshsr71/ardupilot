@@ -1,0 +1,34 @@
+
+# Frame Class : QUAD
+FRAME_CLASS 1
+
+# Frame Type
+# Most useful class types that determine the motor order around the frame
+# Value : Name                 : Propeller Rotation Direction
+# 12    : BetaFlightX          : Propellers inward
+# 18    : BetaFlightX Reversed : Propellers outward
+FRAME_TYPE 12
+
+# Yaw PID
+ATC_ANG_YAW_P 11
+
+# Pitch PID
+ATC_RAT_PIT_D 0.0007
+ATC_RAT_PIT_FLTD 50
+ATC_RAT_PIT_FLTT 40
+ATC_RAT_PIT_I 0.092
+ATC_RAT_PIT_P 0.092
+
+# Roll PID
+ATC_RAT_RLL_D 0.0007
+ATC_RAT_RLL_FLTD 50
+ATC_RAT_RLL_FLTT 40
+ATC_RAT_RLL_I 0.072
+ATC_RAT_RLL_P 0.072
+
+# YAW PID
+ATC_RAT_YAW_D 0.012
+ATC_RAT_YAW_FLTD 5
+ATC_RAT_YAW_FLTE 7.5
+ATC_RAT_YAW_I 0.014
+ATC_RAT_YAW_P 0.14
