@@ -1,0 +1,27 @@
+# BLHeli & AM32 Base Parameters for all applicable ESCs
+
+# Defaults for DShot ESCs
+# MOT_PWM_MAX 2000
+# MOT_PWM_MIN 1000
+
+# Allow for BLHeli32, ESC-Configurator.com pass through support
+SERVO_BLH_AUTO 1
+
+# This assumes a sane motor ordering of using the first four servo outputs for the motors
+# Not ture for QUAD planes 
+# This needs to be un-defined and redfined on quad planes
+SERVO_BLH_BDMASK 15
+SERVO_BLH_MASK 15
+
+# Sets output port to be the first USB port, should default to mavlink
+# Defaults to the first USB port
+# SERVO_BLH_PORT 0
+
+# SET DShot ESC type
+#   1 : BLHeli32 Normal
+#   3 : BLHeli32 + Extended Telemetry
+# The ESC must support extended telemetry IE BLHeli 32.10 or greater
+SERVO_DSHOT_ESC 3
+
+# Set DShot Command Rate to double the loop rate ie (SCHED_LOOP_RATE)
+SERVO_DSHOT_RATE 2

@@ -1,0 +1,20 @@
+# DRONECAN Battery Monitoring for when using fully electric mode.
+# Two batteries in parallel
+
+# Battery 1 (DRONECAN) Voltage & Current
+BATT_MONITOR 8
+BATT_CAPACITY 15800
+BATT_LOW_MAH 1600
+BATT_LOW_VOLT 43.75
+
+# Failsafe LOW Action is RTL
+BATT_FS_LOW_ACT 2
+
+# Battery 2 (DRONECAN)
+BATT2_MONITOR 8
+BATT2_CAPACITY 15800
+BATT2_LOW_MAH 1600
+BATT2_LOW_VOLT 43.75
+
+# Failsafe LOW Action is RTL
+BATT2_FS_LOW_ACT 2
