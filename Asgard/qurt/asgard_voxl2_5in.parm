@@ -1,0 +1,140 @@
+
+######################## 
+# All vehicles
+
+# Asgardian Designs
+# All Vehicles Params
+
+# Turn off arming by rudder it is dangerous for acro flying
+ARMING_RUDDER 0
+
+######### Filtering #########
+# Enable the onboard FFT
+# FIXME Check min and max 
+
+FFT_ENABLE 1
+FFT_MAXHZ 950
+FFT_MINHZ 16
+FFT_NUM_FRAMES 5
+
+# FFT_OPTIONS
+# Compute the FFT after the filtering: harmonic notch and low pass filter
+FFT_OPTIONS 3
+
+# Signal to Noise Ratio in dB
+FFT_SNR_REF 5
+
+FFT_WINDOW_SIZE 128
+
+######## RC Channel Mapping Common ########
+
+# Flight Mode Channel setup
+# ELRS asks flight mode be on channel 12
+FLTMODE_CH 12
+
+##############################################################
+
+
+############################################################
+# Airframe
+#@include ../Asgardian_Designs/Frames/Asgard_5in.parm
+
+# Frame Class : QUAD
+FRAME_CLASS 1
+
+# Frame Type
+# Most useful class types that determine the motor order around the frame
+# Value : Name                 : Propeller Rotation Direction
+# 12    : BetaFlightX          : Propellers inward
+# 18    : BetaFlightX Reversed : Propellers outward
+FRAME_TYPE 12
+
+# Yaw PID
+ATC_ANG_YAW_P 11
+
+# Pitch PID
+ATC_RAT_PIT_D 0.0007
+ATC_RAT_PIT_FLTD 50
+ATC_RAT_PIT_FLTT 40
+ATC_RAT_PIT_I 0.092
+ATC_RAT_PIT_P 0.092
+
+# Roll PID
+ATC_RAT_RLL_D 0.0007
+ATC_RAT_RLL_FLTD 50
+ATC_RAT_RLL_FLTT 40
+ATC_RAT_RLL_I 0.072
+ATC_RAT_RLL_P 0.072
+
+# YAW PID
+ATC_RAT_YAW_D 0.012
+ATC_RAT_YAW_FLTD 5
+ATC_RAT_YAW_FLTE 7.5
+ATC_RAT_YAW_I 0.014
+ATC_RAT_YAW_P 0.14
+
+#######################################################
+
+#####################################################
+# Energy Source
+@include ../Asgardian_Designs/Energy_Source/Battery/6S_Li_Ion.parm
+
+
+# 6S Li-Ion values
+
+# BATT_ARM_VOLT 19.1
+# BATT_CRT_VOLT 18
+# BATT_LOW_VOLT 18.6
+
+# NOTE we must explicitly set the number of battery cells
+# Setting this automatically like BetaFlight does can never work and is dangerous when using LI-Ion cells.
+# BF assumes you are always starting with a fully charged packed, which obviously is not always the case
+MSP_OSD_NCELLS 6
+OSD_CELL_COUNT 6
+
+# Average cell voltage below which the OSD element flashes
+OSD_W_AVGCELLV 3.3
+
+#####################################################
+
+
+########################################################
+# ESC
+#@include ../Asgardian_Designs/ESCs/ModalAI_ESCT.parm
+
+#
+MOT_SPIN_ARM 0.03
+MOT_SPIN_MAX 0.98
+MOT_SPIN_MIN 0.06
+
+
+#########################################################
+# Electric Motor
+
+#########################################################
+
+
+#########################################################
+
+#########################################################
+
+
+#########################################################
+
+
+
+#########################################################
+
+
+
+#########################################################
+
+
+#########################################################
+
+
+
+#########################################################
+
+
+#########################################################
