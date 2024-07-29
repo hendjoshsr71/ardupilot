@@ -4,12 +4,39 @@
 # TO BE REAPLACED BY USING the upload option :
 #       ./waf [build_vehicle] --upload
 # Run from ardupilot repo root
+# ./libraries/AP_HAL_QURT/scripts/install.sh 
 
 # Requires three deb packages to be installed
 # voxl-mavlink-server_1.4.1_arm64.deb
 # modalai-slpi_1.1.19_arm64.deb
 # libslpi-link_1.0.0_arm64.deb
 # 
+
+# Gather Development Files Needed
+#-i  : specify ssh key to use
+# ssh USERNAME@qurt.ardupilot.org -i /home/USERNAME/.ssh/KEY_NAME_rsa
+#
+# Grab the following folders using rsync
+# rsync -chavzP --stats USERNAME@qurt.ardupilot.org:/opt/hexagon-sdk ~/Downloads
+# rsync -chavzP --stats USERNAME@qurt.ardupilot.org:/opt/aarch64-sdk ~/Downloads
+#
+# Copy folders to the following
+# cp -r ~/Downloads/hexagon-sdk/ /opt
+# cp -r ~/Downloads/aarch64-sdk/ /opt
+#
+#
+# If on Ubuntu 24.04 you will be unable to build due to the dependedcy on libncurses.so.5
+# FIX is taken from here: https://community.localwp.com/t/installation-failed-in-ubuntu-24-04-lts/42579/3
+#
+#
+# curl -O http://launchpadlibrarian.net/648013231/libtinfo5_6.4-2_amd64.deb
+# sudo dpkg -i libtinfo5_6.4-2_amd64.deb
+#
+# curl -O http://launchpadlibrarian.net/648013227/libncurses5_6.4-2_amd64.deb
+# sudo dpkg -i libncurses5_6.4-2_amd64.deb
+
+# Must install ADB
+# sudo apt install adb
 
 # Get the Current ArduPilot Repo Directory
 AP_DIR=$PWD 
