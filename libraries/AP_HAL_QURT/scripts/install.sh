@@ -38,6 +38,10 @@
 # Must install ADB
 # sudo apt install adb
 
+# To BUILD
+# ./waf configure --board QURT
+# ./waf [vehicle]  IE [copter, plane, rover] 
+
 # Get the Current ArduPilot Repo Directory
 AP_DIR=$PWD 
 QURT_BOARD_DIR="$AP_DIR/libraries/AP_HAL_QURT"
@@ -51,8 +55,12 @@ QURT_BOARD_DIR="$AP_DIR/libraries/AP_HAL_QURT"
 adb shell systemctl disable voxl-px4
 adb shell service voxl-px4 stop
 
+# Make this an only if ps -ef | grep px4 returns something
+adb shell pkill -9 px4
+
 # Stop the ardupilot service if it is running
 adb shell service voxl-ardupilot stop
+adb shell pkill -9 ardu
 
 # Push Service files
 adb push $QURT_BOARD_DIR/ap_host/service/voxl-ardupilot.service /etc/systemd/system/
