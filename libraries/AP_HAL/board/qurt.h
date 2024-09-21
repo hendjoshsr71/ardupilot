@@ -82,6 +82,8 @@
 #define HAL_BATT_VOLT_SCALE 1
 #define HAL_BATT_CURR_SCALE 1
 
+/* On older drones with Tmotor ESC battery monitoring comes in via an I2C INA*/
+
 #define HAL_PROBE_EXTERNAL_I2C_COMPASSES
 
 /*
