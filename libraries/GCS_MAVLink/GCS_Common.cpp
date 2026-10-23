@@ -7550,7 +7550,8 @@ void GCS::passthru_timer(void)
         }
     }
 
-    uint8_t buf[64];
+    // one 1kHz tick's worth: 64 bytes is 64 kB/s, only 1.5x a 420000 baud link
+    uint8_t buf[256];
 
     // read from port1, and write to port2
     int16_t nbytes = _passthru.port1->read_locked(buf, MIN(sizeof(buf),_passthru.port2->txspace()), lock_key);
