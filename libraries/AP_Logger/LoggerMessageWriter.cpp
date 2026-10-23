@@ -8,6 +8,7 @@
 #include <AP_Vehicle/AP_Vehicle_Type.h>
 #include "AP_Logger.h"
 #include <AP_RCProtocol/AP_RCProtocol.h>
+#include <AP_RCTelemetry/AP_CRSF_Telem.h>
 
 #if HAL_LOGGER_FENCE_ENABLED
     #include <AC_Fence/AC_Fence.h>
@@ -352,6 +353,21 @@ void LoggerMessageWriter_WriteSysInfo::process() {
         if (! _logger_backend->Write_MessageF("RC Protocol: %s", prot)) {
             return; // call me again
         }
+        stage = Stage::RC_FIRMWARE;
+        FALLTHROUGH;
+    }
+    case Stage::RC_FIRMWARE: {
+#if HAL_CRSF_TELEM_ENABLED
+        // e.g. "ELRS 3.6.4-dev 52652a". Learned after this log began, it is written when it
+        // is learned instead: AP_CRSF_Telem sends it as text, which the log records
+        char rx_firmware[40];
+        const AP_CRSF_Telem *crsf = AP::crsf_telem();
+        if (crsf != nullptr && crsf->get_rx_firmware_string(rx_firmware, sizeof(rx_firmware))) {
+            if (! _logger_backend->Write_Message(rx_firmware)) {
+                return; // call me again
+            }
+        }
+#endif
         stage = Stage::RC_OUTPUT;
         FALLTHROUGH;
     }

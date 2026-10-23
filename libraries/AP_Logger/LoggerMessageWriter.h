@@ -37,6 +37,7 @@ private:
         SYSTEM_ID,
         PARAM_SPACE_USED,
         RC_PROTOCOL,
+        RC_FIRMWARE,  // the receiver's firmware, when it says it
         RC_OUTPUT,
 #if AP_RTC_LOGGING_ENABLED
         LOG_RTC_MSG,
