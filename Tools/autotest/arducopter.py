@@ -16876,6 +16876,7 @@ return update, 1000
             self.SixCompassCalibrationAndReordering,
             self.CRSF,
             self.SerialPassthroughRCIN,
+            self.CRSFReceiverFirmware,
             self.MotorTest,
             self.AltEstimation,
             self.EKFSource,
