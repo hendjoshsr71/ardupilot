@@ -1408,6 +1408,10 @@ private:
         uint32_t last_port1_data_ms;
         uint32_t baud1;
         uint32_t baud2;
+        // configured rates, captured when passthru starts and restored when it ends;
+        // baud2 above follows the host's USB baud, so it cannot be used for that
+        uint32_t orig_baud1;
+        uint32_t orig_baud2;
         uint8_t parity1;
         uint8_t parity2;
         uint8_t timeout_s;
