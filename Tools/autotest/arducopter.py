@@ -24205,6 +24205,7 @@ return update, 1000
             Test(self.GyroFFTAverage, attempts=1, speedup=8),
             self.CRSF,
             self.SerialPassthroughRCIN,
+            self.CRSFReceiverFirmware,
             self.GSF,
             self.SIMCompare,
             self.WatchAlts,
