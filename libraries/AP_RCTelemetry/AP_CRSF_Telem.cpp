@@ -515,7 +515,8 @@ bool AP_CRSF_Telem::is_packet_ready(uint8_t idx, bool queue_empty)
     case GENERAL_COMMAND:
         return _baud_rate_request.pending || _bind_request_pending;
     case VERSION_PING:
-        return _crsf_version.pending && AP::crsf()->is_detected(); // only send pings if protocol has been detected
+        // only send pings, or the read of an ELRS receiver's version, if protocol has been detected
+        return (_crsf_version.pending || _rx_firmware.read_pending) && AP::crsf()->is_detected();
     case HEARTBEAT:
         return true; // always send heartbeat if enabled
     case DEVICE_PING:
@@ -582,6 +583,17 @@ void AP_CRSF_Telem::process_packet(uint8_t idx)
             }
             break;
         case VERSION_PING:
+            if (!_crsf_version.pending) {
+                // the device info is in: read the ELRS receiver's version parameter
+                if (_rx_firmware.read_retry_count++ > CRSF_RX_DEVICE_PING_MAX_RETRY) {
+                    _rx_firmware.read_pending = false;
+                    disable_scheduler_entry(VERSION_PING);
+                    announce_rx_firmware();
+                } else {
+                    calc_rx_param_read();
+                }
+                break;
+            }
             // to get crossfire firmware version we send an RX device ping
             if (_crsf_version.retry_count++ > CRSF_RX_DEVICE_PING_MAX_RETRY) {
                 _crsf_version.pending = false;
@@ -641,6 +653,10 @@ bool AP_CRSF_Telem::_process_frame(AP_RCProtocol_CRSF::FrameType frame_type, voi
 
     case AP_CRSF_Protocol::CRSF_FRAMETYPE_PARAM_DEVICE_INFO:
         process_device_info_frame((ParameterDeviceInfoFrame*)data);
+        break;
+
+    case AP_CRSF_Protocol::CRSF_FRAMETYPE_PARAMETER_SETTINGS_ENTRY:
+        process_rx_param_entry_frame((ParameterSettingsEntry*)data, length);
         break;
 
     case AP_CRSF_Protocol::CRSF_FRAMETYPE_COMMAND:
@@ -797,9 +813,24 @@ void AP_CRSF_Telem::process_device_info_frame(ParameterDeviceInfoFrame* info)
         _crsf_version.major = info->payload[offset+11];
         _crsf_version.minor = info->payload[offset+12];
     } else {
-        // ELRS does not populate the version field so cook up something sensible
+        // ELRS's version field is its own firmware's version, not a CRSF protocol version,
+        // so cook up something sensible for the latter
         _crsf_version.major = 1;
         _crsf_version.minor = 0;
+        if (!_rx_firmware.known) {
+            // sw id = 0x00:MAJOR:MINOR:PATCH, then the parameter count
+            _rx_firmware.major = info->payload[offset+10];
+            _rx_firmware.minor = info->payload[offset+11];
+            _rx_firmware.patch = info->payload[offset+12];
+            _rx_firmware.param_count = info->payload[offset+13];
+            _rx_firmware.known = true;
+            // a receiver that counts its parameters to this side answers a read of them: its
+            // last one is named with its build and holds its commit
+            _rx_firmware.read_pending = _rx_firmware.param_count > 0;
+            if (!_rx_firmware.read_pending) {
+                announce_rx_firmware();
+            }
+        }
     }
 
     // should we use rf_mode reported by link statistics?
@@ -808,7 +839,75 @@ void AP_CRSF_Telem::process_device_info_frame(ParameterDeviceInfoFrame* info)
     }
 
     _crsf_version.pending = false;
+    if (!_rx_firmware.read_pending) {
+        disable_scheduler_entry(VERSION_PING);
+    }
+}
+
+// read the ELRS receiver's last parameter, which names its build and holds its commit
+void AP_CRSF_Telem::calc_rx_param_read()
+{
+    _telem.ext.param_read.destination = AP_CRSF_Protocol::CRSF_ADDRESS_CRSF_RECEIVER;
+    _telem.ext.param_read.origin = AP_CRSF_Protocol::CRSF_ADDRESS_FLIGHT_CONTROLLER;
+    _telem.ext.param_read.param_num = _rx_firmware.param_count;
+    _telem.ext.param_read.param_chunk = 0;
+    _telem_size = sizeof(ParameterSettingsReadFrame);
+    _telem_type = AP_CRSF_Protocol::CRSF_FRAMETYPE_PARAMETER_READ;
+    _telem_pending = true;
+}
+
+// the receiver's answer to calc_rx_param_read(): an INFO item, its name the build and its value the commit
+void AP_CRSF_Telem::process_rx_param_entry_frame(ParameterSettingsEntry* entry, uint8_t length)
+{
+    if (!_rx_firmware.read_pending
+        || entry->header.destination != AP_CRSF_Protocol::CRSF_ADDRESS_FLIGHT_CONTROLLER
+        || entry->header.origin != AP_CRSF_Protocol::CRSF_ADDRESS_CRSF_RECEIVER
+        || entry->header.param_num != _rx_firmware.param_count
+        || length <= sizeof(ParameterSettingsEntryHeader) + 2) {
+        return;
+    }
+    // chunk 0: parent folder, type, then the name and the value, each null-terminated
+    const uint8_t len = MIN(uint8_t(length - sizeof(ParameterSettingsEntryHeader)), uint8_t(sizeof(entry->payload)));
+    const uint8_t *p = entry->payload;
+    if ((p[1] & 0x3F) == ParameterType::INFO) {
+        const char *name = (const char *)&p[2];
+        const uint8_t name_len = strnlen(name, len - 2);
+        if (2 + name_len + 1 < len) {
+            const char *value = name + name_len + 1;
+            const uint8_t value_len = strnlen(value, len - 2 - name_len - 1);
+            const uint8_t build_len = MIN(name_len, uint8_t(sizeof(_rx_firmware.build) - 1));
+            const uint8_t commit_len = MIN(value_len, uint8_t(sizeof(_rx_firmware.commit) - 1));
+            memcpy(_rx_firmware.build, name, build_len);
+            _rx_firmware.build[build_len] = '\0';
+            memcpy(_rx_firmware.commit, value, commit_len);
+            _rx_firmware.commit[commit_len] = '\0';
+        }
+    }
+    _rx_firmware.read_pending = false;
     disable_scheduler_entry(VERSION_PING);
+    announce_rx_firmware();
+}
+
+void AP_CRSF_Telem::announce_rx_firmware()
+{
+    char text[40];
+    if (get_rx_firmware_string(text, sizeof(text))) {
+        GCS_SEND_TEXT(MAV_SEVERITY_INFO, "%s", text);
+    }
+}
+
+bool AP_CRSF_Telem::get_rx_firmware_string(char *buf, uint8_t buflen) const
+{
+    if (!is_elrs() || !_rx_firmware.known || _rx_firmware.read_pending) {
+        return false;
+    }
+    if (_rx_firmware.build[0] != '\0' && _rx_firmware.commit[0] != '\0') {
+        hal.util->snprintf(buf, buflen, "%s %s %s", get_protocol_string(), _rx_firmware.build, _rx_firmware.commit);
+    } else {
+        hal.util->snprintf(buf, buflen, "%s %u.%u.%u", get_protocol_string(),
+                           unsigned(_rx_firmware.major), unsigned(_rx_firmware.minor), unsigned(_rx_firmware.patch));
+    }
+    return true;
 }
 
 // request for a general command

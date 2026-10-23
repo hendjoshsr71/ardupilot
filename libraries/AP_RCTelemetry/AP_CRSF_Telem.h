@@ -342,6 +342,11 @@ public:
     void start_bind() { _bind_request_pending = true; }
     bool bind_in_progress() { return _bind_request_pending;}
 
+    // the receiver's firmware, for the log and the banner: "ELRS 3.6.4-dev 52652a" from a
+    // receiver that names its build and commit, "ELRS 3.6.3" from one that does not.
+    // False until it is known
+    bool get_rx_firmware_string(char *buf, uint8_t buflen) const;
+
 private:
 
     enum SensorType {
@@ -407,7 +412,10 @@ private:
     void process_param_read_frame(ParameterSettingsReadFrame* read);
     void process_param_write_frame(ParameterSettingsWriteFrame* write, uint8_t length);
     void process_device_info_frame(ParameterDeviceInfoFrame* info);
+    void process_rx_param_entry_frame(ParameterSettingsEntry* entry, uint8_t length);
     void process_command_frame(CommandFrame* command);
+    void calc_rx_param_read();
+    void announce_rx_firmware();
 
     // setup ready for passthrough operation
     void setup_wfq_scheduler(void) override;
@@ -453,6 +461,20 @@ private:
         bool pending = true;
         uint32_t last_request_info_ms;
     } _crsf_version;
+
+    // an ELRS receiver's own firmware version, from its DEVICE_INFO, and the build and commit
+    // its last parameter carries when it answers parameter reads from this side
+    struct {
+        bool known;
+        uint8_t major;
+        uint8_t minor;
+        uint8_t patch;
+        uint8_t param_count;
+        bool read_pending;
+        uint8_t read_retry_count;
+        char build[16];
+        char commit[9];
+    } _rx_firmware;
 
     struct {
         bool init_done;
