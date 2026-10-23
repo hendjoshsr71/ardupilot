@@ -84,11 +84,11 @@ const AP_Param::GroupInfo AP_BLHeli::var_info[] = {
 
     // @Param: TMOUT
     // @DisplayName: BLHeli protocol timeout
-    // @Description: This sets the inactivity timeout for the BLHeli protocol in seconds. If no packets are received in this time normal MAVLink operations are resumed. A value of 0 means no timeout
+    // @Description: This sets the inactivity timeout for the BLHeli protocol in seconds. If no packets are received in this time normal MAVLink operations are resumed. A value of 0 means no timeout, so the port stays with the BLHeli protocol until a reboot. A configurator that needs it again re-enters it by sending its next request.
     // @Units: s
     // @Range: 0 300
     // @User: Standard
-    AP_GROUPINFO("TMOUT",  4, AP_BLHeli, timeout_sec, 0),
+    AP_GROUPINFO("TMOUT",  4, AP_BLHeli, timeout_sec, 30),
 
     // @Param: TRATE
     // @DisplayName: BLHeli telemetry rate
