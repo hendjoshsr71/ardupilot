@@ -361,6 +361,22 @@ void AP_RCProtocol::check_added_uart(void)
     if (!added.uart) {
         return;
     }
+    if (added.uart->is_write_locked()) {
+        // another user (e.g. SERIAL_PASS serial passthrough) has the
+        // port. When it takes it, put back plain 8N1 in case we left it
+        // in a search config, then leave it alone: reconfiguring it again
+        // would restart the UART under them and lose the bytes in flight.
+        // Our config is re-applied once the port is released
+        if (!added.locked) {
+            added.locked = true;
+            added.uart->configure_parity(0);
+            added.uart->set_stop_bits(1);
+            added.uart->set_options(added.uart->get_options() & ~AP_HAL::UARTDriver::OPTION_RXINV);
+        }
+        added.opened = false;
+        return;
+    }
+    added.locked = false;
     uint32_t now = AP_HAL::millis();
     bool searching = should_search(now);
     if (!searching && !_detected_with_bytes) {

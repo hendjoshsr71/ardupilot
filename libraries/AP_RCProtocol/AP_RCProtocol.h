@@ -305,6 +305,7 @@ private:
     struct {
         AP_HAL::UARTDriver *uart;
         bool opened;
+        bool locked;    // another user (e.g. serial passthrough) has the port
         uint32_t last_config_change_ms;
         uint8_t config_num;
 #if AP_RCPROTOCOL_CRSF_ENABLED && (defined(STM32F4) || defined(STM32F7))
