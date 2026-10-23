@@ -16439,6 +16439,126 @@ switch value'''
         host.close()
         self.reboot_sitl()
 
+    def CRSFReceiverFirmware(self):
+        '''an ELRS receiver's firmware reaches the GCS, the banner and the log:
+        its build and commit when it answers a read of its last parameter,
+        its DEVICE_INFO version when it counts no parameters'''
+        rx_port = self.spare_network_port()
+        self.set_parameters({
+            "SERIAL5_PROTOCOL": 23,  # RC input, where the receiver is
+            "RC_PROTOCOLS": 512,     # CRSF only, not SITL's own RC input
+        })
+        self.customise_SITL_commandline(["--serial5=tcp:%u" % rx_port])
+
+        def crc8(data):
+            crc = 0
+            for b in data:
+                crc ^= b
+                for _ in range(8):
+                    crc = ((crc << 1) ^ 0xD5) & 0xFF if crc & 0x80 else (crc << 1) & 0xFF
+            return crc
+
+        def frame(frame_type, payload):
+            body = bytes([frame_type]) + payload
+            return bytes([0xC8, len(body) + 1]) + body + bytes([crc8(body)])
+
+        # RC_CHANNELS_PACKED, 16 channels of 11 bits at 992: what makes the FC detect CRSF
+        bits = 0
+        for i in range(16):
+            bits |= 992 << (11 * i)
+        rc = frame(0x16, bits.to_bytes(22, "little"))
+
+        def device_info(param_count):
+            # name, serial "ELRS", hardware id, firmware 0x00:3:6:4, parameter count, version
+            payload = bytes([0xC8, 0xEC]) + b"RM XR4\0" + b"ELRS" + bytes(4) + bytes([0, 3, 6, 4, param_count, 0])
+            return frame(0x29, payload)
+
+        def version_entry(field):
+            # the last parameter: an INFO item named with the build, holding the commit
+            payload = bytes([0xC8, 0xEC, field, 0, 0, 12]) + b"3.6.4-dev\0" + b"52652a\0"
+            return frame(0x2B, payload)
+
+        def connect():
+            tstart = self.get_sim_time()
+            while True:
+                try:
+                    sock = socket.create_connection(("127.0.0.1", rx_port), timeout=1)
+                    sock.setblocking(False)
+                    return sock
+                except OSError:
+                    if self.get_sim_time_cached() - tstart > 30:
+                        raise NotAchievedException("Could not connect to port %u" % rx_port)
+                    self.delay_sim_time(0.5)
+
+        def frames_in(buf):
+            '''whole, CRC-checked frames from the front of buf, which keeps the rest'''
+            out = []
+            while len(buf) >= 4:
+                length = buf[1]
+                if not 2 <= length <= 62:
+                    del buf[0]
+                    continue
+                if len(buf) < length + 2:
+                    break
+                body = bytes(buf[2:length + 1])
+                if crc8(body) == buf[length + 1]:
+                    out.append((body[0], body[1:]))
+                    del buf[:length + 2]
+                else:
+                    del buf[0]
+            return out
+
+        def be_receiver(param_count, expect, timeout=60):
+            '''send RC frames, answer what the FC asks of a receiver, until it says expect'''
+            sock = connect()
+            got = bytearray()
+            tstart = self.get_sim_time()
+            while self.get_sim_time_cached() - tstart < timeout:
+                try:
+                    sock.send(rc)
+                    got += sock.recv(4096)
+                except BlockingIOError:
+                    pass
+                for frame_type, payload in frames_in(got):
+                    if frame_type == 0x28 and payload[0] == 0xEC:  # DEVICE_PING for the receiver
+                        sock.send(device_info(param_count))
+                    elif frame_type == 0x2C and payload[0] == 0xEC and payload[2] == param_count:  # PARAMETER_READ
+                        sock.send(version_entry(payload[2]))
+                m = self.mav.recv_match(type='STATUSTEXT', blocking=True, timeout=0.02)
+                if m is not None and m.text == expect:
+                    return sock
+            raise NotAchievedException("The FC never said %s" % expect)
+
+        def assert_log_says(text):
+            dfreader = self.dfreader_for_current_onboard_log()
+            while True:
+                m = dfreader.recv_match(type='MSG')
+                if m is None:
+                    raise NotAchievedException("The onboard log never says %s" % text)
+                if m.Message == text:
+                    return
+
+        self.progress("A receiver that answers a parameter read: its build and commit")
+        sock = be_receiver(21, "ELRS 3.6.4-dev 52652a")
+        self.context_collect('STATUSTEXT')
+        self.run_cmd(mavutil.mavlink.MAV_CMD_DO_SEND_BANNER)
+        self.wait_statustext("ELRS 3.6.4-dev 52652a", check_context=True)
+        assert_log_says("ELRS 3.6.4-dev 52652a")  # the text, logged as it was sent
+
+        self.progress("A log begun once it is known has it among its startup messages")
+        self.set_parameter("LOG_DISARMED", 0)
+        self.delay_sim_time(2, reason="the log to stop")
+        self.set_parameter("LOG_DISARMED", 1)
+        self.delay_sim_time(5, reason="a new log and its startup messages")
+        assert_log_says("ELRS 3.6.4-dev 52652a")
+        sock.close()
+
+        self.progress("A receiver that counts no parameters to the FC: its version alone")
+        self.reboot_sitl()
+        sock = be_receiver(0, "ELRS 3.6.4")
+        sock.close()
+        self.reboot_sitl()
+
     def CRSF(self):
         '''Test RC CRSF'''
         self.context_push()
