@@ -4750,6 +4750,14 @@ void GCS_MAVLINK::send_banner()
         send_text(MAV_SEVERITY_INFO, "%s", banner_msg);
     }
 
+#if HAL_CRSF_TELEM_ENABLED
+    // the RC receiver's firmware, when it has said it, e.g. "ELRS 3.6.4-dev 52652a"
+    const AP_CRSF_Telem *crsf_telem = AP::crsf_telem();
+    if (crsf_telem != nullptr && crsf_telem->get_rx_firmware_string(banner_msg, sizeof(banner_msg))) {
+        send_text(MAV_SEVERITY_INFO, "%s", banner_msg);
+    }
+#endif
+
 #if AP_INERTIALSENSOR_ENABLED
     // output any fast sampling status messages
     for (uint8_t i = 0; i < INS_MAX_BACKENDS; i++) {
