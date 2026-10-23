@@ -16403,6 +16403,38 @@ switch value'''
         self.set_parameter("SERIAL_PASS2", -1)
         send_rc_until(rx, 1312)
 
+        # the host's escape: a second of silence, these 16 bytes, a second of silence
+        escape = bytes([0xA8, 0xB3, 0x56, 0x6E, 0x31, 0xAE, 0x06, 0x22,
+                        0x37, 0x32, 0x89, 0x57, 0xC7, 0x6F, 0xC5, 0x1F])
+        self.progress("Passthrough with no timeout, so only the escape can end it")
+        self.context_push()
+        self.context_collect('STATUSTEXT')
+        self.set_parameters({
+            "SERIAL_PASSTIMO": 0,
+            "SERIAL_PASS2": 5,
+        })
+        self.delay_sim_time(3, reason="passthrough to start")
+        drain(rx)
+        drain(host)
+
+        self.progress("The escape inside data is data")
+        transfer(host, rx, to_rx[:4096] + escape + to_rx[4096:8192])
+        self.progress("The escape with a byte straight after it is data")
+        self.delay_sim_time(1.5, reason="silence before the escape")
+        transfer(host, rx, escape + b"x")
+        self.delay_sim_time(3, reason="no escape to act on")
+        if self.get_parameter("SERIAL_PASS2") != 5:
+            raise NotAchievedException("Passthrough ended on data")
+
+        self.progress("Silence, the escape, silence: passthrough ends")
+        self.delay_sim_time(1.5, reason="silence before the escape")
+        transfer(host, rx, escape)
+        self.wait_statustext("Passthru ended by escape", check_context=True, timeout=10)
+        if self.get_parameter("SERIAL_PASS2") != -1:
+            raise NotAchievedException("SERIAL_PASS2 not cleared by the escape")
+        send_rc_until(rx, 992)
+        self.context_pop()
+
         rx.close()
         host.close()
         self.reboot_sitl()
