@@ -1415,11 +1415,27 @@ private:
         uint8_t parity1;
         uint8_t parity2;
         uint8_t timeout_s;
+        // the host's escape sequence (passthru_escape_scan): how much of it has
+        // arrived in a burst that began after a silence, when that burst began,
+        // and when the whole sequence had arrived (0 while it has not)
+        bool escape_armed;
+        uint8_t escape_matched;
+        uint32_t escape_armed_ms;
+        uint32_t escape_done_ms;
         HAL_Semaphore sem;
     } _passthru;
 
+    // the silence before and after the escape sequence, and the time its bytes arrive in:
+    // shorter than the silence, so a gap inside the sequence cannot start it again
+    static constexpr uint32_t PASSTHRU_ESCAPE_GUARD_MS = 100;
+    static constexpr uint32_t PASSTHRU_ESCAPE_WINDOW_MS = 50;
+
     // timer called to implement pass-thru
     void passthru_timer();
+    // watch the bytes from port1 for the escape sequence that ends pass-thru
+    void passthru_escape_scan(const uint8_t *buf, uint16_t nbytes, uint32_t now_ms, bool after_silence);
+    // end pass-thru: ports unlocked, rates and parity restored, ports given back
+    void passthru_end(bool clear_param, const char *why);
 
     // this contains the index of the GCS_MAVLINK backend we will
     // first call update_send on.  It is incremented each time
