@@ -59,6 +59,7 @@
 #include <AP_OpenDroneID/AP_OpenDroneID.h>
 #include <AP_OSD/AP_OSD.h>
 #include <AP_RCTelemetry/AP_CRSF_Telem.h>
+#include <AP_ESC_Telem/AP_ESC_Telem.h>
 #include <AP_RPM/AP_RPM.h>
 #include <AP_AIS/AP_AIS.h>
 #include <AP_Filesystem/AP_Filesystem.h>
@@ -4754,6 +4755,13 @@ void GCS_MAVLINK::send_banner()
     // the RC receiver's firmware, when it has said it, e.g. "ELRS 3.6.4-dev 52652a"
     const AP_CRSF_Telem *crsf_telem = AP::crsf_telem();
     if (crsf_telem != nullptr && crsf_telem->get_rx_firmware_string(banner_msg, sizeof(banner_msg))) {
+        send_text(MAV_SEVERITY_INFO, "%s", banner_msg);
+    }
+#endif
+
+#if AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+    // AM32 ESCs' firmware and bootloader, e.g. "ESC1-4 AM32 2.20-dev 7eaa34e4 BL19 3a2b1c0d"
+    for (uint8_t next = 0; AP::esc_telem().identity().get_firmware_line(next, banner_msg, sizeof(banner_msg)); ) {
         send_text(MAV_SEVERITY_INFO, "%s", banner_msg);
     }
 #endif
