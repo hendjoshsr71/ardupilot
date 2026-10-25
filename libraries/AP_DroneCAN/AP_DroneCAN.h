@@ -388,9 +388,17 @@ private:
     Canard::Server<uavcan_protocol_GetNodeInfoRequest> node_info_server{canard_iface, node_info_req_cb};
     uavcan_protocol_GetNodeInfoResponse node_info_rsp;
 
-#if AP_SCRIPTING_ENABLED
+#if AP_SCRIPTING_ENABLED || AP_ESC_TELEM_AM32_IDENTITY_ENABLED
     Canard::ObjCallback<AP_DroneCAN, dronecan_protocol_FlexDebug> FlexDebug_cb{this, &AP_DroneCAN::handle_FlexDebug};
     Canard::Subscriber<dronecan_protocol_FlexDebug> FlexDebug_listener{FlexDebug_cb, _driver_index};
+#endif
+#if AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+    // AM32 ESCs' identity and settings, as FlexDebug: see AP_ESC_Identity.h
+    Canard::Publisher<dronecan_protocol_FlexDebug> flexdebug_pub{canard_iface};
+    void handle_esc_identity(const CanardRxTransfer& transfer, const dronecan_protocol_FlexDebug& msg);
+    void esc_identity_send_requests(void);
+    uint32_t _esc_identity_request_ms;
+    uint8_t _esc_identity_requests[DRONECAN_SRV_NUMBER];
 #endif
     
 #if AP_DRONECAN_HOBBYWING_ESC_SUPPORT
@@ -447,8 +455,10 @@ private:
     void handle_param_save_response(const CanardRxTransfer& transfer, const uavcan_protocol_param_ExecuteOpcodeResponse& rsp);
     void handle_node_info_request(const CanardRxTransfer& transfer, const uavcan_protocol_GetNodeInfoRequest& req);
 
-#if AP_SCRIPTING_ENABLED
+#if AP_SCRIPTING_ENABLED || AP_ESC_TELEM_AM32_IDENTITY_ENABLED
     void handle_FlexDebug(const CanardRxTransfer& transfer, const dronecan_protocol_FlexDebug& msg);
+#endif
+#if AP_SCRIPTING_ENABLED
     struct FlexDebug {
         struct FlexDebug *next;
         uint32_t timestamp_us;

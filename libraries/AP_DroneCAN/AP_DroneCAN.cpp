@@ -51,6 +51,7 @@
 #include <AP_Mount/AP_Mount_Xacti.h>
 #include <string.h>
 #include <AP_Servo_Telem/AP_Servo_Telem.h>
+#include <AP_ESC_Telem/AP_ESC_Telem.h>
 
 #if AP_DRONECAN_SERIAL_ENABLED
 #include "AP_DroneCAN_serial.h"
@@ -529,6 +530,9 @@ void AP_DroneCAN::loop(void)
         send_parameter_save_request();
         send_node_status();
         _dna_server.verify_nodes();
+#if AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+        esc_identity_send_requests();
+#endif
 
 #if AP_DRONECAN_SEND_GPS && AP_GPS_DRONECAN_ENABLED
         if (option_is_set(AP_DroneCAN::Options::SEND_GNSS) && !AP_GPS_DroneCAN::instance_exists(this)) {
@@ -1588,12 +1592,19 @@ bool AP_DroneCAN::is_esc_data_index_valid(const uint8_t index) {
     return true;
 }
 
-#if AP_SCRIPTING_ENABLED
+#if AP_SCRIPTING_ENABLED || AP_ESC_TELEM_AM32_IDENTITY_ENABLED
 /*
-  handle FlexDebug message, holding a copy locally for a lua script to access
+  handle FlexDebug message: an AM32 ESC's identity or settings, or a
+  message held locally for a lua script to access
  */
 void AP_DroneCAN::handle_FlexDebug(const CanardRxTransfer& transfer, const dronecan_protocol_FlexDebug &msg)
 {
+#if AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+    if (msg.id == AP_ESC_Identity::FLEXDEBUG_IDENTITY || msg.id == AP_ESC_Identity::FLEXDEBUG_SETTINGS) {
+        handle_esc_identity(transfer, msg);
+    }
+#endif
+#if AP_SCRIPTING_ENABLED
     if (!option_is_set(Options::ENABLE_FLEX_DEBUG)) {
         return;
     }
@@ -1621,7 +1632,66 @@ void AP_DroneCAN::handle_FlexDebug(const CanardRxTransfer& transfer, const drone
 
     // link into the list
     flexDebug_list = p;
+#endif // AP_SCRIPTING_ENABLED
 }
+#endif // AP_SCRIPTING_ENABLED || AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+
+#if AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+/*
+  an AM32 ESC's identity (FlexDebug 101) or settings (102): its ESC index,
+  then the record
+ */
+void AP_DroneCAN::handle_esc_identity(const CanardRxTransfer& transfer, const dronecan_protocol_FlexDebug& msg)
+{
+    if (msg.u8.len < 2) {
+        return;
+    }
+    const uint8_t esc_offset = constrain_int16(_esc_offset.get(), 0, DRONECAN_SRV_NUMBER);
+    const uint8_t esc_index = msg.u8.data[0] + esc_offset;
+    if (!is_esc_data_index_valid(esc_index)) {
+        return;
+    }
+    AP_ESC_Identity &identity = AP::esc_telem().identity();
+    if (msg.id == AP_ESC_Identity::FLEXDEBUG_IDENTITY) {
+        identity.handle_identity_record(esc_index, AP_ESC_Identity::Source::DRONECAN,
+                                        &msg.u8.data[1], msg.u8.len - 1,
+                                        transfer.source_node_id, _driver_index);
+    } else {
+        identity.handle_settings_record(esc_index, AP_ESC_Identity::Source::DRONECAN,
+                                        &msg.u8.data[1], msg.u8.len - 1);
+    }
+}
+
+/*
+  ask each AM32 ESC on this bus whose identity we have for its settings,
+  once a boot: FlexDebug 103 naming the node
+ */
+void AP_DroneCAN::esc_identity_send_requests(void)
+{
+    const uint32_t now = AP_HAL::millis();
+    if (now - _esc_identity_request_ms < 2000) {
+        return;
+    }
+    _esc_identity_request_ms = now;
+    AP_ESC_Identity &identity = AP::esc_telem().identity();
+    for (uint8_t i = 0; i < MIN(DRONECAN_SRV_NUMBER, ESC_TELEM_MAX_ESCS); i++) {
+        uint8_t node, driver;
+        if (!identity.can_node(i, node, driver) || driver != _driver_index ||
+            !identity.wants_settings(i) || _esc_identity_requests[i] >= 5) {
+            continue;
+        }
+        _esc_identity_requests[i]++;
+        dronecan_protocol_FlexDebug req {};
+        req.id = AP_ESC_Identity::FLEXDEBUG_REQUEST;
+        req.u8.len = 2;
+        req.u8.data[0] = node;
+        req.u8.data[1] = AP_ESC_Identity::REQUEST_SETTINGS;
+        flexdebug_pub.broadcast(req);
+    }
+}
+#endif // AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+
+#if AP_SCRIPTING_ENABLED
 
 /*
   get the last FlexDebug message from a node
