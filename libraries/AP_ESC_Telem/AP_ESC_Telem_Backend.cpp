@@ -45,6 +45,12 @@ void AP_ESC_Telem_Backend::update_telem_data(const uint8_t esc_index, const Tele
     _frontend->update_telem_data(esc_index, new_data, data_present_mask);
 }
 
+#if AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+void AP_ESC_Telem_Backend::update_edt_debug(const uint8_t esc_index, const uint8_t type, const uint8_t byte) {
+    _frontend->_identity.handle_edt_debug(esc_index, type, byte);
+}
+#endif
+
 /*
   return true if the data is stale
  */

@@ -15,6 +15,8 @@ static_assert(ESC_TELEM_MAX_ESCS > 0, "Cannot have 0 ESC telemetry instances");
 #define ESC_TELEM_DATA_TIMEOUT_MS 5000UL
 #define ESC_RPM_DATA_TIMEOUT_US 1000000UL
 
+#include "AP_ESC_Identity.h"
+
 class AP_ESC_Telem {
 public:
     friend class AP_ESC_Telem_Backend;
@@ -121,6 +123,11 @@ public:
     // callback to update the data in the frontend, should be called by the driver when new data is available
     void update_telem_data(const uint8_t esc_index, const AP_ESC_Telem_Backend::TelemetryData& new_data, const uint16_t data_mask);
 
+#if AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+    // AM32 ESCs' firmware, bootloader and settings
+    AP_ESC_Identity &identity() { return _identity; }
+#endif
+
 #if AP_SCRIPTING_ENABLED
     /*
       set RPM scale factor from script
@@ -156,6 +163,10 @@ private:
 #endif
     
     bool _have_data;
+
+#if AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+    AP_ESC_Identity _identity;
+#endif
 
     AP_Int8 mavlink_offset;
 
