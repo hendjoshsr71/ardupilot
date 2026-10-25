@@ -14,6 +14,7 @@ import pathlib
 import re
 import shutil
 import socket
+import struct
 import subprocess
 import tempfile
 import time
@@ -5474,6 +5475,199 @@ class AutoTestCopter(vehicle_test_suite.TestSuite):
         error = abs(mavextra.angle_diff(want, got))
         self.progress("yaw want=%f got=%f error=%f" % (want, got, error))
         return error
+
+    @staticmethod
+    def am32_crc16(data, crc=0xFFFF):
+        '''the CRC-16/CCITT-FALSE AM32's identity and settings records end with'''
+        for b in data:
+            crc ^= b << 8
+            for _ in range(8):
+                crc = ((crc << 1) ^ 0x1021) & 0xFFFF if crc & 0x8000 else (crc << 1) & 0xFFFF
+        return crc
+
+    def am32_identity_record(self, settings, fw_hash, fw_type, fw_flags, bl_hash, name):
+        '''an AM32 identity record, as AM32's Inc/esc_identity.h lays it out'''
+        n = len(name)
+        rec = bytes([0xA3, 0x31, 1, 26 + n, 2, 20, fw_type, fw_flags, settings[1]])
+        rec += struct.pack("<I", fw_hash)
+        rec += bytes([settings[2], 3, 32]) + struct.pack("<I", bl_hash) + bytes([255])
+        rec += struct.pack("<H", self.am32_crc16(settings)) + bytes([n]) + name.encode()
+        return rec + struct.pack("<H", self.am32_crc16(rec))
+
+    def assert_am32_logs(self, escs, src, fw_hash, bl_hash, name, settings_for, line, settings_log):
+        '''the current log holds an ESCI for each ESC naming the log with its
+        settings, and line. With settings_log None that log is this one, and
+        it holds each ESC's settings as ESCE rows; otherwise it holds none'''
+        path = self.current_onboard_log_filepath()
+        this_log = int(os.path.basename(path).split(".")[0])
+        dfreader = self.dfreader_for_path(path)
+        esci = {}
+        esce = {}
+        said = False
+        while True:
+            m = dfreader.recv_match(type=['ESCI', 'ESCE', 'MSG'])
+            if m is None:
+                break
+            t = m.get_type()
+            if t == 'ESCI':
+                esci[m.I] = m
+            elif t == 'ESCE':
+                esce.setdefault(m.I, {})[m.Ofs] = m.Hex
+            elif m.Message == line:
+                said = True
+        if not said:
+            raise NotAchievedException("log %u never says %s" % (this_log, line))
+        expect_slog = this_log if settings_log is None else settings_log
+        for esc in escs:
+            settings = settings_for(esc)
+            m = esci.get(esc)
+            if m is None:
+                raise NotAchievedException("no ESCI for ESC%u in log %u" % (esc + 1, this_log))
+            want = {
+                "Src": src, "Ver": 220, "Hash": fw_hash, "EE": 3, "BL": 19, "BLP": 3,
+                "BLT": 255, "BLH": bl_hash, "Name": name,
+                "SCRC": self.am32_crc16(settings), "SLog": expect_slog,
+            }
+            for field, value in want.items():
+                if getattr(m, field) != value:
+                    raise NotAchievedException("ESCI ESC%u %s=%s, want %s" %
+                                               (esc + 1, field, getattr(m, field), value))
+            rows = esce.get(esc, {})
+            if settings_log is None:
+                got = "".join(rows.get(ofs, "") for ofs in range(0, 192, 32))
+                if got != settings.hex():
+                    raise NotAchievedException("ESCE ESC%u holds %s" % (esc + 1, got))
+            elif rows:
+                raise NotAchievedException("ESCE for ESC%u again in log %u" % (esc + 1, this_log))
+        return this_log
+
+    def ESCIdentitySerial(self):
+        '''AM32 ESCs on the serial telemetry wire: their firmware and bootloader into
+        every log and the banner, their settings into one log a boot'''
+        line = "ESC1-4 AM32 2.20-dev 1a2b3c4d BL19 5e6f7a8b"
+
+        def settings_for(esc):
+            # as SIM_AM32 makes them
+            return bytes([1, 3, 19, 2, 20] + [(i * 7 + esc) & 0xFF for i in range(5, 192)])
+
+        self.context_push()
+        self.set_parameters({
+            "SERIAL5_PROTOCOL": 16,  # ESC telemetry
+            "SERVO_BLH_AUTO": 1,
+            "SERVO_BLH_TRATE": 10,
+            "MOT_PWM_TYPE": 6,       # DShot600
+        })
+        self.context_collect('STATUSTEXT')
+        self.customise_SITL_commandline(["--serial5=sim:am32"])
+        self.wait_statustext(line, timeout=60, check_context=True)
+        self.delay_sim_time(5, reason="the settings, after the identities")
+
+        self.progress("The banner says it")
+        self.context_clear_collection('STATUSTEXT')
+        self.run_cmd(mavutil.mavlink.MAV_CMD_DO_SEND_BANNER)
+        self.wait_statustext(line, check_context=True)
+
+        self.progress("This log: the identities, and the settings once")
+        settings_log = self.assert_am32_logs(range(4), 2, 0x1a2b3c4d, 0x5e6f7a8b, "AM32_SIM_F051",
+                                             settings_for, line, None)
+
+        self.progress("A new log: the identities again, naming the log with the settings")
+        # a disarm marks the log for rotation (not with LOG_REPLAY), and the
+        # next arm opens the new one; toggling LOG_DISARMED keeps the same file
+        self.set_parameters({
+            "LOG_FILE_DSRMROT": 1,
+            "LOG_REPLAY": 0,
+        })
+        self.wait_ready_to_arm()
+        self.arm_vehicle()
+        self.disarm_vehicle()
+        self.arm_vehicle()
+        self.disarm_vehicle()
+        self.delay_sim_time(5, reason="the new log's startup messages")
+        self.assert_am32_logs(range(4), 2, 0x1a2b3c4d, 0x5e6f7a8b, "AM32_SIM_F051",
+                              settings_for, line, settings_log)
+        self.context_pop()
+        self.reboot_sitl()
+
+    def ESCIdentityDroneCAN(self):
+        '''AM32 ESCs on DroneCAN: the identity each sends as FlexDebug 101 into every
+        log and the banner, and their settings, asked for with FlexDebug 103, into one'''
+        import dronecan
+        fw_hash, bl_hash, name = 0x2c3d4e5f, 0x5e6f7a8b, "AM32_SIM_L431_CAN"
+        line = "ESC1-2 AM32 2.20 2c3d4e5f BL19 5e6f7a8b"
+
+        def settings_for(esc):
+            return bytes([1, 3, 19, 2, 20] + [(i * 11 + esc) & 0xFF for i in range(5, 192)])
+
+        self.context_push()
+        self.set_parameters({
+            "CAN_P1_DRIVER": 1,
+            "CAN_D1_PROTOCOL": 1,  # DroneCAN
+        })
+        self.context_collect('STATUSTEXT')
+        self.reboot_sitl()
+
+        # two ESCs, AM32 nodes 60 and 61 on the bus SITL's CAN1 is
+        escs = {60 + esc: esc for esc in range(2)}
+        nodes = {node_id: dronecan.make_node("mcast:0", node_id=node_id) for node_id in escs}
+        records = {
+            node_id: self.am32_identity_record(settings_for(esc), fw_hash, 255, 2, bl_hash, name)
+            for node_id, esc in escs.items()
+        }
+        settings_asked = set()
+
+        def on_flexdebug(e):
+            # FlexDebug 103: a node id and a mask, 2 for the settings
+            msg = e.message
+            data = bytes(msg.u8)
+            if msg.id == 103 and len(data) >= 2 and data[0] in nodes and data[1] & 2:
+                node_id = data[0]
+                esc = escs[node_id]
+                rec = bytes([0xA3, 0x32, 1, 198]) + settings_for(esc)
+                rec += struct.pack("<H", self.am32_crc16(rec))
+                nodes[node_id].broadcast(dronecan.dronecan.protocol.FlexDebug(
+                    id=102, u8=list(bytes([esc]) + rec)))
+                settings_asked.add(node_id)
+
+        for node in nodes.values():
+            node.add_handler(dronecan.dronecan.protocol.FlexDebug, on_flexdebug)
+
+        def said():
+            return any(m.text == line for m in self.context_collection('STATUSTEXT'))
+
+        def be_escs(seconds, until=None):
+            tstart = self.get_sim_time()
+            last_identity = 0
+            while self.get_sim_time_cached() - tstart < seconds:
+                now = self.get_sim_time_cached()
+                if now - last_identity >= 1:
+                    # an AM32 sends it after each GetNodeInfo answer; once a second will do
+                    last_identity = now
+                    for node_id, node in nodes.items():
+                        node.broadcast(dronecan.dronecan.protocol.FlexDebug(
+                            id=101, u8=list(bytes([escs[node_id]]) + records[node_id])))
+                for node in nodes.values():
+                    node.spin(0.01)
+                self.mav.recv_match(type='STATUSTEXT', blocking=False)
+                if until is not None and until():
+                    return
+            if until is not None:
+                raise NotAchievedException("the ESCs were not heard in %us" % seconds)
+
+        try:
+            be_escs(60, until=said)
+            be_escs(60, until=lambda: settings_asked == set(nodes))
+            be_escs(3)
+            self.progress("The banner says it")
+            self.context_clear_collection('STATUSTEXT')
+            self.run_cmd(mavutil.mavlink.MAV_CMD_DO_SEND_BANNER)
+            be_escs(10, until=said)
+            self.assert_am32_logs(range(2), 4, fw_hash, bl_hash, name, settings_for, line, None)
+        finally:
+            for node in nodes.values():
+                node.close()
+        self.context_pop()
+        self.reboot_sitl()
 
     def DroneCANCompass(self):
         '''check the compass in a simulated DroneCAN peripheral'''
@@ -23905,6 +24099,8 @@ return update, 1000
             self.CRSF,
             self.SerialPassthroughRCIN,
             self.CRSFReceiverFirmware,
+            self.ESCIdentitySerial,
+            self.ESCIdentityDroneCAN,
             self.GSF,
             self.SIMCompare,
             self.WatchAlts,
