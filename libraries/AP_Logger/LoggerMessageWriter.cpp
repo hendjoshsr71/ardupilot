@@ -9,6 +9,7 @@
 #include "AP_Logger.h"
 #include <AP_RCProtocol/AP_RCProtocol.h>
 #include <AP_RCTelemetry/AP_CRSF_Telem.h>
+#include <AP_ESC_Telem/AP_ESC_Telem.h>
 
 #if HAL_LOGGER_FENCE_ENABLED
     #include <AC_Fence/AC_Fence.h>
@@ -271,6 +272,7 @@ void LoggerMessageWriter_WriteSysInfo::reset()
 {
     LoggerMessageWriter::reset();
     stage = Stage::FIRMWARE_STRING;
+    esc_line = 0;
 }
 
 void LoggerMessageWriter_WriteSysInfo::process() {
@@ -366,6 +368,23 @@ void LoggerMessageWriter_WriteSysInfo::process() {
             if (! _logger_backend->Write_Message(rx_firmware)) {
                 return; // call me again
             }
+        }
+#endif
+        stage = Stage::ESC_FIRMWARE;
+        FALLTHROUGH;
+    }
+    case Stage::ESC_FIRMWARE: {
+#if AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+        // e.g. "ESC1-4 AM32 2.20-dev 7eaa34e4 BL19 3a2b1c0d", one line for each
+        // run of ESCs with the same firmware. Learned after this log began, it is
+        // written when it is learned instead, as the text AP_ESC_Identity sends
+        char esc_firmware[50];
+        uint8_t next = esc_line;
+        while (AP::esc_telem().identity().get_firmware_line(next, esc_firmware, sizeof(esc_firmware))) {
+            if (! _logger_backend->Write_Message(esc_firmware)) {
+                return; // call me again
+            }
+            esc_line = next;
         }
 #endif
         stage = Stage::RC_OUTPUT;
