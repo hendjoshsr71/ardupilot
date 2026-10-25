@@ -234,6 +234,11 @@ SITL::SerialDevice *SITL_State_Common::create_serial_sim(const char *name, const
         sitl_model->set_volz(&_sitl->volz_sim);
         return &_sitl->volz_sim;
 #endif  // AP_SIM_VOLZ_ENABLED
+#if AP_SIM_AM32_ENABLED
+    } else if (streq(name, "am32")) {
+        sitl_model->set_am32(&_sitl->am32_sim);
+        return &_sitl->am32_sim;
+#endif  // AP_SIM_AM32_ENABLED
 #if AP_SIM_SIYI_ZT30_ENABLED
     } else if (streq(name, "siyi_zt30")) {
         const auto siyi = NEW_NOTHROW SITL::Siyi_ZT30();
