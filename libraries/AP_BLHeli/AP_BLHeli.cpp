@@ -154,6 +154,13 @@ const AP_Param::GroupInfo AP_BLHeli::var_info[] = {
     // @RebootRequired: True
     AP_GROUPINFO("RVMASK",  12, AP_BLHeli, channel_reversed_mask, 0),
 
+    // @Param: OPTS
+    // @DisplayName: BLHeli options
+    // @Description: Options for the ESCs. ReadIdentity: while disarmed, ask each ESC on the ESC telemetry wire for its firmware and bootloader versions and git hashes and its settings, and log them (AM32; other ESCs answer with less or not at all)
+    // @Bitmask: 0:ReadIdentity
+    // @User: Advanced
+    AP_GROUPINFO("OPTS",  13, AP_BLHeli, options, 1),
+
     AP_GROUPEND
 };
 
@@ -1641,9 +1648,21 @@ void AP_BLHeli::update_telemetry(void)
     }
     if (!telem_uart_started || !telem_uart->is_owned_by_current_thread()) {
         // we need to use begin() here to ensure the correct thread owns the uart
+#if AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+        // with room for an ESC's settings record, 198 bytes
+        telem_uart->begin(115200, 512, 0);
+#else
         telem_uart->begin(115200);
+#endif
         telem_uart_started = true;
     }
+
+#if AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+    if (identity_read_update()) {
+        // an ESC is answering a command on the wire: no telemetry until it is done
+        return;
+    }
+#endif
 
     uint32_t nbytes = telem_uart->available();
 
@@ -1692,5 +1711,109 @@ void AP_BLHeli::update_telemetry(void)
         }
     }
 }
+
+#if AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+/*
+  ask the ESCs on the telemetry wire, one at a time while disarmed, for
+  their identity and then their settings. True while an answer is due,
+  when the wire is not for telemetry
+ */
+bool AP_BLHeli::identity_read_update(void)
+{
+    const uint32_t now = AP_HAL::millis();
+    if (id_read.command != 0) {
+        const uint32_t n = MIN(telem_uart->available(), uint32_t(sizeof(id_read.buf) - id_read.len));
+        if (n > 0) {
+            id_read.len += telem_uart->read(&id_read.buf[id_read.len], n);
+        }
+        // ten command frames, then up to 104 bytes for command 6 and 198 for
+        // command 11 at 115200 baud
+        const uint32_t window_ms = id_read.command == AP_HAL::RCOutput::DSHOT_ESC_INFO ? 50 : 70;
+        if (now - id_read.sent_ms < window_ms) {
+            return true;
+        }
+        // an ESC that answered gets its next ask soon, one that did not later
+        id_read.next_ms = now + (identity_read_parse() ? 50 : 1000);
+        id_read.command = 0;
+        telem_uart->discard_input();
+        return true;
+    }
+    if (!option_is_set(Option::READ_IDENTITY) || hal.util->get_soft_armed() || now < id_read.next_ms) {
+        return false;
+    }
+    AP_ESC_Identity &identity = AP::esc_telem().identity();
+    for (uint8_t i = 0; i < num_motors; i++) {
+        const uint8_t idx = (id_read.motor + 1 + i) % num_motors;
+        const uint8_t chan = motor_map[idx];
+        // its telemetry says the ESC is up and taking commands
+        if (!SRV_Channels::have_digital_outputs(1U << chan) || AP::esc_telem().get_last_telem_data_ms(chan) == 0) {
+            continue;
+        }
+        uint8_t command = 0;
+        if (identity.wants_identity(chan)) {
+            if (id_read.attempts[idx][0] < 3) {
+                command = AP_HAL::RCOutput::DSHOT_ESC_INFO;
+                id_read.attempts[idx][0]++;
+            }
+        } else if (identity.wants_settings(chan)) {
+            if (id_read.attempts[idx][1] < 3) {
+                command = AP_HAL::RCOutput::DSHOT_SETTINGS_REQUEST;
+                id_read.attempts[idx][1]++;
+            } else {
+                // an AM32 without the settings record, or another firmware
+                identity.settings_unavailable(chan);
+            }
+        }
+        if (command == 0) {
+            continue;
+        }
+        telem_uart->discard_input();
+        id_read.len = 0;
+        id_read.motor = idx;
+        id_read.command = command;
+        id_read.sent_ms = now;
+        hal.rcout->send_dshot_command(command, chan, 0, 10, false);
+        return true;
+    }
+    // nothing to ask: look again in a while
+    id_read.next_ms = now + 1000;
+    return false;
+}
+
+/*
+  what came back on the wire: true if it answered the command
+ */
+bool AP_BLHeli::identity_read_parse(void)
+{
+    AP_ESC_Identity &identity = AP::esc_telem().identity();
+    const uint8_t chan = motor_map[id_read.motor];
+    const uint8_t *b = id_read.buf;
+    const uint16_t len = id_read.len;
+
+    if (id_read.command == AP_HAL::RCOutput::DSHOT_ESC_INFO) {
+        // the info frame every AM32 sends, then the identity record on one that has it
+        for (uint16_t ofs = 0; ofs + AP_ESC_Identity::INFO_FRAME_LEN <= len; ofs++) {
+            AP_ESC_Identity::Identity info;
+            if (!AP_ESC_Identity::parse_info_frame(&b[ofs], len - ofs, info)) {
+                continue;
+            }
+            const uint16_t rec = ofs + AP_ESC_Identity::INFO_FRAME_LEN;
+            if (!identity.handle_identity_record(chan, AP_ESC_Identity::Source::SERIAL, &b[rec], len - rec)) {
+                identity.handle_info_frame(chan, &b[ofs], len - ofs);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    for (uint16_t ofs = 0; ofs + AP_ESC_Identity::SETTINGS_RECORD_LEN <= len; ofs++) {
+        if (b[ofs] == AP_ESC_Identity::RECORD_MAGIC &&
+            identity.handle_settings_record(chan, AP_ESC_Identity::Source::SERIAL, &b[ofs], len - ofs)) {
+            return true;
+        }
+    }
+    return false;
+}
+#endif // AP_ESC_TELEM_AM32_IDENTITY_ENABLED
 
 #endif // HAVE_AP_BLHELI_SUPPORT
