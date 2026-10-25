@@ -14,3 +14,8 @@
 #if AP_EXTENDED_ESC_TELEM_ENABLED && !HAL_WITH_ESC_TELEM
     #error "AP_EXTENDED_ESC_TELEM_ENABLED requires HAL_WITH_ESC_TELEM"
 #endif
+
+// AM32 ESCs' firmware and bootloader identity and settings, see AP_ESC_Identity.h
+#ifndef AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+#define AP_ESC_TELEM_AM32_IDENTITY_ENABLED (HAL_WITH_ESC_TELEM && HAL_PROGRAM_SIZE_LIMIT_KB > 1024)
+#endif

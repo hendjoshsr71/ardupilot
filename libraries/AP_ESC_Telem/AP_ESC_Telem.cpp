@@ -818,6 +818,10 @@ void AP_ESC_Telem::update()
             _telem_data[i].any_data_valid = false;
         }
     }
+
+#if AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+    _identity.update();
+#endif
 }
 
 // NOTE: This function should only be used to check timeouts other than 

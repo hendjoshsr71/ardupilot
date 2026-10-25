@@ -83,6 +83,12 @@ protected:
     // callback to update the data in the frontend, should be called by the driver when new data is available
     void update_telem_data(const uint8_t esc_index, const TelemetryData& new_data, const uint16_t data_present_mask);
 
+#if AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+    // an extended DShot telemetry debug1 (type 4) or debug2 (type 5) frame,
+    // which AM32 uses to stream its identity: see AP_ESC_Identity.h
+    void update_edt_debug(const uint8_t esc_index, const uint8_t type, const uint8_t byte);
+#endif
+
 private:
     AP_ESC_Telem* _frontend;
 };
