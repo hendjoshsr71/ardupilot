@@ -28,6 +28,7 @@
 #include "SIM_Loweheiser.h"
 #include "SIM_FETtecOneWireESC.h"
 #include "SIM_Volz.h"
+#include "SIM_AM32.h"
 #include "SIM_I2C.h"
 #include "SIM_Battery.h"
 #include <Filter/Filter.h>
@@ -175,6 +176,9 @@ public:
     void set_fetteconewireesc(FETtecOneWireESC *_fetteconewireesc) { fetteconewireesc = _fetteconewireesc; }
 #if AP_SIM_VOLZ_ENABLED
     void set_volz(Volz *_volz) { volz = _volz; }
+#if AP_SIM_AM32_ENABLED
+    void set_am32(AM32 *_am32) { am32 = _am32; }
+#endif
 #endif
     void set_ie24(IntelligentEnergy24 *_ie24) { ie24 = _ie24; }
     float get_battery_voltage() const { return battery_voltage; }
@@ -417,6 +421,9 @@ private:
     FETtecOneWireESC *fetteconewireesc;
 #if AP_SIM_VOLZ_ENABLED
     Volz *volz;
+#if AP_SIM_AM32_ENABLED
+    AM32 *am32;
+#endif
 #endif  // AP_SIM_VOLZ_ENABLED
 
     IntelligentEnergy24 *ie24;

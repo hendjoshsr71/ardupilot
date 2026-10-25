@@ -1212,6 +1212,12 @@ void Aircraft::update_external_payload(const struct sitl_input &input)
     }
 #endif  // AP_SIM_VOLZ_ENABLED
 
+#if AP_SIM_AM32_ENABLED
+    if (am32) {
+        am32->update(*this);
+    }
+#endif  // AP_SIM_AM32_ENABLED
+
 #if AP_SIM_SHIP_ENABLED
     sitl->models.shipsim.update();
 #endif
