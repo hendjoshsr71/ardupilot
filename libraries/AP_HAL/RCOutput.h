@@ -268,6 +268,8 @@ public:
       DSHOT_ROTATE_ALTERNATE = 8,
       DSHOT_3D_OFF = 9,
       DSHOT_3D_ON = 10,
+      // AM32: answered with its settings record, see AP_ESC_Identity.h
+      DSHOT_SETTINGS_REQUEST = 11,
       DSHOT_SAVE = 12,
       DSHOT_EXTENDED_TELEMETRY_ENABLE = 13,
       DSHOT_EXTENDED_TELEMETRY_DISABLE = 14,
