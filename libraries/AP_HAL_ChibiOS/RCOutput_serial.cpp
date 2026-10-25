@@ -67,7 +67,10 @@ bool RCOutput::dshot_send_command(pwm_group& group, uint8_t command, uint8_t cha
 
     // keep the other ESCs armed rather than sending nothing
     const uint16_t zero_packet = create_dshot_packet(0, false, bdshot_telem);
-    const uint16_t packet = create_dshot_packet(command, true, bdshot_telem);
+    // an ESC answers ESC_INFO and SETTINGS_REQUEST on the telemetry wire: a
+    // telemetry request with them would put KISS frames in the way
+    const bool request_telem = command != DSHOT_ESC_INFO && command != DSHOT_SETTINGS_REQUEST;
+    const uint16_t packet = create_dshot_packet(command, request_telem, bdshot_telem);
 
     for (uint8_t i = 0; i < 4; i++) {
         if (!group.is_chan_enabled(i)) {
