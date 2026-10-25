@@ -826,6 +826,10 @@ bool RCOutput::bdshot_decode_telemetry_from_erpm(uint16_t encodederpm, uint8_t c
             break;
         case 0b100:  // Debug 1
         case 0b101:  // Debug 2
+    #if HAL_WITH_ESC_TELEM && AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+            // AM32 streams its identity here, a byte a frame
+            update_edt_debug(normalized_chan, expo, value & 0xFFU);
+    #endif
             return false;
             break;
         case 0b110: { // Stress level
