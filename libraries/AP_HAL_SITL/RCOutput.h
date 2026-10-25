@@ -4,6 +4,7 @@
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
 #include "AP_HAL_SITL.h"
 #include <AP_ESC_Telem/AP_ESC_Telem_SITL.h>
+#include <SITL/SIM_config.h>
 
 class HALSITL::RCOutput : public AP_HAL::RCOutput {
 public:
@@ -50,6 +51,12 @@ public:
     bool set_serial_led_num_LEDs(const uint16_t chan, uint8_t num_leds, output_mode mode = MODE_PWM_NONE, uint32_t clock_mask = 0) override;
     bool set_serial_led_rgb_data(const uint16_t chan, int8_t led, uint8_t red, uint8_t green, uint8_t blue) override;
     bool serial_led_send(const uint16_t chan) override;
+
+#if AP_SIM_AM32_ENABLED
+    // passed to a simulated AM32 ESC on the telemetry wire (SIM_AM32)
+    void set_telem_request_mask(uint32_t mask) override;
+    void send_dshot_command(uint8_t command, uint8_t chan, uint32_t command_timeout_ms, uint16_t repeat_count, bool priority) override;
+#endif
     
 private:
     SITL_State *_sitlState;
