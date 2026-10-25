@@ -18,6 +18,8 @@
 
 using namespace HALSITL;
 
+extern const AP_HAL::HAL& hal;
+
 void RCOutput::init() {}
 
 void RCOutput::set_freq(uint32_t chmask, uint16_t freq_hz)
@@ -175,5 +177,27 @@ bool RCOutput::serial_led_send(const uint16_t chan)
     }
     return true;
 }
+
+#if AP_SIM_AM32_ENABLED
+void RCOutput::set_telem_request_mask(uint32_t mask)
+{
+    SITL::SIM *sitl = AP::sitl();
+    if (sitl != nullptr) {
+        sitl->am32_sim.telem_request(mask);
+    }
+}
+
+void RCOutput::send_dshot_command(uint8_t command, uint8_t chan, uint32_t command_timeout_ms, uint16_t repeat_count, bool priority)
+{
+    // as on hardware, once armed only priority commands go out
+    if (hal.util->get_soft_armed() && !priority) {
+        return;
+    }
+    SITL::SIM *sitl = AP::sitl();
+    if (sitl != nullptr) {
+        sitl->am32_sim.dshot_command(command, chan);
+    }
+}
+#endif  // AP_SIM_AM32_ENABLED
 
 #endif //CONFIG_HAL_BOARD == HAL_BOARD_SITL
