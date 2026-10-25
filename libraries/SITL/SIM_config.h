@@ -330,6 +330,10 @@
 #define AP_SIM_VOLZ_ENABLED AP_SIM_ENABLED
 #endif  // AP_SIM_VOLZ_ENABLED
 
+#ifndef AP_SIM_AM32_ENABLED
+#define AP_SIM_AM32_ENABLED AP_SIM_ENABLED
+#endif  // AP_SIM_AM32_ENABLED
+
 // simulated payload / actuator devices owned by SITL::SIM and driven by the
 // aircraft model
 #ifndef AP_SIM_BUZZER_ENABLED
