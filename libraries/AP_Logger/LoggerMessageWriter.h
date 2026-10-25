@@ -38,12 +38,14 @@ private:
         PARAM_SPACE_USED,
         RC_PROTOCOL,
         RC_FIRMWARE,  // the receiver's firmware, when it says it
+        ESC_FIRMWARE, // AM32 ESCs' firmware and bootloader, as they have said them
         RC_OUTPUT,
 #if AP_RTC_LOGGING_ENABLED
         LOG_RTC_MSG,
 #endif  // AP_RTC_LOGGING_ENABLED
     };
     Stage stage;
+    uint8_t esc_line;  // ESC_FIRMWARE: the next ESC to describe
 };
 
 class LoggerMessageWriter_WriteEntireMission : public LoggerMessageWriter {
