@@ -29,6 +29,7 @@
 #if HAL_SUPPORT_RCOUT_SERIAL
 
 #include <AP_ESC_Telem/AP_ESC_Telem_Backend.h>
+#include <AP_ESC_Telem/AP_ESC_Telem_config.h>
 
 #include <AP_Param/AP_Param.h>
 #include <Filter/LowPassFilter.h>
@@ -78,6 +79,14 @@ private:
     AP_Int8 motor_poles;
     // mask of channels with bi-directional dshot enabled
     AP_UInt32 channel_bidir_dshot_mask;
+    AP_Int8 options;
+
+    enum class Option : uint8_t {
+        READ_IDENTITY = (1U << 0),
+    };
+    bool option_is_set(Option option) const {
+        return (uint8_t(options.get()) & uint8_t(option)) != 0;
+    }
     
     enum mspState {
         MSP_IDLE=0,
@@ -290,6 +299,25 @@ private:
     void run_connection_test(uint8_t chan);
     void read_telemetry_packet(void);
     void log_bidir_telemetry(void);
+
+#if AP_ESC_TELEM_AM32_IDENTITY_ENABLED
+    /*
+      asking each ESC for its identity (DShot command 6) and settings
+      (command 11) over the telemetry wire, one at a time while disarmed,
+      see AP_ESC_Identity.h
+     */
+    struct {
+        uint8_t command;        // the command being answered, 0 when idle
+        uint8_t motor;          // into motor_map
+        uint32_t sent_ms;
+        uint32_t next_ms;       // leave the wire to telemetry until then
+        uint8_t attempts[max_motors][2];
+        uint8_t buf[256];
+        uint16_t len;
+    } id_read;
+    bool identity_read_update(void);
+    bool identity_read_parse(void);
+#endif
 
     // protocol handler hook
     bool protocol_handler(uint8_t , AP_HAL::UARTDriver *);
