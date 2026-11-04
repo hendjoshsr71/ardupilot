@@ -5615,6 +5615,65 @@ class AutoTestCopter(vehicle_test_suite.TestSuite):
         self.context_pop()
         self.reboot_sitl()
 
+    def dronecan_mcast_node(self, node_id, bus=0):
+        '''a pydronecan node on SITL's multicast CAN bus, on the interface and port
+        SITL uses.  pydronecan's mcast driver leaves the interface to the routing
+        table, so it does not meet a SITL pinned with SITL_MULTICAST_IF_ADDR'''
+        import select
+        import dronecan
+        from dronecan.driver.common import AbstractDriver, CANFrame
+        from dronecan.driver.mcast import MCAST_ADDRESS_BASE, MCAST_PORT, MCAST_MAGIC, MCAST_FLAG_CANFD, MCAST_MAX_PKT_LEN
+        from dronecan.dsdl.common import crc16_from_bytes
+
+        # read as SITL reads them: unset or empty is the default
+        if_name = os.environ.get("SITL_MULTICAST_IF_ADDR", "")
+        if_addr = socket.inet_aton(if_name or "0.0.0.0")
+        port = int(os.environ.get("SITL_CAN_MCAST_PORT") or MCAST_PORT)
+        group = "%s.%u" % (MCAST_ADDRESS_BASE, bus)
+
+        class Driver(AbstractDriver):
+            def __init__(self):
+                super().__init__()
+                self.rx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                self.rx.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self.rx.bind((group, port))
+                self.rx.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(group) + if_addr)
+                self.tx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                if if_name:
+                    self.tx.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, if_addr)
+                self.tx.connect((group, port))
+                self.tx_port = self.tx.getsockname()[1]
+
+            def send_frame(self, frame):
+                self._tx_hook(frame)
+                message_id = frame.id | (1 << 31 if frame.extended else 0)
+                body = struct.pack("<HI", MCAST_FLAG_CANFD if frame.canfd else 0, message_id) + bytes(frame.data)
+                self.tx.send(struct.pack("<HH", MCAST_MAGIC, crc16_from_bytes(body)) + body)
+
+            def receive(self, timeout=None):
+                deadline = None if timeout is None else time.monotonic() + timeout
+                while True:
+                    wait = None if deadline is None else max(0, deadline - time.monotonic())
+                    if not select.select([self.rx], [], [], wait)[0]:
+                        return None
+                    data, (_, src_port) = self.rx.recvfrom(MCAST_MAX_PKT_LEN)
+                    if src_port == self.tx_port or len(data) < 10:
+                        # our own frame looped back, or not a frame
+                        continue
+                    magic, crc, flags, message_id = struct.unpack("<HHHI", data[:10])
+                    if magic != MCAST_MAGIC or crc != crc16_from_bytes(data[4:]):
+                        continue
+                    frame = CANFrame(message_id & 0x1FFFFFFF, data[10:], bool(message_id & (1 << 31)),
+                                     canfd=bool(flags & MCAST_FLAG_CANFD))
+                    self._rx_hook(frame)
+                    return frame
+
+            def close(self):
+                self.rx.close()
+                self.tx.close()
+
+        return dronecan.node.Node(Driver(), node_id=node_id)
+
     def ESCIdentityDroneCAN(self):
         '''AM32 ESCs on DroneCAN: the identity each sends as FlexDebug 101 into every
         log and the banner, and their settings, asked for with FlexDebug 103, into one'''
@@ -5635,7 +5694,7 @@ class AutoTestCopter(vehicle_test_suite.TestSuite):
 
         # two ESCs, AM32 nodes 60 and 61 on the bus SITL's CAN1 is
         escs = {60 + esc: esc for esc in range(2)}
-        nodes = {node_id: dronecan.make_node("mcast:0", node_id=node_id) for node_id in escs}
+        nodes = {node_id: self.dronecan_mcast_node(node_id) for node_id in escs}
         records = {
             node_id: self.am32_identity_record(settings_for(esc), fw_hash, 255, 2, bl_hash, name)
             for node_id, esc in escs.items()
