@@ -7459,6 +7459,9 @@ void GCS::update_passthru(void)
         _passthru.options1 = options1;
         _passthru.options2 = options2;
         _passthru.ports_set_up = false;
+        _passthru.escape_armed = false;
+        _passthru.escape_matched = 0;
+        _passthru.escape_done_ms = 0;
         GCS_SEND_TEXT(MAV_SEVERITY_INFO, "Passthru enabled");
         if (!_passthru.timer_installed) {
             _passthru.timer_installed = true;
@@ -7468,45 +7471,86 @@ void GCS::update_passthru(void)
                (!enabled || port1 != _passthru.port1 || port2 != _passthru.port2)) {
         // disabled, or SERIAL_PASS1/2 changed: finish with the ports in use,
         // a session on new ports starts on the next update
-        _passthru.enabled = false;
-        _passthru.port1->lock_port(0, 0);
-        _passthru.port2->lock_port(0, 0);
-        // Restore original baudrates and port ownership
-        if (_passthru.baud1 != _passthru.orig_baud1) {
-            _passthru.port1->end();
-        }
-        _passthru.port1->begin(_passthru.orig_baud1);
-        if (_passthru.baud2 != _passthru.orig_baud2) {
-            _passthru.port2->end();
-        }
-        _passthru.port2->begin(_passthru.orig_baud2);
-        // begin() resets hardware parity without updating get_parity().
-        _passthru.port1->configure_parity(_passthru.orig_parity1);
-        _passthru.port2->configure_parity(_passthru.orig_parity2);
-        restore_passthru_line_settings();
-        GCS_SEND_TEXT(MAV_SEVERITY_INFO, "Passthru disabled");
+        passthru_end(false, "Passthru disabled");
+    } else if (enabled &&
+               _passthru.escape_done_ms != 0 &&
+               now - _passthru.escape_done_ms >= PASSTHRU_ESCAPE_GUARD_MS) {
+        // the host sent the escape sequence, framed by silence
+        passthru_end(true, "Passthru ended by escape");
     } else if (enabled &&
                _passthru.timeout_s &&
                now - _passthru.last_port1_data_ms > uint32_t(_passthru.timeout_s)*1000U) {
-        // timed out, disable
-        _passthru.enabled = false;
-        _passthru.port1->lock_port(0, 0);
-        _passthru.port2->lock_port(0, 0);
+        passthru_end(true, "Passthru timed out");
+    }
+}
+
+void GCS::passthru_end(bool clear_param, const char *why)
+{
+    _passthru.enabled = false;
+    _passthru.escape_armed = false;
+    _passthru.escape_done_ms = 0;
+    _passthru.port1->lock_port(0, 0);
+    _passthru.port2->lock_port(0, 0);
+    if (clear_param) {
         AP::serialmanager().disable_passthru();
-        // Restore original baudrates and port ownership
-        if (_passthru.baud1 != _passthru.orig_baud1) {
-            _passthru.port1->end();
+    }
+    // Restore original baudrates and port ownership
+    if (_passthru.baud1 != _passthru.orig_baud1) {
+        _passthru.port1->end();
+    }
+    _passthru.port1->begin(_passthru.orig_baud1);
+    if (_passthru.baud2 != _passthru.orig_baud2) {
+        _passthru.port2->end();
+    }
+    _passthru.port2->begin(_passthru.orig_baud2);
+    // begin() resets hardware parity without updating get_parity().
+    _passthru.port1->configure_parity(_passthru.orig_parity1);
+    _passthru.port2->configure_parity(_passthru.orig_parity2);
+    restore_passthru_line_settings();
+    GCS_SEND_TEXT(MAV_SEVERITY_INFO, "%s", why);
+}
+
+/*
+  The host's way out of pass-thru, over the bridge itself, for a board with no
+  second port to set SERIAL_PASS2 from: 100ms of silence, these 16 bytes
+  within 50ms, and 100ms of silence. Any other byte is data and starts
+  nothing; the bytes are forwarded like any others. The 16 bytes are what
+  make a false exit unlikely; the silences only frame them. The sequence is kept
+  complemented, so that no firmware image holds it and could carry it through
+  a bridge; random data matches it with probability 2^-128. The 16 bytes all
+  differ, so a match cannot overlap itself and a count is all it needs. The
+  sequence as sent: A8 B3 56 6E 31 AE 06 22 37 32 89 57 C7 6F C5 1F
+  (ArduConfigurator's @arduconfig/passthrough-escape).
+ */
+static const uint8_t passthru_escape_complement[16] {
+    0x57, 0x4c, 0xa9, 0x91, 0xce, 0x51, 0xf9, 0xdd, 0xc8, 0xcd, 0x76, 0xa8, 0x38, 0x90, 0x3a, 0xe0
+};
+
+void GCS::passthru_escape_scan(const uint8_t *buf, uint16_t nbytes, uint32_t now_ms, bool after_silence)
+{
+    if (after_silence) {
+        // a burst after a silence: it may be the escape
+        _passthru.escape_armed = true;
+        _passthru.escape_matched = 0;
+        _passthru.escape_armed_ms = now_ms;
+        _passthru.escape_done_ms = 0;
+    }
+    for (uint16_t i = 0; i < nbytes; i++) {
+        if (!_passthru.escape_armed ||
+            _passthru.escape_matched >= ARRAY_SIZE(passthru_escape_complement) ||
+            now_ms - _passthru.escape_armed_ms > PASSTHRU_ESCAPE_WINDOW_MS ||
+            uint8_t(~buf[i]) != passthru_escape_complement[_passthru.escape_matched]) {
+            // data: nothing more until the next silence
+            _passthru.escape_armed = false;
+            _passthru.escape_matched = 0;
+            _passthru.escape_done_ms = 0;
+            return;
         }
-        _passthru.port1->begin(_passthru.orig_baud1);
-        if (_passthru.baud2 != _passthru.orig_baud2) {
-            _passthru.port2->end();
+        _passthru.escape_matched++;
+        if (_passthru.escape_matched == ARRAY_SIZE(passthru_escape_complement)) {
+            // 0 means "not yet": a match at 0 ms is a match at 1
+            _passthru.escape_done_ms = MAX(now_ms, 1U);
         }
-        _passthru.port2->begin(_passthru.orig_baud2);
-        // begin() resets hardware parity without updating get_parity().
-        _passthru.port1->configure_parity(_passthru.orig_parity1);
-        _passthru.port2->configure_parity(_passthru.orig_parity2);
-        restore_passthru_line_settings();
-        GCS_SEND_TEXT(MAV_SEVERITY_INFO, "Passthru timed out");
     }
 }
 
@@ -7638,7 +7682,10 @@ void GCS::passthru_timer(void)
     // read from port1, and write to port2
     int16_t nbytes = _passthru.port1->read_locked(buf, MIN(sizeof(buf),_passthru.port2->txspace()), lock_key);
     if (nbytes > 0) {
-        _passthru.last_port1_data_ms = AP_HAL::millis();
+        const uint32_t now_ms = AP_HAL::millis();
+        passthru_escape_scan(buf, nbytes, now_ms,
+                             now_ms - _passthru.last_port1_data_ms >= PASSTHRU_ESCAPE_GUARD_MS);
+        _passthru.last_port1_data_ms = now_ms;
         _passthru.port2->write_locked(buf, nbytes, lock_key);
     }
 
