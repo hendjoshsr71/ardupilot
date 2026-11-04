@@ -7412,8 +7412,9 @@ void GCS::update_passthru(void)
 
     WITH_SEMAPHORE(_passthru.sem);
     uint32_t now = AP_HAL::millis();
-    uint32_t baud1, baud2;
-    uint16_t options1, options2;
+    // get_passthru() only sets these when it returns true
+    uint32_t baud1 = 0, baud2 = 0;
+    uint16_t options1 = 0, options2 = 0;
     bool enabled = AP::serialmanager().get_passthru(_passthru.port1, _passthru.port2, _passthru.timeout_s,
                                                     baud1, baud2, options1, options2);
     if (enabled && !_passthru.enabled) {
@@ -7423,6 +7424,8 @@ void GCS::update_passthru(void)
         _passthru.last_port1_data_ms = now;
         _passthru.baud1 = baud1;
         _passthru.baud2 = baud2;
+        _passthru.orig_baud1 = baud1;
+        _passthru.orig_baud2 = baud2;
         _passthru.options1 = options1;
         _passthru.options2 = options2;
         _passthru.ports_set_up = false;
@@ -7435,14 +7438,22 @@ void GCS::update_passthru(void)
         _passthru.enabled = false;
         _passthru.port1->lock_port(0, 0);
         _passthru.port2->lock_port(0, 0);
-        // Restore original baudrates
-        if (_passthru.baud1 != baud1) {
+        // Restore the configured baudrates
+        if (_passthru.baud1 != _passthru.orig_baud1 && _passthru.orig_baud1 != 0) {
             _passthru.port1->end();
-            _passthru.port1->begin(baud1);
+            _passthru.port1->begin(_passthru.orig_baud1);
         }
-        if (_passthru.baud2 != baud2) {
+        if (_passthru.baud2 != _passthru.orig_baud2 && _passthru.orig_baud2 != 0) {
             _passthru.port2->end();
-            _passthru.port2->begin(baud2);
+            _passthru.port2->begin(_passthru.orig_baud2);
+        }
+        if (_passthru.ports_set_up) {
+            // passthru_timer() began both ports, so the timer thread owns them, and a port
+            // only reads for its owner. Claim them back for this thread, where a GCS port is
+            // read; a protocol on its own thread, such as RCIN, claims its port again itself.
+            // Before restoring the line settings, as begin() can drop the parity.
+            _passthru.port1->begin(0);
+            _passthru.port2->begin(0);
         }
         restore_passthru_line_settings();
         GCS_SEND_TEXT(MAV_SEVERITY_INFO, "Passthru disabled");
@@ -7454,14 +7465,22 @@ void GCS::update_passthru(void)
         _passthru.port1->lock_port(0, 0);
         _passthru.port2->lock_port(0, 0);
         AP::serialmanager().disable_passthru();
-        // Restore original baudrates
-        if (_passthru.baud1 != baud1) {
+        // Restore the configured baudrates
+        if (_passthru.baud1 != _passthru.orig_baud1 && _passthru.orig_baud1 != 0) {
             _passthru.port1->end();
-            _passthru.port1->begin(baud1);
+            _passthru.port1->begin(_passthru.orig_baud1);
         }
-        if (_passthru.baud2 != baud2) {
+        if (_passthru.baud2 != _passthru.orig_baud2 && _passthru.orig_baud2 != 0) {
             _passthru.port2->end();
-            _passthru.port2->begin(baud2);
+            _passthru.port2->begin(_passthru.orig_baud2);
+        }
+        if (_passthru.ports_set_up) {
+            // passthru_timer() began both ports, so the timer thread owns them, and a port
+            // only reads for its owner. Claim them back for this thread, where a GCS port is
+            // read; a protocol on its own thread, such as RCIN, claims its port again itself.
+            // Before restoring the line settings, as begin() can drop the parity.
+            _passthru.port1->begin(0);
+            _passthru.port2->begin(0);
         }
         restore_passthru_line_settings();
         GCS_SEND_TEXT(MAV_SEVERITY_INFO, "Passthru timed out");
