@@ -16490,7 +16490,7 @@ switch value'''
             except BlockingIOError:
                 pass
 
-        def transfer(src, dst, data, timeout=60):
+        def transfer(src, dst, data, timeout=60, trailing_ok=False):
             sent = 0
             got = bytearray()
             tstart = self.get_sim_time()
@@ -16507,6 +16507,9 @@ switch value'''
                 except BlockingIOError:
                     pass
                 self.drain_mav(quiet=True)
+            if trailing_ok:
+                # the port is back in RC use once the escape ends passthrough
+                got = got[:len(data)]
             if bytes(got) != data:
                 first = next(i for i in range(len(data)) if i >= len(got) or got[i] != data[i])
                 raise NotAchievedException("Passthrough data differs from byte %u" % first)
@@ -16564,7 +16567,7 @@ switch value'''
 
         self.progress("Silence, the escape, silence: passthrough ends")
         self.delay_sim_time(1.5, reason="silence before the escape")
-        transfer(host, rx, escape)
+        transfer(host, rx, escape, trailing_ok=True)
         self.wait_statustext("Passthru ended by escape", check_context=True, timeout=10)
         if self.get_parameter("SERIAL_PASS2") != -1:
             raise NotAchievedException("SERIAL_PASS2 not cleared by the escape")
