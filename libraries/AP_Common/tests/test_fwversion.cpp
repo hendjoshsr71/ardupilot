@@ -23,9 +23,9 @@ TEST(AP_FWVersion, FWVersion)
     EXPECT_EQ(AP::fwversion().patch, FW_PATCH);
     EXPECT_EQ(AP::fwversion().fw_type, FW_TYPE);
     EXPECT_EQ(AP::fwversion().os_sw_version, 0u);
-    EXPECT_STREQ(AP::fwversion().fw_string, THISFIRMWARE);
+    EXPECT_STREQ(AP::fwversion().fw_string, THISFIRMWARE "_fleet");
     EXPECT_STREQ(AP::fwversion().fw_hash_str, "");
-    EXPECT_STREQ(AP::fwversion().fw_short_string, THISFIRMWARE);
+    EXPECT_STREQ(AP::fwversion().fw_short_string, THISFIRMWARE "_fleet");
     EXPECT_EQ(AP::fwversion().fw_hash, 0u);
     EXPECT_EQ(AP::fwversion().middleware_name, nullptr);
     EXPECT_EQ(AP::fwversion().middleware_hash_str, nullptr);

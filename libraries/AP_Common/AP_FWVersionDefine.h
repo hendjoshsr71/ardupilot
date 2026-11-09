@@ -24,13 +24,19 @@
 #include <AP_Vehicle/AP_Vehicle_Type.h>
 
 /*
+  fleet builds end their firmware string in "_fleet", so a host can
+  tell them from other builds of the same version
+ */
+#define AP_FWSTR_FLEET_SUFFIX "_fleet"
+
+/*
   allow vendors to set AP_CUSTOM_FIRMWARE_STRING in hwdef.dat
  */
 #ifdef AP_CUSTOM_FIRMWARE_STRING
-#define ACTIVE_FWSTR AP_CUSTOM_FIRMWARE_STRING
-#define ORIGINAL_FWSTR THISFIRMWARE
+#define ACTIVE_FWSTR AP_CUSTOM_FIRMWARE_STRING AP_FWSTR_FLEET_SUFFIX
+#define ORIGINAL_FWSTR THISFIRMWARE AP_FWSTR_FLEET_SUFFIX
 #else
-#define ACTIVE_FWSTR THISFIRMWARE
+#define ACTIVE_FWSTR THISFIRMWARE AP_FWSTR_FLEET_SUFFIX
 #define ORIGINAL_FWSTR nullptr
 #endif
 
